@@ -1,0 +1,38 @@
+name: gate
+
+# Runs the plugin validation gate on every PR and push to main.
+# Mirrors the local pre-commit hook (make gate) so CI and local agree.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install pyyaml pytest
+
+      - name: Validate skill contracts
+        run: python3 scripts/validate_skills.py
+
+      - name: Validate plugin packaging (Claude / AGY / Codex / Kimi)
+        run: python3 scripts/validate_plugin.py
+
+      - name: Lint Mermaid diagrams
+        run: python3 scripts/validate_mermaid.py
+
+      - name: Check reference URLs resolve
+        run: python3 scripts/check_links.py
+
+      - name: Smoke tests
+        run: python3 -m pytest tests/skill-smoke-tests/ -q

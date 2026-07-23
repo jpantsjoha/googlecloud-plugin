@@ -1,18 +1,16 @@
 <p align="center">
-  <img src="assets/googlecloud-plugin-hero.png" alt="GoogleCloud Plugin — Human-led. Agent-powered. Built on Google Cloud." width="55%">
+  <img src="assets/images/googlecloud-plugin-by-jp.png" alt="googlecloud-plugin by JP — Open source. Agent-powered. Built for Google Cloud." width="100%">
 </p>
 
 # GoogleCloud Plugin
 
-> **Human-led. Agent-powered. Built on Google Cloud.**
-
 > **Install once, and your coding agent gains a full Google Cloud delivery team — a vendor-objective solution designer, a GCP architect, an agentic-systems architect, plus security, SRE, and QA — wired into a design-first, security-first delivery gate.**
 
-Skill libraries for Google Cloud are everywhere. What they miss is the operating contract: who designs before anyone codes, who signs off on least-privilege before anything deploys, what "done" means when an agent ships to a billable cloud. This plugin ships that contract, with the GCP know-how bolted in.
+Skill libraries for Google Cloud are everywhere. What they miss is the operating contract: who designs before anyone writes code, who signs off on least-privilege before anything deploys, what "done" means when an agent ships to a billable cloud. This plugin ships that contract, with the GCP know-how built in.
 
-One install gives an agent (Claude, Codex, or Antigravity) five personas, eleven service skills, the MCP server map, and a research pipeline that keeps every reference current — because a plugin that silently goes stale is worse than no plugin at all.
+One install gives an agent (Claude, Codex, or Antigravity) five personas, eleven service skills, the MCP server map, and a research pipeline that keeps every reference current. A plugin that goes stale in silence is worse than none.
 
-The plugin is **GCP-only and opinionated by design**. It spans the estate a builder actually touches — from Firebase and Cloud Run to BigQuery and GKE, and up through the agent frameworks that now sit on top: ADK, and the MCP / A2A / AP2 protocol stack, deployed on the Gemini Enterprise Agent Platform. Refine it for your team; keep the contract coherent while you do.
+The plugin is **GCP-only and opinionated by design**. It covers the estate a builder touches — Firebase, Cloud Run, BigQuery, GKE — and the agent frameworks now built on top: ADK, and the MCP / A2A / AP2 protocol stack, deployed on the Gemini Enterprise Agent Platform. Refine it for your team. Keep the contract coherent as you do.
 
 > **Speed is easy. Safe speed is engineered.**
 
@@ -89,13 +87,13 @@ sequenceDiagram
 
     rect rgb(240, 253, 244)
         note over Sec,Impl: Implementation — known-good GCP patterns, cost-warned
-        Impl->>Impl: 6. Build on google-cloud patterns; warn before every billable action
+        Impl->>Impl: 6. Build on google-cloud patterns, warn before every billable action
     end
 
     rect rgb(254, 249, 231)
         note over Impl,QA: Quality Gate — receipts, not polish
         Impl->>QA: 7. Submit candidate
-        QA-->>Ops: 8. make gate (validate + lint + test) + agent-eval — pass or BLOCK
+        QA-->>Ops: 8. make gate (all checks) + agent-eval — pass or BLOCK
     end
 
     rect rgb(224, 242, 254)
@@ -157,7 +155,7 @@ Freshness is a feature, not a chore: `make check` runs weekly and flags any GCP 
 
 ## About the author
 
-Created and maintained by **Jaroslav Pantsjoha (JP)** — Technical Director and Enterprise Agent Solution Architect at Cognizant, Google Developer Expert (Google Cloud), speaker, and author of *Building the Agentic Enterprise on Google Cloud* (Packt) and co-author of *Mastering Multi-Agent Systems on Google Cloud* (AVA Publishing).
+Created and maintained by **Jaroslav Pantsjoha (JP)** — Technical Director and Enterprise Agent Solution Architect at Cognizant, Google Developer Expert (Google Cloud), speaker, and author of *Building the Agentic Enterprise on Google Cloud* (Packt).
 
 I built this to make my own Google Cloud work repeatable, then to share it. The model is the easy part; the durable engineering is the harness around it — the skills, rules, MCP servers, gates, and evals. GCP patterns outlast the week's model release, so they are worth encoding once and reusing. This plugin is that baseline aimed squarely at Google Cloud — the GCP companion to my [`join-the-team`](https://github.com/jpantsjoha/ai-native-developer-experience) harness. Part of the **#HarnessEngineering** body of work and the Google Cloud / GDE community.
 
@@ -169,3 +167,7 @@ I built this to make my own Google Cloud work repeatable, then to share it. The 
 ## Licence
 
 Open source under the [MIT License](LICENSE) — free for personal and commercial use, modification, and redistribution.
+
+---
+
+*This is an independent, community project. It is not affiliated with, sponsored by, or endorsed by Google LLC. "Google Cloud", "GCP", "Gemini", "Vertex AI", and related names are trademarks of Google LLC, used here only to describe what the plugin works with.*
