@@ -7,9 +7,9 @@
         "CLOUDSDK_CORE_PROJECT": "${GCP_PROJECT_ID}"
       }
     },
-    "genai-toolbox": {
-      "command": "uvx",
-      "args": ["toolbox-core", "--tools-file", "${TOOLBOX_TOOLS_FILE}"],
+    "toolbox": {
+      "command": "npx",
+      "args": ["-y", "@toolbox-sdk/server", "--stdio", "--config", "${TOOLBOX_TOOLS_FILE}"],
       "env": {
         "GCP_PROJECT_ID": "${GCP_PROJECT_ID}",
         "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",

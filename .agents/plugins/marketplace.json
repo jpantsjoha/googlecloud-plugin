@@ -1,0 +1,21 @@
+{
+  "name": "googlecloud-plugin-marketplace",
+  "plugins": [
+    {
+      "name": "googlecloud-plugin",
+      "interface": {
+        "displayName": "GoogleCloud Plugin",
+        "shortDescription": "A full Google Cloud delivery team for your coding agent."
+      },
+      "source": {
+        "source": "local",
+        "path": "."
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "NONE"
+      },
+      "category": "Infrastructure"
+    }
+  ]
+}
