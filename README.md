@@ -114,15 +114,12 @@ Freshness is a feature, not a chore: `make check` runs weekly and flags any GCP 
 
 ## About the author
 
-I'm **Jaroslav Pantsjoha (JP)** — a Google Developer Expert, and I build on Google Cloud for a living and for fun. Most weekends there's a hackathon build or an exploration on the go, and the same lesson keeps landing: the model is the easy part. The durable engineering is the harness around it — the skills, the rules, the MCP servers, the gates, the evals.
+Created and maintained by **Jaroslav Pantsjoha (JP)** — Technical Director and Enterprise Agent Solution Architect at Cognizant, Google Developer Expert (Google Cloud), speaker, and author of *Building the Agentic Enterprise on Google Cloud* (Packt) and co-author of *Mastering Multi-Agent Systems on Google Cloud* (AVA Publishing).
 
-I built this plugin to make my own life easier, and then to share it. I already run my [`join-the-team`](https://github.com/jpantsjoha/ai-native-developer-experience) harness and a set of global skills across projects; what I wanted was the same consistency aimed squarely at Google Cloud. GCP patterns and approaches tend to stick around longer than the week's model release — which makes them worth encoding once, properly, so every build starts from the same design-first, security-first baseline instead of re-deriving it each time.
+I built this to make my own Google Cloud work repeatable, then to share it. The model is the easy part; the durable engineering is the harness around it — the skills, rules, MCP servers, gates, and evals. GCP patterns outlast the week's model release, so they are worth encoding once and reusing. This plugin is that baseline aimed squarely at Google Cloud — the GCP companion to my [`join-the-team`](https://github.com/jpantsjoha/ai-native-developer-experience) harness. Part of the **#HarnessEngineering** body of work and the Google Cloud / GDE community.
 
-This is that baseline: one coherent, current, complete Google Cloud builder experience I can hand to my community and colleagues — from Firebase to the AP2 / A2A / ADK frameworks — and know we are all working from the same contract.
-
-Part of the **#HarnessEngineering** work and the Google Cloud / GDE community.
-
-**Connect:** [linkedin.com/in/johas](https://www.linkedin.com/in/johas) · [github.com/jpantsjoha](https://github.com/jpantsjoha)
+- LinkedIn: [uk.linkedin.com/in/johas](https://uk.linkedin.com/in/johas)
+- Google Developer Expert: [me.developers.google.com/u/jpantsjoha](https://me.developers.google.com/u/jpantsjoha)
 
 ---
 

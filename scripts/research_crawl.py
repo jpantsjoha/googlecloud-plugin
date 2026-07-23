@@ -30,6 +30,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Cloud Run IAM", "https://cloud.google.com/run/docs/securing/managing-access"),
         ("Cloud Run Pricing", "https://cloud.google.com/run/pricing"),
         ("Cloud Run gcloud reference", "https://cloud.google.com/sdk/gcloud/reference/run"),
+        ("Cloud Run Release Notes", "https://cloud.google.com/run/docs/release-notes"),
     ],
     "gke": [
         ("GKE Overview", "https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview"),
@@ -37,6 +38,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("GKE Security Overview", "https://cloud.google.com/kubernetes-engine/docs/concepts/security-overview"),
         ("GKE Networking Overview", "https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview"),
         ("Workload Identity Federation", "https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity"),
+        ("GKE Release Notes", "https://cloud.google.com/kubernetes-engine/docs/release-notes"),
     ],
     "iam": [
         ("IAM Overview", "https://cloud.google.com/iam/docs/overview"),
@@ -44,6 +46,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Service Account Overview", "https://cloud.google.com/iam/docs/service-account-overview"),
         ("IAM Conditions", "https://cloud.google.com/iam/docs/conditions-overview"),
         ("Predefined Roles Reference", "https://cloud.google.com/iam/docs/understanding-roles"),
+        ("IAM Release Notes", "https://cloud.google.com/iam/docs/release-notes"),
     ],
     "bigquery": [
         ("BigQuery Introduction", "https://cloud.google.com/bigquery/docs/introduction"),
@@ -51,6 +54,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("BigQuery Pricing", "https://cloud.google.com/bigquery/pricing"),
         ("BigQuery Performance Best Practices", "https://cloud.google.com/bigquery/docs/best-practices-performance-overview"),
         ("BigQuery Storage Best Practices", "https://cloud.google.com/bigquery/docs/best-practices-storage"),
+        ("BigQuery Release Notes", "https://cloud.google.com/bigquery/docs/release-notes"),
     ],
     "cloud-storage": [
         ("Cloud Storage Overview", "https://cloud.google.com/storage/docs/introduction"),
@@ -58,6 +62,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Cloud Storage Best Practices", "https://cloud.google.com/storage/docs/best-practices"),
         ("Cloud Storage Pricing", "https://cloud.google.com/storage/pricing"),
         ("Object Lifecycle Management", "https://cloud.google.com/storage/docs/lifecycle"),
+        ("Cloud Storage Release Notes", "https://cloud.google.com/storage/docs/release-notes"),
     ],
     "vertex-ai": [
         ("Vertex AI Overview", "https://cloud.google.com/vertex-ai/docs/start/introduction-unified-platform"),
@@ -66,6 +71,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Vertex AI Pricing", "https://cloud.google.com/vertex-ai/pricing"),
         ("Vertex AI Model Garden", "https://cloud.google.com/vertex-ai/generative-ai/docs/model-garden/explore-models"),
         ("Agent Builder Overview", "https://cloud.google.com/dialogflow/cx/docs/concept/agent"),
+        ("Vertex AI Release Notes", "https://cloud.google.com/vertex-ai/docs/release-notes"),
     ],
     "networking": [
         ("VPC Overview", "https://cloud.google.com/vpc/docs/vpc"),
@@ -82,6 +88,8 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Cloud Profiler Overview", "https://cloud.google.com/profiler/docs/about-profiler"),
         ("Error Reporting", "https://cloud.google.com/error-reporting/docs"),
         ("Log-based Metrics", "https://cloud.google.com/logging/docs/logs-based-metrics"),
+        ("Cloud Logging Release Notes", "https://cloud.google.com/logging/docs/release-notes"),
+        ("Cloud Monitoring Release Notes", "https://cloud.google.com/monitoring/docs/release-notes"),
     ],
     "mcp-servers": [
         ("MCP Toolbox for Databases (announcement)", "https://cloud.google.com/blog/products/ai-machine-learning/mcp-toolbox-for-databases-now-supports-model-context-protocol"),
