@@ -1,4 +1,4 @@
-.PHONY: all gate validate manifest preflight lint test check crawl crawl-dry hooks help
+.PHONY: all gate validate manifest preflight lint mermaid test check crawl crawl-dry hooks help
 
 PYTHON  := python3
 SCRIPTS := scripts
@@ -7,9 +7,9 @@ TESTS   := tests/skill-smoke-tests
 # ─── 3-minute validation gate (validate + manifest + lint + test) ───────────
 # This is the pre-commit gate. Install the hook once with: make hooks
 
-gate: validate manifest lint test
+gate: validate manifest mermaid lint test
 	@echo ""
-	@echo "Gate passed: validate + manifest + lint + test"
+	@echo "Gate passed: validate + manifest + mermaid + lint + test"
 
 # ─── Individual targets ──────────────────────────────────────────────────────
 
@@ -24,6 +24,10 @@ manifest:
 preflight:
 	@echo "==> Preflight: infer GCP context from environment (read-only)..."
 	@$(PYTHON) $(SCRIPTS)/preflight.py
+
+mermaid:
+	@echo "==> Linting Mermaid diagrams (GitHub render-safety)..."
+	@$(PYTHON) $(SCRIPTS)/validate_mermaid.py
 
 lint:
 	@echo "==> Checking reference URLs..."
@@ -62,9 +66,10 @@ help:
 	@echo ""
 	@echo "GoogleCloud Plugin — Makefile Targets"
 	@echo ""
-	@echo "  make gate        Pre-commit gate: validate + manifest + lint + test"
+	@echo "  make gate        Pre-commit gate: validate + manifest + mermaid + lint + test"
 	@echo "  make validate    Validate all SKILL.md frontmatter (contract check)"
 	@echo "  make manifest    Validate plugin is installable (Claude/AGY/Codex/Kimi)"
+	@echo "  make mermaid     Lint Mermaid diagrams for GitHub render-safety"
 	@echo "  make lint        Check all reference URLs resolve (HTTP 200)"
 	@echo "  make test        Run skill smoke tests via pytest"
 	@echo "  make check       Freshness check: hash drift detection vs live sources"
