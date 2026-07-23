@@ -96,3 +96,4 @@ gcloud compute routers nats create NAT_NAME \
 - [Cloud Load Balancing](https://cloud.google.com/load-balancing/docs/load-balancing-overview)
 - [Cloud Armor Overview](https://cloud.google.com/armor/docs/cloud-armor-overview)
 - [Private Google Access](https://cloud.google.com/vpc/docs/private-google-access)
+- [Network Security Architecture](https://cloud.google.com/architecture/framework/security/network-security)

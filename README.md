@@ -1,4 +1,10 @@
+<p align="center">
+  <img src="assets/googlecloud-plugin-hero.png" alt="GoogleCloud Plugin — Human-led. Agent-powered. Built on Google Cloud." width="55%">
+</p>
+
 # GoogleCloud Plugin
+
+> **Human-led. Agent-powered. Built on Google Cloud.**
 
 > **Install once, and your coding agent gains a full Google Cloud delivery team — a vendor-objective solution designer, a GCP architect, an agentic-systems architect, plus security, SRE, and QA — wired into a design-first, security-first delivery gate.**
 
@@ -9,6 +15,43 @@ One install gives an agent (Claude, Codex, or Antigravity) five personas, eleven
 The plugin is **GCP-only and opinionated by design**. It spans the estate a builder actually touches — from Firebase and Cloud Run to BigQuery and GKE, and up through the agent frameworks that now sit on top: ADK, and the MCP / A2A / AP2 protocol stack, deployed on the Gemini Enterprise Agent Platform. Refine it for your team; keep the contract coherent while you do.
 
 > **Speed is easy. Safe speed is engineered.**
+
+---
+
+## Install
+
+One plugin, four coding assistants. Skills live in `skills/`; each harness reads its own manifest.
+
+**Claude Code**
+
+```text
+/plugin marketplace add jpantsjoha/googlecloud-plugin
+/plugin install googlecloud-plugin@googlecloud-plugin-marketplace
+```
+
+**Antigravity (Gemini)**
+
+```bash
+agy plugin install https://github.com/jpantsjoha/googlecloud-plugin
+```
+
+**Kimi Code**
+
+```text
+/plugins install https://github.com/jpantsjoha/googlecloud-plugin
+```
+
+**Codex** — no install step. Codex discovers `.agents/skills/` natively and reads `AGENTS.md` as its always-on adapter. Clone the repo and Codex picks up the contract:
+
+```bash
+git clone https://github.com/jpantsjoha/googlecloud-plugin
+```
+
+After cloning to work on the plugin itself, install the pre-commit gate once:
+
+```bash
+make hooks    # runs `make gate` (validate + manifest + lint + test) on every commit
+```
 
 ---
 

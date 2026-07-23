@@ -30,6 +30,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Cloud Run IAM", "https://cloud.google.com/run/docs/securing/managing-access"),
         ("Cloud Run Pricing", "https://cloud.google.com/run/pricing"),
         ("Cloud Run gcloud reference", "https://cloud.google.com/sdk/gcloud/reference/run"),
+        ("Cloud Run General Development Tips", "https://cloud.google.com/run/docs/tips/general"),
         ("Cloud Run Release Notes", "https://cloud.google.com/run/docs/release-notes"),
     ],
     "gke": [
@@ -38,6 +39,8 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("GKE Security Overview", "https://cloud.google.com/kubernetes-engine/docs/concepts/security-overview"),
         ("GKE Networking Overview", "https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview"),
         ("Workload Identity Federation", "https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity"),
+        ("GKE Best Practices Index", "https://cloud.google.com/kubernetes-engine/docs/best-practices"),
+        ("GKE IAM", "https://cloud.google.com/kubernetes-engine/docs/how-to/iam"),
         ("GKE Release Notes", "https://cloud.google.com/kubernetes-engine/docs/release-notes"),
     ],
     "iam": [
@@ -80,6 +83,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Cloud Armor Overview", "https://cloud.google.com/armor/docs/cloud-armor-overview"),
         ("Private Google Access", "https://cloud.google.com/vpc/docs/private-google-access"),
         ("Shared VPC Overview", "https://cloud.google.com/vpc/docs/shared-vpc"),
+        ("Network Security Architecture", "https://cloud.google.com/architecture/framework/security/network-security"),
     ],
     "logging-monitoring": [
         ("Cloud Logging Overview", "https://cloud.google.com/logging/docs/overview"),

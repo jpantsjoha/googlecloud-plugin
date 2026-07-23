@@ -82,4 +82,6 @@ gcloud run services update SERVICE_NAME \
 - [Cloud Run Overview](https://cloud.google.com/run/docs/overview/what-is-cloud-run)
 - [Cloud Run IAM](https://cloud.google.com/run/docs/securing/managing-access)
 - [Cloud Run Pricing](https://cloud.google.com/run/pricing)
+- [Cloud Run General Development Tips](https://cloud.google.com/run/docs/tips/general)
 - [gcloud run reference](https://cloud.google.com/sdk/gcloud/reference/run)
+- [Cloud Run Release Notes](https://cloud.google.com/run/docs/release-notes)

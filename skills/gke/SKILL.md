@@ -80,3 +80,6 @@ gcloud iam service-accounts add-iam-policy-binding GSA_EMAIL \
 - [GKE Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
 - [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
 - [GKE Security Overview](https://cloud.google.com/kubernetes-engine/docs/concepts/security-overview)
+- [GKE Best Practices Index](https://cloud.google.com/kubernetes-engine/docs/best-practices)
+- [GKE IAM](https://cloud.google.com/kubernetes-engine/docs/how-to/iam)
+- [GKE Release Notes](https://cloud.google.com/kubernetes-engine/docs/release-notes)
