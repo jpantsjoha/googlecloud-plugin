@@ -48,8 +48,16 @@ git clone https://github.com/jpantsjoha/googlecloud-plugin
 After cloning to work on the plugin itself, install the pre-commit gate once:
 
 ```bash
-make hooks    # runs `make gate` (validate + manifest + lint + test) on every commit
+make hooks    # runs `make gate` (validate + manifest + mermaid + lint + test) on every commit
 ```
+
+### In action
+
+The plugin running in Antigravity — asked what it is and how it delivers value, the agent introduces the team and the delivery gate:
+
+<p align="center">
+  <img src="assets/images/googlecloud-plugin-antigravity-demo.png" alt="googlecloud-plugin running in the Antigravity CLI — the agent summarises the personas and the sequential delivery gate" width="90%">
+</p>
 
 ---
 
@@ -58,15 +66,16 @@ make hooks    # runs `make gate` (validate + manifest + lint + test) on every co
 Every piece of work flows through sequential gates. No gate opens until the one before it clears. Human intent enters at the top; a human authorises production at the bottom. The AI personas scale the execution in between — they never grant their own authority.
 
 ```mermaid
+%%{init: {'theme':'neutral', 'sequence': {'useMaxWidth': true, 'diagramMarginX': 24, 'diagramMarginY': 18, 'actorMargin': 44, 'boxMargin': 15, 'boxTextMargin': 8, 'noteMargin': 12, 'messageMargin': 42}}}%%
 sequenceDiagram
     autonumber
-    actor Req as Requirement (Human intent)
-    participant Sol as solution-designer (Tier 1 · vendor-objective)
-    participant Arch as gcp-architect + agent-architect (Tier 2)
+    actor Req as Requirement
+    participant Sol as solution-designer
+    participant Arch as gcp-architect +<br/>agent-architect
     participant Sec as gcp-security
-    participant Impl as Service Skills (Cloud Run · GKE · BigQuery · …)
-    participant QA as gcp-qa (+ agent-eval)
-    actor Ops as gcp-ops (Human SRE sign-off)
+    participant Impl as Service Skills
+    participant QA as gcp-qa
+    actor Ops as gcp-ops
 
     rect rgb(238, 242, 255)
         note over Req,Sol: Solution Gate — is this even GCP? (skip if unambiguously GCP-only)
