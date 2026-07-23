@@ -6,11 +6,13 @@
 
 > **Install once, and your coding agent gains a full Google Cloud delivery team — a vendor-objective solution designer, a GCP architect, an agentic-systems architect, plus security, SRE, and QA — wired into a design-first, security-first delivery gate.**
 
+> **All the GCP skills. All the MCP servers available today. Assembled to fast-track the right architecture for your requirements.**
+
 Skill libraries for Google Cloud are everywhere. What they miss is the operating contract: who designs before anyone writes code, who signs off on least-privilege before anything deploys, what "done" means when an agent ships to a billable cloud. This plugin ships that contract, with the GCP know-how built in.
 
-One install gives an agent (Claude, Codex, or Antigravity) five personas, eleven service skills, the MCP server map, and a research pipeline that keeps every reference current. A plugin that goes stale in silence is worse than none.
+One install gives an agent (Claude, Codex, or Antigravity) six personas, eleven service skills, and a research pipeline that keeps every reference current. A plugin that goes stale in silence is worse than none.
 
-The plugin is **GCP-only and opinionated by design**. It covers the estate a builder touches — Firebase, Cloud Run, BigQuery, GKE — and the agent frameworks now built on top: ADK, and the MCP / A2A / AP2 protocol stack, deployed on the Gemini Enterprise Agent Platform. Refine it for your team. Keep the contract coherent as you do.
+The plugin is **GCP-only and opinionated by design**. It covers the services a builder reaches for — Firebase, Cloud Run, BigQuery, GKE — and the agent frameworks now built on top: ADK, and the MCP / A2A / AP2 protocol stack, deployed on the Gemini Enterprise Agent Platform. Refine it for your team. Keep the contract coherent as you do.
 
 > **Speed is easy. Safe speed is engineered.**
 
@@ -50,8 +52,6 @@ After cloning to work on the plugin itself, install the pre-commit gate once:
 ```bash
 make hooks    # runs `make gate` (validate + manifest + mermaid + lint + test) on every commit
 ```
-
-### In action
 
 The plugin running in Antigravity — asked what it is and how it delivers value, the agent introduces the team and the delivery gate:
 
@@ -128,7 +128,7 @@ The rule underneath every gate: **infer intent, never infer permission.** An AI 
 
 ## What you install
 
-**Five personas** — the team:
+**Six personas** — the team:
 
 | Persona | Tier | Owns |
 | :--- | :--- | :--- |
@@ -166,7 +166,7 @@ Freshness is a feature, not a chore: `make check` runs weekly and flags any GCP 
 
 Created and maintained by **Jaroslav Pantsjoha (JP)** — Technical Director and Enterprise Agent Solution Architect at Cognizant, Google Developer Expert (Google Cloud), speaker, and author of *Building the Agentic Enterprise on Google Cloud* (Packt).
 
-I built this to make my own Google Cloud work repeatable, then to share it. The model is the easy part; the durable engineering is the harness around it — the skills, rules, MCP servers, gates, and evals. GCP patterns outlast the week's model release, so they are worth encoding once and reusing. This plugin is that baseline aimed squarely at Google Cloud — the GCP companion to my [`join-the-team`](https://github.com/jpantsjoha/ai-native-developer-experience) harness. Part of the **#HarnessEngineering** body of work and the Google Cloud / GDE community.
+I built this to make my own Google Cloud work repeatable, then to share it. The model is the easy part; the durable engineering is the harness around it — the skills, rules, MCP servers, gates, and evals. GCP patterns outlast the week's model release, so they are worth encoding once and reusing. This plugin is that baseline aimed squarely at Google Cloud — the GCP companion to my [`join-the-team`](https://github.com/jpantsjoha/ai-native-developer-experience) harness. Part of the **#HarnessEngineering** body of work — the engineering discipline behind the Agentic Enterprise.
 
 - LinkedIn: [uk.linkedin.com/in/johas](https://uk.linkedin.com/in/johas)
 - Google Developer Expert: [me.developers.google.com/u/jpantsjoha](https://me.developers.google.com/u/jpantsjoha)

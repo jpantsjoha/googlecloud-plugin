@@ -59,20 +59,23 @@ gcloud auth application-default login --impersonate-service-account=SA@PROJECT.i
 Google's MCP Toolbox for Databases enables LLM agents to query Cloud SQL, AlloyDB, Spanner, BigQuery, and more safely.
 
 ```bash
-# Install
-pip install toolbox-core
+# Run the toolbox MCP server (requires a tools.yaml pointing at your database)
+# Tested 2026-07-23: this is the correct package. Full docs: https://mcp-toolbox.dev
+npx -y @toolbox-sdk/server --stdio --config tools.yaml
 
-# Configure (toolbox.yaml)
+# Example tools.yaml (BigQuery source)
 # sources:
-#   my-pg-source:
-#     kind: cloud-sql-postgres
+#   my-bq:
+#     kind: bigquery
 #     project: PROJECT_ID
-#     region: REGION
-#     instance: INSTANCE_NAME
-#     database: DB_NAME
-#     user: DB_USER
-#     password: ${DB_PASSWORD}
+# tools:
+#   run_query:
+#     source: my-bq
+#     description: Run a read-only BigQuery query
+#     statement: SELECT ...
 ```
+
+> **Package note (tested 2026-07-23):** use `@toolbox-sdk/server` via npx — **not** `pip install toolbox-core` / `uvx toolbox-core`. `toolbox-core` is the Python SDK *library* for building apps; it has no server CLI entry point.
 
 - [MCP Toolbox for Databases (announcement)](https://cloud.google.com/blog/products/ai-machine-learning/mcp-toolbox-for-databases-now-supports-model-context-protocol)
 - [GitHub: googleapis/genai-toolbox](https://github.com/googleapis/genai-toolbox)
