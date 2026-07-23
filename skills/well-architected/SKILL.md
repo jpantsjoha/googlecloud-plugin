@@ -74,4 +74,4 @@ Six pillars that every GCP workload should be evaluated against. Referenced in e
 - [Security Pillar](https://cloud.google.com/architecture/framework/security)
 - [Reliability Pillar](https://cloud.google.com/architecture/framework/reliability)
 - [Cost Optimization Pillar](https://cloud.google.com/architecture/framework/cost-optimization)
-- [Performance Pillar](https://cloud.google.com/architecture/framework/performance)
+- [Performance Optimization Pillar](https://cloud.google.com/architecture/framework/performance-optimization)

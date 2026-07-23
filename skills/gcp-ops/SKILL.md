@@ -80,4 +80,4 @@ Owner: gcp-ops
 - [SRE Book — Google](https://sre.google/sre-book/table-of-contents/)
 - [Cloud Monitoring Overview](https://cloud.google.com/monitoring/docs/monitoring-overview)
 - [Cloud Operations Suite](https://cloud.google.com/products/operations)
-- [GCP Incident Management](https://cloud.google.com/architecture/incident-management)
+- [SRE Incident Response (Workbook)](https://sre.google/workbook/incident-response/)

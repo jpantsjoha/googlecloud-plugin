@@ -50,7 +50,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("BigQuery Access Control", "https://cloud.google.com/bigquery/docs/access-control"),
         ("BigQuery Pricing", "https://cloud.google.com/bigquery/pricing"),
         ("BigQuery Performance Best Practices", "https://cloud.google.com/bigquery/docs/best-practices-performance-overview"),
-        ("BigQuery Storage Overview", "https://cloud.google.com/bigquery/docs/storage-overview"),
+        ("BigQuery Storage Best Practices", "https://cloud.google.com/bigquery/docs/best-practices-storage"),
     ],
     "cloud-storage": [
         ("Cloud Storage Overview", "https://cloud.google.com/storage/docs/introduction"),
@@ -80,13 +80,13 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Cloud Monitoring Overview", "https://cloud.google.com/monitoring/docs/monitoring-overview"),
         ("Cloud Trace Overview", "https://cloud.google.com/trace/docs/overview"),
         ("Cloud Profiler Overview", "https://cloud.google.com/profiler/docs/about-profiler"),
-        ("Error Reporting Overview", "https://cloud.google.com/error-reporting/docs/overview"),
+        ("Error Reporting", "https://cloud.google.com/error-reporting/docs"),
         ("Log-based Metrics", "https://cloud.google.com/logging/docs/logs-based-metrics"),
     ],
     "mcp-servers": [
-        ("MCP Toolbox for Databases", "https://googleapis.github.io/genai-toolbox/"),
+        ("MCP Toolbox for Databases (announcement)", "https://cloud.google.com/blog/products/ai-machine-learning/mcp-toolbox-for-databases-now-supports-model-context-protocol"),
         ("GenAI Toolbox GitHub", "https://github.com/googleapis/genai-toolbox"),
-        ("Google MCP Servers Repository", "https://github.com/googleapis/mcp-toolbox-for-databases"),
+        ("MCP Servers Registry", "https://github.com/modelcontextprotocol/servers"),
         ("Model Context Protocol Spec", "https://modelcontextprotocol.io/introduction"),
     ],
     "well-architected": [
@@ -95,7 +95,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("Security Pillar", "https://cloud.google.com/architecture/framework/security"),
         ("Reliability Pillar", "https://cloud.google.com/architecture/framework/reliability"),
         ("Cost Optimization Pillar", "https://cloud.google.com/architecture/framework/cost-optimization"),
-        ("Performance Pillar", "https://cloud.google.com/architecture/framework/performance"),
+        ("Performance Optimization Pillar", "https://cloud.google.com/architecture/framework/performance-optimization"),
     ],
     "terraform-gcp": [
         ("Cloud Foundation Toolkit", "https://cloud.google.com/foundation-toolkit"),
@@ -124,7 +124,7 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("SRE Book — Google", "https://sre.google/sre-book/table-of-contents/"),
         ("Cloud Monitoring Overview", "https://cloud.google.com/monitoring/docs/monitoring-overview"),
         ("Cloud Operations Suite", "https://cloud.google.com/products/operations"),
-        ("GCP Incident Management", "https://cloud.google.com/architecture/incident-management"),
+        ("SRE Incident Response (Workbook)", "https://sre.google/workbook/incident-response/"),
     ],
     "gcp-qa": [
         ("Cloud Build Overview", "https://cloud.google.com/build/docs/overview"),

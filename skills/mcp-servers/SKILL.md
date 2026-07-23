@@ -74,7 +74,7 @@ pip install toolbox-core
 #     password: ${DB_PASSWORD}
 ```
 
-- [MCP Toolbox for Databases](https://googleapis.github.io/genai-toolbox/)
+- [MCP Toolbox for Databases (announcement)](https://cloud.google.com/blog/products/ai-machine-learning/mcp-toolbox-for-databases-now-supports-model-context-protocol)
 - [GitHub: googleapis/genai-toolbox](https://github.com/googleapis/genai-toolbox)
 
 ## Self-Hosted / Community MCPs
@@ -95,6 +95,6 @@ pip install toolbox-core
 
 ## References
 
-- [GenAI Toolbox Docs](https://googleapis.github.io/genai-toolbox/)
+- [GenAI Toolbox Docs](https://github.com/googleapis/genai-toolbox/blob/main/README.md)
 - [Model Context Protocol Spec](https://modelcontextprotocol.io/introduction)
-- [Google MCP Servers GitHub](https://github.com/googleapis/mcp-toolbox-for-databases)
+- [MCP Servers Registry](https://github.com/modelcontextprotocol/servers)

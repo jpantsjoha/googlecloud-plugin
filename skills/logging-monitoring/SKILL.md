@@ -94,4 +94,4 @@ jsonPayload.reason="OOMKilling"
 - [Cloud Monitoring Overview](https://cloud.google.com/monitoring/docs/monitoring-overview)
 - [Cloud Trace Overview](https://cloud.google.com/trace/docs/overview)
 - [Log-based Metrics](https://cloud.google.com/logging/docs/logs-based-metrics)
-- [Error Reporting](https://cloud.google.com/error-reporting/docs/overview)
+- [Error Reporting](https://cloud.google.com/error-reporting/docs)
