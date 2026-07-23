@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "gcloud": {
+      "command": "npx",
+      "args": ["-y", "@google-cloud/gcloud-mcp"],
+      "env": {
+        "CLOUDSDK_CORE_PROJECT": "${GCP_PROJECT_ID}"
+      }
+    },
+    "genai-toolbox": {
+      "command": "uvx",
+      "args": ["toolbox-core", "--tools-file", "${TOOLBOX_TOOLS_FILE}"],
+      "env": {
+        "GCP_PROJECT_ID": "${GCP_PROJECT_ID}",
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
+        "TOOLBOX_TOOLS_FILE": "${TOOLBOX_TOOLS_FILE}"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "googlecloud-plugin",
+  "description": "A full Google Cloud delivery team for your coding agent: vendor-objective solution designer, GCP architect, agentic-systems architect (ADK / Agent Runtime / MCP / A2A / AP2), plus security, SRE, and QA — wired into a design-first, security-first delivery gate. Eleven service skills (Cloud Run, GKE, IAM, BigQuery, Cloud Storage, Vertex AI, networking, observability), MCP server setup, and a self-validating research pipeline that keeps every reference current.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Jaroslav Pantsjoha",
+    "url": "https://uk.linkedin.com/in/johas"
+  },
+  "homepage": "https://github.com/jpantsjoha/googlecloud-plugin",
+  "repository": "https://github.com/jpantsjoha/googlecloud-plugin",
+  "license": "MIT",
+  "keywords": [
+    "google-cloud",
+    "gcp",
+    "gcp-skills",
+    "cloud-run",
+    "gke",
+    "bigquery",
+    "vertex-ai",
+    "iam",
+    "cloud-storage",
+    "terraform",
+    "well-architected",
+    "mcp",
+    "adk",
+    "a2a",
+    "ap2",
+    "agentic",
+    "agent-architecture",
+    "gemini",
+    "geap",
+    "sre",
+    "devsecops",
+    "solution-architecture",
+    "claude-code",
+    "antigravity",
+    "codex"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "_about": "Google Cloud MCP self-configuration. Agents reach GCP through named MCP servers, never raw credentials. Auth is Application Default Credentials (ADC) or a service-account key referenced by PATH — never a value in this file. Point each server at ONE source, expose ONLY the tools it needs. Verify package currency before pinning; this space moves fast (snapshot 2026-07). See skills/mcp-servers/SKILL.md for setup + troubleshooting.",
+
+  "mcpServers": {
+    "genai-toolbox": {
+      "_note": "Google's MCP Toolbox for Databases (genai-toolbox). One governed, read-oriented seam over BigQuery / Cloud SQL / Spanner / AlloyDB. Credentials via ADC in the environment, never hardcoded.",
+      "command": "uvx",
+      "args": ["toolbox-core", "--tools-file", "${TOOLBOX_TOOLS_FILE}"],
+      "env": {
+        "GCP_PROJECT_ID": "${GCP_PROJECT_ID}",
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
+        "TOOLBOX_TOOLS_FILE": "${TOOLBOX_TOOLS_FILE}"
+      },
+      "_exposedTools": [
+        "list_datasets",
+        "describe_schema",
+        "run_readonly_query"
+      ],
+      "_source": "https://github.com/googleapis/genai-toolbox",
+      "_exampleSources": {
+        "bigquery": "read-only analytics queries over a dataset",
+        "cloudsql": "managed PostgreSQL/MySQL reads",
+        "spanner": "strongly-consistent relational reads",
+        "alloydb": "PostgreSQL-compatible operational reads"
+      }
+    },
+
+    "gcloud": {
+      "_note": "Broad gcloud CLI seam for GCP resource operations the managed servers do not cover. Requires a local, authenticated gcloud (gcloud auth application-default login). Least-privilege: run under a scoped service account, not owner.",
+      "command": "npx",
+      "args": ["-y", "@google-cloud/gcloud-mcp"],
+      "env": {
+        "CLOUDSDK_CORE_PROJECT": "${GCP_PROJECT_ID}"
+      },
+      "_exposedTools": [
+        "gcloud_run",
+        "gcloud_describe",
+        "gcloud_list"
+      ],
+      "_verify": "Confirm the current package name/availability before pinning — Google's managed + community gcloud MCP surface is evolving."
+    }
+  }
+}

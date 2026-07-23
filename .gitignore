@@ -1,3 +1,30 @@
+# Plugin working directory — planning, research drafts, audits (never public)
+_plugin/
+
+# Claude agent files — construction guide and session advisories
+.claude/local-CLAUDE.md
+
+# Research cache — raw crawl output and hash cache
+research/raw/
+research/.hash-cache.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+venv/
+.venv/
+*.egg-info/
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+
 # Local .terraform directories
 .terraform/
 

@@ -1,0 +1,159 @@
+name: googlecloud-plugin
+version: 0.1.0
+description: >
+  Unified Google Cloud plugin. Installs a full operational GCP team:
+  vendor-agnostic solution designer, GCP architect, security enforcer,
+  SRE/ops, and QA — plus 11 service skills and MCP server configurations.
+  Design-first, security-first, GCP Well-Architected aligned.
+author: jp
+license: MIT
+min_harness_version: "0.1"
+
+# ─── Persona skills (load in order — Tier 1 before Tier 2 before Tier 3) ────
+personas:
+  - name: solution-designer
+    path: skills/solution-designer/SKILL.md
+    tier: 1
+    gate: solution
+  - name: gcp-architect
+    path: skills/gcp-architect/SKILL.md
+    tier: 2
+    gate: gcp-design
+  - name: agent-architect
+    path: skills/agent-architect/SKILL.md
+    tier: 2
+    gate: gcp-design
+    owns_eval: true
+  - name: gcp-security
+    path: skills/gcp-security/SKILL.md
+    tier: 3
+    gate: security
+  - name: gcp-ops
+    path: skills/gcp-ops/SKILL.md
+    tier: 3
+    gate: operational-readiness
+  - name: gcp-qa
+    path: skills/gcp-qa/SKILL.md
+    tier: 3
+    gate: quality
+
+# ─── Service skills (first-wave — v0.1) ─────────────────────────────────────
+skills:
+  - name: cloud-run
+    path: skills/cloud-run/SKILL.md
+    wave: 1
+    status: normalized
+  - name: gke
+    path: skills/gke/SKILL.md
+    wave: 1
+    status: normalized
+  - name: iam
+    path: skills/iam/SKILL.md
+    wave: 1
+    status: normalized
+  - name: bigquery
+    path: skills/bigquery/SKILL.md
+    wave: 1
+    status: normalized
+  - name: cloud-storage
+    path: skills/cloud-storage/SKILL.md
+    wave: 1
+    status: normalized
+  - name: vertex-ai
+    path: skills/vertex-ai/SKILL.md
+    wave: 1
+    status: normalized
+  - name: networking
+    path: skills/networking/SKILL.md
+    wave: 1
+    status: normalized
+  - name: logging-monitoring
+    path: skills/logging-monitoring/SKILL.md
+    wave: 1
+    status: normalized
+
+# ─── Cross-cutting skills ─────────────────────────────────────────────────────
+  - name: mcp-servers
+    path: skills/mcp-servers/SKILL.md
+    wave: 1
+    status: normalized
+  - name: well-architected
+    path: skills/well-architected/SKILL.md
+    wave: 1
+    status: normalized
+  - name: terraform-gcp
+    path: skills/terraform-gcp/SKILL.md
+    wave: 1
+    status: normalized
+
+# ─── MCP server listings ──────────────────────────────────────────────────────
+mcp_servers:
+  google_managed:
+    - id: google-cloud-run
+      capability: Deploy/manage Cloud Run services
+      auth: ADC
+      status: available
+    - id: google-bigquery
+      capability: Query/manage BigQuery
+      auth: ADC
+      status: available
+    - id: google-gke
+      capability: GKE cluster management
+      auth: ADC + kubeconfig
+      status: available
+    - id: google-storage
+      capability: Cloud Storage bucket ops
+      auth: ADC
+      status: available
+    - id: google-vertex-ai
+      capability: Vertex AI model/endpoint management
+      auth: ADC
+      status: available
+    - id: google-iam
+      capability: IAM policy management
+      auth: ADC
+      status: available
+    - id: google-logging
+      capability: Cloud Logging query/ingest
+      auth: ADC
+      status: available
+    - id: google-monitoring
+      capability: Metrics, alerting policy management
+      auth: ADC
+      status: available
+  community:
+    - id: genai-toolbox
+      capability: Database access for LLM agents (Cloud SQL, Spanner, BigQuery, AlloyDB)
+      repo: https://github.com/googleapis/genai-toolbox
+      auth: ADC
+      status: available
+
+# ─── Validation ───────────────────────────────────────────────────────────────
+validation:
+  gate_command: make gate
+  scripts:
+    - scripts/validate_skills.py
+    - scripts/check_links.py
+    - scripts/freshness_check.py
+  test_runner: pytest tests/skill-smoke-tests/
+
+# ─── Research pipeline ────────────────────────────────────────────────────────
+research:
+  crawl_script: scripts/research_crawl.py
+  sources_index: research/SOURCES.md
+  coverage_matrix: research/coverage-matrix.md
+  freshness_schedule: weekly
+
+# ─── Coverage targets for v0.1 ────────────────────────────────────────────────
+coverage_targets:
+  v0.1:
+    required_status: validated
+    services:
+      - cloud-run
+      - gke
+      - iam
+      - bigquery
+      - cloud-storage
+      - vertex-ai
+      - networking
+      - logging-monitoring

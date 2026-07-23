@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: the plugin validation gate.
+#
+# Runs `make gate` — validate (SKILL.md contracts) + manifest (installable across
+# Claude / Antigravity / Codex / Kimi) + lint (reference URLs resolve) + test
+# (smoke tests). Mirrors CI so a broken plugin never reaches a commit.
+#
+# Version-controlled under .githooks/ so it travels with the repo.
+# Activate once after cloning:
+#
+#     make hooks      # or: git config core.hooksPath .githooks
+#
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "pre-commit: running 'make gate' (validate + manifest + lint + test)..."
+
+if ! command -v make >/dev/null 2>&1; then
+  echo "pre-commit: ERROR - 'make' not found; cannot run the gate." >&2
+  exit 1
+fi
+
+if ! make gate; then
+  echo "" >&2
+  echo "pre-commit: BLOCKED - the gate failed. Fix the violations above and re-commit." >&2
+  echo "  (bypass only if you know what you are doing: git commit --no-verify)" >&2
+  exit 1
+fi
+
+echo "pre-commit: gate passed."

@@ -1,0 +1,47 @@
+{
+  "name": "googlecloud-plugin",
+  "version": "0.1.0",
+  "description": "A full Google Cloud delivery team for your coding agent: solution designer, GCP architect, agentic-systems architect (ADK / Agent Runtime / MCP / A2A / AP2), plus security, SRE, and QA — wired into a design-first, security-first delivery gate, with eleven service skills and MCP server setup.",
+  "author": {
+    "name": "Jaroslav Pantsjoha",
+    "url": "https://uk.linkedin.com/in/johas"
+  },
+  "homepage": "https://github.com/jpantsjoha/googlecloud-plugin",
+  "repository": "https://github.com/jpantsjoha/googlecloud-plugin",
+  "license": "MIT",
+  "keywords": [
+    "google-cloud",
+    "gcp",
+    "cloud-run",
+    "gke",
+    "bigquery",
+    "vertex-ai",
+    "iam",
+    "terraform",
+    "well-architected",
+    "mcp",
+    "adk",
+    "a2a",
+    "ap2",
+    "agentic",
+    "gemini",
+    "sre"
+  ],
+  "skills": "./skills/",
+  "sessionStart": {
+    "skill": "solution-designer"
+  },
+  "skillInstructions": "Kimi Code tool mapping for this plugin's skills:\n\n- When a skill says to ask the user or present multiple-choice options, call Kimi Code's `AskUserQuestion` tool.\n- When a skill refers to `TodoWrite`, use Kimi Code's `TodoList` tool.\n- When a skill dispatches an implementer/reviewer subagent, use Kimi Code's `Agent` tool (`coder`, `explore`, or `plan`).\n- When a skill refers to the `Skill` tool, use Kimi Code's native `Skill` tool.\n- Use Kimi Code's `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`, `FetchURL`, and `WebSearch` tools by their actual exposed names.\n- Gate discipline is non-negotiable: design before code (solution-designer -> gcp-architect/agent-architect), security review before implementation (gcp-security), and `make gate` before any release (gcp-qa).",
+  "interface": {
+    "displayName": "GoogleCloud Plugin",
+    "shortDescription": "A full Google Cloud delivery team for your coding agent.",
+    "longDescription": "Install once and gain a vendor-objective solution designer, a GCP architect, an agentic-systems architect (ADK / A2A / AP2 / MCP), plus security, SRE, and QA — wired into a design-first, security-first delivery gate. Eleven service skills, MCP setup, and a self-validating research pipeline.",
+    "developerName": "Jaroslav Pantsjoha",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/jpantsjoha/googlecloud-plugin"
+  }
+}
