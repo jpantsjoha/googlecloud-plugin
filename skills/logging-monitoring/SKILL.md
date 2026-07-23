@@ -88,6 +88,14 @@ resource.type="k8s_container"
 jsonPayload.reason="OOMKilling"
 ```
 
+## Safety Rules
+
+- **Log sinks can incur cost.** Exporting logs to BigQuery, Cloud Storage, or Pub/Sub bills for storage and, in BigQuery's case, for queries over the exported data. Scope every sink with a tight `--log-filter` — never export `severity>=DEFAULT` (i.e. everything) to a billable destination without intent.
+- **Scope log filters narrowly.** Broad filters (no `resource.type`, no `severity`) match high-volume logs and drive both ingestion and export cost. Always pin `resource.type` and the minimum `severity` you need.
+- **Exclusion filters reduce ingestion cost.** Use log exclusions to drop high-volume, low-value logs (e.g. health-check 200s) before they are ingested and billed.
+- **Never log secrets.** Application logs routed to Cloud Logging are readable by anyone with `roles/logging.viewer`. Redact tokens, keys, and PII at the source; do not rely on downstream filtering.
+- **Retention has a cost curve.** Default retention is free to a point; extended retention on `_Default`/custom buckets bills per GB. Set retention deliberately per bucket.
+
 ## References
 
 - [Cloud Logging Overview](https://cloud.google.com/logging/docs/overview)

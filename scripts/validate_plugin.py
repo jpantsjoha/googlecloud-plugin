@@ -57,6 +57,11 @@ def check_gemini(errors: list[str]) -> None:
         elif not (ROOT / ctx).exists():
             errors.append(f"gemini-extension.json: contextFileName '{ctx}' does not exist")
 
+    # AGY's native validator (agy plugin validate) requires a root plugin.json.
+    root_manifest = _load_json(ROOT / "plugin.json", errors)
+    if root_manifest and root_manifest.get("name") != EXPECTED_NAME:
+        errors.append(f"root plugin.json: name '{root_manifest.get('name')}' != '{EXPECTED_NAME}'")
+
 
 def check_kimi(errors: list[str]) -> None:
     m = _load_json(ROOT / ".kimi-plugin" / "plugin.json", errors)
@@ -81,6 +86,36 @@ def check_codex(errors: list[str]) -> None:
         errors.append("MISSING  .agents/skills (Codex skill discovery path)")
     elif not list(agents_skills.glob("*/SKILL.md")):
         errors.append(".agents/skills resolves but contains no SKILL.md files")
+
+
+def check_mcp_consistency(errors: list[str]) -> None:
+    """The three MCP manifests must declare the same server names (drift guard).
+
+    .mcp.json (Claude Code), mcp_config.json (AGY), and gemini-extension.json
+    inline (Gemini extension runtime) are read by different harnesses — they
+    must not drift apart.
+    """
+    def servers(path: Path, key_path: tuple[str, ...]) -> set[str] | None:
+        m = _load_json(path, errors)
+        if m is None:
+            return None
+        node = m
+        for k in key_path:
+            node = node.get(k, {}) if isinstance(node, dict) else {}
+        return set(node.keys()) if isinstance(node, dict) else set()
+
+    claude = servers(ROOT / ".mcp.json", ("mcpServers",))
+    agy = servers(ROOT / "mcp_config.json", ("mcpServers",))
+    gemini = servers(ROOT / "gemini-extension.json", ("mcpServers",))
+
+    present = {n: s for n, s in (("claude .mcp.json", claude), ("agy mcp_config.json", agy), ("gemini inline", gemini)) if s is not None}
+    if len(present) > 1:
+        baseline_name, baseline = next(iter(present.items()))
+        for name, s in present.items():
+            if s != baseline:
+                errors.append(
+                    f"MCP drift: '{name}' servers {sorted(s)} != '{baseline_name}' {sorted(baseline)}"
+                )
 
 
 def check_context_files(errors: list[str]) -> None:
@@ -116,6 +151,7 @@ def main() -> None:
     check_gemini(errors)
     check_kimi(errors)
     check_codex(errors)
+    check_mcp_consistency(errors)
     check_context_files(errors)
     check_yaml_index_consistency(errors)
 

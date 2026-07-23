@@ -2,6 +2,22 @@
 
 All skills in this plugin authenticate via one of three patterns. No credential values are ever stored — paths only.
 
+## Bootstrap: infer from the environment, prompt only if missing
+
+The plugin does **not** ship an `init` that logs you in or hardcodes a project. It infers your GCP context from the environment and proceeds — especially for read-only work — and prompts for a login only when context is genuinely absent. Run:
+
+```bash
+make preflight     # read-only; detects project + credentials, never logs in
+```
+
+**Project precedence:** `GOOGLE_CLOUD_PROJECT` → `GCP_PROJECT_ID` → `CLOUDSDK_CORE_PROJECT` → `gcloud config get-value project` → prompt.
+
+**Credential precedence:** `GOOGLE_APPLICATION_CREDENTIALS` (path) → ADC file (`~/.config/gcloud/application_default_credentials.json`) → active `gcloud` account → prompt.
+
+If context is present, skills proceed. If missing, `preflight` prints the exact command (`gcloud auth application-default login`, `gcloud config set project …`) — it never installs the SDK for you (system-level) and never stores a credential value.
+
+**Read-only vs mutation:** read-only discovery may proceed on inferred context; any billable or mutating action still warns and confirms per the gate, and stops if credentials are absent.
+
 ## Pattern 1 — Application Default Credentials (ADC) — Preferred
 
 ```bash

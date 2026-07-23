@@ -1,4 +1,4 @@
-.PHONY: all gate validate manifest lint test check crawl crawl-dry hooks help
+.PHONY: all gate validate manifest preflight lint test check crawl crawl-dry hooks help
 
 PYTHON  := python3
 SCRIPTS := scripts
@@ -20,6 +20,10 @@ validate:
 manifest:
 	@echo "==> Validating plugin packaging (Claude · Antigravity · Codex · Kimi)..."
 	@$(PYTHON) $(SCRIPTS)/validate_plugin.py
+
+preflight:
+	@echo "==> Preflight: infer GCP context from environment (read-only)..."
+	@$(PYTHON) $(SCRIPTS)/preflight.py
 
 lint:
 	@echo "==> Checking reference URLs..."

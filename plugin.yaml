@@ -42,49 +42,49 @@ skills:
   - name: cloud-run
     path: skills/cloud-run/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: gke
     path: skills/gke/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: iam
     path: skills/iam/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: bigquery
     path: skills/bigquery/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: cloud-storage
     path: skills/cloud-storage/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: vertex-ai
     path: skills/vertex-ai/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: networking
     path: skills/networking/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: logging-monitoring
     path: skills/logging-monitoring/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
 
 # ─── Cross-cutting skills ─────────────────────────────────────────────────────
   - name: mcp-servers
     path: skills/mcp-servers/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: well-architected
     path: skills/well-architected/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
   - name: terraform-gcp
     path: skills/terraform-gcp/SKILL.md
     wave: 1
-    status: stub
+    status: normalized
 
 # ─── MCP server listings ──────────────────────────────────────────────────────
 mcp_servers:
