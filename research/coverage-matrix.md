@@ -16,6 +16,7 @@ Last updated: 2026-07-23 (Phase 1 crawl complete — 75/75 sources resolve, 70 u
 |---------|-------|--------|-------|
 | Solution Designer | `skills/solution-designer/` | normalized | Frontmatter valid, references live, gate green |
 | GCP Architect | `skills/gcp-architect/` | normalized | Frontmatter valid, references live, gate green |
+| Agent Architect | `skills/agent-architect/` | normalized | Tier 2 agentic specialist; owns agent-eval; references live, gate green |
 | GCP Security | `skills/gcp-security/` | normalized | Frontmatter valid, references live, gate green |
 | GCP Ops | `skills/gcp-ops/` | normalized | Frontmatter valid, references live, gate green |
 | GCP QA | `skills/gcp-qa/` | normalized | Frontmatter valid, references live, gate green |

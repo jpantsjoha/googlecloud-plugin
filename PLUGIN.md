@@ -28,6 +28,7 @@ Route agent prompts to the correct skill using the trigger list below. When in d
 | Trigger Pattern | Skill |
 |----------------|-------|
 | GCP HLD, GCP design, architect on GCP, GCP ADR | `skills/gcp-architect/` |
+| Agentic system, multi-agent, ADK, Agent Runtime, A2A/AP2/MCP, agent eval | `skills/agent-architect/` |
 | Well-Architected Framework review, GCP pillars | `skills/well-architected/` |
 | Terraform on GCP, IaC GCP, CFT, landing zone | `skills/terraform-gcp/` |
 
@@ -68,8 +69,9 @@ New work or feature request
 [SOLUTION GATE] solution-designer
     Skip if: unambiguously GCP-only, no cross-vendor components
     ↓
-[GCP DESIGN GATE] gcp-architect
+[GCP DESIGN GATE] gcp-architect (+ agent-architect if agentic)
     Block if: no GCP HLD, or HLD contradicts solution design
+    Agentic workloads: agent-architect defines topology, protocols, model, eval set
     ↓
 [SECURITY GATE] gcp-security
     Block if: IAM over-permissive, secrets in code, GCP risks unaddressed
@@ -77,8 +79,9 @@ New work or feature request
 [IMPLEMENTATION] service skills
     Warn before every billable action
     ↓
-[QUALITY GATE] gcp-qa  →  make gate
+[QUALITY GATE] gcp-qa  →  make gate  (+ agent-architect agent-eval if agentic)
     Block if: validate/lint/test fails, acceptance criteria unmet
+    Agentic: agent eval (groundedness, task success, trajectory) must pass
     ↓
 [OPERATIONAL READINESS GATE] gcp-ops
     Block if: no SLO, no alerting, no runbook for production workload

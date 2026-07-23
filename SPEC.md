@@ -487,6 +487,7 @@ Two tiers of design authority, then delivery + assurance.
 | Persona | Skill | Role | Gate Responsibility |
 |---------|-------|------|---------------------|
 | **GCP Architect** | `skills/gcp-architect/` | 100% Google Cloud focused. Receives the GCP-scoped portion of the solution-designer HLD. Design-first within GCP. Generates GCP-specific HLD/LLD, authors GCP ADRs. Aware of all GCP repos, examples, patterns, policies, principles, and MCPs. Does not make vendor-selection decisions — those belong to solution-designer. | **GCP Design Gate** — blocks GCP implementation without a current GCP HLD aligned to the solution design |
+| **Agent Architect** | `skills/agent-architect/` | Agentic-systems specialist, sibling to gcp-architect. Owns agentic application design on the Gemini Enterprise Agent Platform (GEAP) — topologies, ADK, Agent Runtime, MCP/A2A/AP2 protocol stack, grounding/RAG, memory, HITL, model selection. GCP is always the deployment target. Uniquely also **runs agent evaluation** (design + execution). See ADR-006. | **GCP Design Gate** (agentic specialist) + **agent-eval** contribution to the Quality Gate |
 
 **Tier 3 — Delivery + Assurance (cross-cutting)**
 

@@ -30,6 +30,8 @@ mcp_servers:
 
 Unified ML platform for training, deploying, and serving models — including Gemini, generative AI, and custom models.
 
+> **Naming currency:** the platform was renamed to the **Gemini Enterprise Agent Platform (GEAP)** at Next '26 (2026-04-22). The rebrand is branding-only — `vertex-ai` persists in gcloud groups, SDK imports, API hostnames, Terraform resources, and doc URLs, so this skill keeps them. For **agentic** system design (ADK, Agent Runtime, multi-agent, MCP/A2A/AP2, agent evaluation), route to `agent-architect`; this skill covers platform/model mechanics.
+
 ## Key Products
 
 | Product | Use |

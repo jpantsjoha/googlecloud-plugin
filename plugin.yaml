@@ -19,6 +19,11 @@ personas:
     path: skills/gcp-architect/SKILL.md
     tier: 2
     gate: gcp-design
+  - name: agent-architect
+    path: skills/agent-architect/SKILL.md
+    tier: 2
+    gate: gcp-design
+    owns_eval: true
   - name: gcp-security
     path: skills/gcp-security/SKILL.md
     tier: 3

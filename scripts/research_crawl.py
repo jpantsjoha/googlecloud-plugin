@@ -131,6 +131,29 @@ SOURCES: dict[str, list[tuple[str, str]]] = {
         ("GCP Testing Best Practices", "https://cloud.google.com/architecture/framework/operational-excellence"),
         ("Artifact Registry Overview", "https://cloud.google.com/artifact-registry/docs/overview"),
     ],
+    "agent-architect": [
+        # Platform (GEAP — legacy vertex-ai paths persist per rebrand)
+        ("Agent Runtime / Agent Engine Overview", "https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview"),
+        ("Agent Engine Deploy", "https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/deploy"),
+        ("Agent Engine Memory Bank", "https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview"),
+        ("Agent Engine Evaluation", "https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/eval/overview"),
+        ("Gen AI Evaluation Service", "https://cloud.google.com/vertex-ai/generative-ai/docs/models/evaluation-overview"),
+        ("Agent Builder Overview", "https://cloud.google.com/vertex-ai/generative-ai/docs/agent-builder/overview"),
+        ("Gemini Enterprise", "https://cloud.google.com/gemini-enterprise"),
+        # Frameworks
+        ("Agent Development Kit (ADK) Docs", "https://adk.dev/"),
+        ("ADK Python", "https://github.com/google/adk-python"),
+        ("ADK Samples", "https://github.com/google/adk-samples"),
+        ("ADK Multi-Agent Patterns", "https://google.github.io/adk-docs/agents/multi-agents/"),
+        ("Agent Starter Pack", "https://github.com/GoogleCloudPlatform/agent-starter-pack"),
+        ("GCP Generative AI Samples", "https://github.com/GoogleCloudPlatform/generative-ai"),
+        # Protocols
+        ("A2A Protocol (Agent-to-Agent)", "https://github.com/a2aproject/A2A"),
+        ("A2A Protocol Docs", "https://a2aproject.github.io/A2A/"),
+        ("AP2 (Agent Payments Protocol)", "https://github.com/google-agentic-commerce/AP2"),
+        ("AP2 Protocol Site", "https://ap2-protocol.org/"),
+        ("Model Context Protocol Spec", "https://modelcontextprotocol.io/introduction"),
+    ],
 }
 
 
@@ -201,10 +224,48 @@ def crawl_service(
     return results
 
 
+def _render_service_block(service: str, entries: list[dict]) -> list[str]:
+    block = [f"## {service}"]
+    for e in entries:
+        block += [
+            f"### {e['title']}",
+            f"- **URL**: {e['url']}",
+            f"- **Retrieved**: {e['retrieved']}",
+            f"- **Hash**: {e['hash']}",
+            f"- **Status**: {e['status']}",
+            "",
+        ]
+    return block
+
+
+def _parse_existing_service_blocks() -> dict[str, list[str]]:
+    """Parse existing SOURCES.md into {service: rendered_block_lines}.
+
+    Preserves services not touched by a partial crawl so a --service run
+    never wipes the rest of the audit trail.
+    """
+    if not SOURCES_FILE.exists():
+        return {}
+    blocks: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in SOURCES_FILE.read_text().splitlines():
+        if line.startswith("## "):
+            current = line[3:].strip()
+            blocks[current] = [line]
+        elif current is not None:
+            blocks[current].append(line)
+    return blocks
+
+
 def write_sources(all_results: list[dict]) -> None:
+    # Merge: start from existing service blocks, override crawled ones.
+    blocks = _parse_existing_service_blocks()
+
     by_service: dict[str, list[dict]] = {}
     for r in all_results:
         by_service.setdefault(r["service"], []).append(r)
+    for service, entries in by_service.items():
+        blocks[service] = _render_service_block(service, entries)
 
     lines = [
         "# Research Sources",
@@ -213,21 +274,15 @@ def write_sources(all_results: list[dict]) -> None:
         "Every source URL is stored with retrieval date and content hash for audit.",
         "",
     ]
-
-    for service, entries in sorted(by_service.items()):
-        lines.append(f"## {service}")
-        for e in entries:
-            lines += [
-                f"### {e['title']}",
-                f"- **URL**: {e['url']}",
-                f"- **Retrieved**: {e['retrieved']}",
-                f"- **Hash**: {e['hash']}",
-                f"- **Status**: {e['status']}",
-                "",
-            ]
+    for service in sorted(blocks):
+        block = blocks[service]
+        # Drop trailing blank lines from a preserved block, re-add one separator.
+        while block and block[-1] == "":
+            block.pop()
+        lines += block + [""]
 
     SOURCES_FILE.write_text("\n".join(lines))
-    print(f"\nSources index → {SOURCES_FILE}")
+    print(f"\nSources index → {SOURCES_FILE} ({len(blocks)} services)")
 
 
 def main() -> None:
