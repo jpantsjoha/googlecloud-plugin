@@ -71,7 +71,7 @@ Parent: architecture/HLD/<master-solution>.md
 <Links to GCP ADRs that back this design>
 ```
 
-## Key References
+## References
 
 - [Google Cloud Architecture Framework](https://cloud.google.com/architecture/framework)
 - [Cloud Foundation Toolkit](https://cloud.google.com/foundation-toolkit)

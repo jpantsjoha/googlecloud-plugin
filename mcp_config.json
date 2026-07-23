@@ -7,7 +7,7 @@
       "command": "uvx",
       "args": ["toolbox-core", "--tools-file", "${TOOLBOX_TOOLS_FILE}"],
       "env": {
-        "GCP_PROJECT_ID": "your-project-id",
+        "GCP_PROJECT_ID": "${GCP_PROJECT_ID}",
         "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
         "TOOLBOX_TOOLS_FILE": "${TOOLBOX_TOOLS_FILE}"
       },

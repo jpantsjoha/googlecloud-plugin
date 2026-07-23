@@ -95,27 +95,52 @@ def check_mcp_consistency(errors: list[str]) -> None:
     inline (Gemini extension runtime) are read by different harnesses — they
     must not drift apart.
     """
-    def servers(path: Path, key_path: tuple[str, ...]) -> set[str] | None:
+    def mcp_map(path: Path) -> dict | None:
         m = _load_json(path, errors)
         if m is None:
             return None
-        node = m
-        for k in key_path:
-            node = node.get(k, {}) if isinstance(node, dict) else {}
-        return set(node.keys()) if isinstance(node, dict) else set()
+        node = m.get("mcpServers", {})
+        # Strip _-prefixed annotation keys so docs don't count as drift.
+        cleaned: dict = {}
+        for name, cfg in node.items():
+            if not isinstance(cfg, dict):
+                cleaned[name] = cfg
+                continue
+            cleaned[name] = {
+                "command": cfg.get("command"),
+                "args": cfg.get("args"),
+                "env": {k: v for k, v in (cfg.get("env") or {}).items() if not k.startswith("_")},
+            }
+        return cleaned
 
-    claude = servers(ROOT / ".mcp.json", ("mcpServers",))
-    agy = servers(ROOT / "mcp_config.json", ("mcpServers",))
-    gemini = servers(ROOT / "gemini-extension.json", ("mcpServers",))
+    claude = mcp_map(ROOT / ".mcp.json")
+    agy = mcp_map(ROOT / "mcp_config.json")
+    gemini = mcp_map(ROOT / "gemini-extension.json")
 
     present = {n: s for n, s in (("claude .mcp.json", claude), ("agy mcp_config.json", agy), ("gemini inline", gemini)) if s is not None}
     if len(present) > 1:
         baseline_name, baseline = next(iter(present.items()))
         for name, s in present.items():
-            if s != baseline:
+            if set(s.keys()) != set(baseline.keys()):
                 errors.append(
                     f"MCP drift: '{name}' servers {sorted(s)} != '{baseline_name}' {sorted(baseline)}"
                 )
+                continue
+            # Compare command/args/env per server — catches hardcoded value drift.
+            for srv in s:
+                if s[srv] != baseline[srv]:
+                    errors.append(
+                        f"MCP drift: server '{srv}' differs between '{name}' and '{baseline_name}' "
+                        f"(command/args/env mismatch — check for hardcoded values)"
+                    )
+    # Guard against hardcoded project placeholders slipping in.
+    for name, s in present.items():
+        for srv, cfg in s.items():
+            for k, v in (cfg.get("env") or {}).items() if isinstance(cfg, dict) else []:
+                if isinstance(v, str) and v and not v.startswith("${") and k.endswith(("PROJECT", "PROJECT_ID")):
+                    errors.append(
+                        f"MCP hardcoded value: '{name}' server '{srv}' env {k}='{v}' — use ${{{k}}} placeholder"
+                    )
 
 
 def check_context_files(errors: list[str]) -> None:
