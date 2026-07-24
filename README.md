@@ -2,6 +2,7 @@
   <img src="assets/images/googlecloud-plugin-by-jp.png" alt="googlecloud-plugin by JP — Open source. Agent-powered. Built for Google Cloud." width="100%">
 </p>
 
+[![Listed on ClaudePluginHub](https://www.claudepluginhub.com/badge/jpantsjoha-googlecloud-plugin)](https://www.claudepluginhub.com/plugins/jpantsjoha-googlecloud-plugin?ref=badge)
 # GoogleCloud Plugin
 
 > **Install once, and your coding agent gains a full Google Cloud delivery team — a vendor-objective solution designer, a GCP architect, an agentic-systems architect, plus security, SRE, and QA — wired into a design-first, security-first delivery gate.**
