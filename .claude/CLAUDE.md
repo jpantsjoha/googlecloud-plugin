@@ -1,7 +1,8 @@
 # GoogleCloud Plugin — Construction Guide
 
 This file advises AI agents working ON the plugin (building, researching, validating skills).
-It is gitignored and never committed to the public repo.
+It is committed, and public — write it for contributors, not as a scratchpad.
+For local notes you don't want published, use `.claude/local-CLAUDE.md`, which is gitignored.
 
 ## Your Role
 
@@ -32,14 +33,27 @@ Before any skill merges to main:
 
 ## Skill Contract
 
-Every `skills/<name>/SKILL.md` must have valid YAML frontmatter with:
-- `name` — matches directory name exactly
-- `description` — >20 chars, meaningful
-- `version` — string or number
-- `triggers` — non-empty list of routing phrases
-- `required_scopes` — list (can be empty `[]` for non-IAM skills)
+Frontmatter follows the [Agent Skills specification](https://agentskills.io/specification).
+The field set is **closed** — adding a top-level key outside
+`{name, description, license, compatibility, allowed-tools, metadata}` makes the
+skill non-conformant, and a conformant client MUST skip it. Everything specific
+to this plugin is namespaced under `metadata` as **string** values:
 
-Run `make validate` after any SKILL.md edit.
+- `name` — matches directory name exactly
+- `description` — what it does AND when to use it, max 1024 chars, ending with
+  `Use when the user mentions: …`. This is the only thing a conformant client
+  routes on. Where two skills overlap, name the other and draw the line.
+- `metadata["googlecloud-plugin/version"]`
+- `metadata["googlecloud-plugin/triggers"]` — comma-joined, non-empty
+- `metadata["googlecloud-plugin/required-scopes"]` — comma-joined, `""` if none
+- `metadata["googlecloud-plugin/mcp-servers"]` — comma-joined, omit if none
+- persona skills add `persona`, `tier`, `gate` under the same namespace
+
+Never reintroduce a top-level `triggers`, `version` or `required_scopes` field —
+that is the exact regression `make validate` exists to catch. See
+[ADR-007](../architecture/decisions/ADR-007-agent-plugins-conformance.md).
+
+Run `make spec && make validate` after any SKILL.md or manifest edit.
 
 ## Safety Rules (Non-Negotiable)
 

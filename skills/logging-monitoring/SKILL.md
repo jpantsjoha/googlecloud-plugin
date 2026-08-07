@@ -1,6 +1,6 @@
 ---
 name: logging-monitoring
-description: "Configure observability on GCP using Cloud Logging, Cloud Monitoring, Cloud Trace, and Cloud Profiler. Covers log sinks, log-based metrics, alerting policies, dashboards, and uptime checks. Owns the operational readiness evidence for gcp-ops. Use when the user mentions: logging setup, monitoring setup, alerting policy, dashboard GCP, error reporting, SLO monitoring."
+description: "Configure observability on GCP using Cloud Logging, Cloud Monitoring, Cloud Trace, and Cloud Profiler. Covers log sinks, log-based metrics, alerting policies, dashboards, and uptime checks. Owns the operational readiness evidence for gcp-ops. Use when the user mentions: logging setup, monitoring setup, alerting policy, dashboard GCP, error reporting, SLO monitoring. Use this to configure the observability resources themselves; use gcp-ops instead for SLO targets, runbooks and release gating."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"

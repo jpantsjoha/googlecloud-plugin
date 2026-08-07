@@ -1,6 +1,6 @@
 ---
 name: iam
-description: "Google Cloud IAM — identity, access management, service accounts, and policy authoring. Enforces least-privilege by default. Covers roles, conditions, service account patterns, Workload Identity Federation, and gcloud CLI. Never grants owner or editor roles. Use when the user mentions: iam policy, grant access, least privilege, IAM binding, who has access, iam conditions, gcloud iam."
+description: "Google Cloud IAM — identity, access management, service accounts, and policy authoring. Enforces least-privilege by default. Covers roles, conditions, service account patterns, Workload Identity Federation, and gcloud CLI. Never grants owner or editor roles. Use when the user mentions: iam policy, grant access, least privilege, IAM binding, who has access, iam conditions, gcloud iam. Use this to author or change IAM; use gcp-security instead to audit an existing posture against the security gate."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"

@@ -1,7 +1,16 @@
 # ADR-005: SKILL.md Frontmatter Contract
 
-**Status:** Accepted  
+**Status:** Superseded by [ADR-007](ADR-007-agent-plugins-conformance.md)
 **Date:** 2026-07-23
+**Superseded:** 2026-08-07
+
+> **Superseded.** The contract below predates Agent Plugins 1.0.0. Agent Skills
+> defines a *closed* frontmatter field set, so the top-level `version`,
+> `triggers`, `required_scopes`, `mcp_servers`, `persona`, `tier` and `gate`
+> fields specified here made every skill non-conformant — and a conformant
+> client MUST skip a non-conforming skill. The same information is retained,
+> namespaced under `metadata`, per ADR-007. The reasoning below still explains
+> *why* the plugin carries this metadata at all; only its location changed.
 
 ## Context
 

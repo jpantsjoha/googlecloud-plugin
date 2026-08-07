@@ -211,8 +211,12 @@ def main() -> None:
     harnesses = ["Claude Code", "Antigravity (Gemini)", "Codex", "Kimi"]
     if not errors:
         for h in harnesses:
-            print(f"OK    {h} — installable")
-        print(f"\nPlugin '{EXPECTED_NAME}' v{EXPECTED_VERSION} is installable across all 4 harnesses")
+            print(f"OK    {h} — manifest present and consistent")
+        print(
+            f"\nPlugin '{EXPECTED_NAME}' v{EXPECTED_VERSION}: all 4 harness manifests "
+            "parse and agree.\nThis is a packaging check, not an install — it does not "
+            "launch any harness."
+        )
         return
 
     for e in errors:

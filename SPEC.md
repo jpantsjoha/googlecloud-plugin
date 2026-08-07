@@ -273,18 +273,19 @@ Every skill has a `SKILL.md` with YAML frontmatter:
 ```yaml
 ---
 name: cloud-run
-description: "Deploy and manage containerized workloads on Cloud Run"
-version: 0.1
-triggers: ["deploy to cloud run", "create cloud run service", "scale cloud run"]
-required_scopes:
-  - run.services.create
-  - run.services.delete
-  - run.services.get
-  - run.services.list
-  - run.services.update
-mcp_servers: []
+description: "Deploy and manage containerized workloads on Cloud Run. … Use when the user mentions: deploy to cloud run, create cloud run service, scale cloud run."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "deploy to cloud run, create cloud run service, scale cloud run"
+  "googlecloud-plugin/required-scopes": "run.services.create, run.services.delete, run.services.get, run.services.list, run.services.update"
+  "googlecloud-plugin/mcp-servers": "google-cloud-run"
 ---
 ```
+
+The Agent Skills frontmatter field set is closed, so routing keywords live in
+`description` and everything plugin-specific is namespaced under `metadata`.
+See [ADR-007](architecture/decisions/ADR-007-agent-plugins-conformance.md).
 
 Followed by H1 title + comprehensive routing + references.
 
@@ -505,23 +506,15 @@ Each persona skill follows the same SKILL.md contract but has an elevated role:
 # Example: gcp-architect frontmatter
 ---
 name: gcp-architect
-description: "Design-first GCP architect. Generates HLD/LLD, owns ADRs, enforces design gate. Aware of all GCP repos, patterns, MCPs, and Well-Architected Framework."
-version: 0.1
-persona: true
-triggers:
-  - "design a solution"
-  - "architect this"
-  - "how should we build"
-  - "what's the approach for"
-  - "HLD for"
-  - "ADR for"
-gate: design
-required_scopes: []
-mcp_servers: []
-references:
-  - url: https://cloud.google.com/architecture
-    title: Google Cloud Architecture Framework
-    retrieved: 2026-07-23
+description: "Design-first GCP architect. Generates HLD/LLD, owns ADRs, enforces the design gate. Aware of all GCP repos, patterns, MCPs, and the Well-Architected Framework. Use this once the design is GCP-only; use solution-designer instead for vendor selection and cross-cloud scope. Use when the user mentions: design a solution, architect this, how should we build, HLD for, ADR for."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/persona": "true"
+  "googlecloud-plugin/tier": "2"
+  "googlecloud-plugin/gate": "gcp-design"
+  "googlecloud-plugin/triggers": "design a solution, architect this, how should we build, HLD for, ADR for"
+  "googlecloud-plugin/required-scopes": ""
 ---
 ```
 

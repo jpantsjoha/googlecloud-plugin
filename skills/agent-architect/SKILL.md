@@ -1,6 +1,6 @@
 ---
 name: agent-architect
-description: "Agentic systems architect for the Gemini Enterprise Agent Platform (GEAP, formerly Vertex AI). Tier 2 specialist alongside gcp-architect: owns agentic application design AND agent evaluation execution. Covers ADK, Agent Runtime (formerly Agent Engine), the MCP/A2A/AP2 protocol stack, multi-agent topologies, grounding/RAG, memory, human-in-the-loop, and Gemini model selection. GCP is always the target deployment platform. Use when the user mentions: agent architecture, agent development kit, agent to agent, agent payments, MCP tools for agent, RAG on GCP, orchestrator agent, gemini agent."
+description: "Agentic systems architect for the Gemini Enterprise Agent Platform (GEAP, formerly Vertex AI). Tier 2 specialist alongside gcp-architect: owns agentic application design AND agent evaluation execution. Covers ADK, Agent Runtime (formerly Agent Engine), the MCP/A2A/AP2 protocol stack, multi-agent topologies, grounding/RAG, memory, human-in-the-loop, and Gemini model selection. GCP is always the target deployment platform. Use when the user mentions: agent architecture, agent development kit, agent to agent, agent payments, MCP tools for agent, RAG on GCP, orchestrator agent, gemini agent. Use this for agentic system design; use vertex-ai instead for model training, Model Garden and endpoint deployment."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"

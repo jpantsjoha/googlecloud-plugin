@@ -1,6 +1,6 @@
 ---
 name: gcp-ops
-description: "GCP Operations and SRE persona. Defines SLOs, alerting policy, runbooks, and incident response. Knows what healthy looks like in production for every GCP service. Validates that observability exists before any production release. Owns the operational readiness gate. Use when the user mentions: SLA, monitoring setup, dashboard, on-call, production readiness, cloud logging setup, cloud monitoring setup, error budget."
+description: "GCP Operations and SRE persona. Defines SLOs, alerting policy, runbooks, and incident response. Knows what healthy looks like in production for every GCP service. Validates that observability exists before any production release. Owns the operational readiness gate. Use when the user mentions: SLA, monitoring setup, dashboard, on-call, production readiness, cloud logging setup, cloud monitoring setup, error budget. Use this for SLO targets, runbooks and release gating; use logging-monitoring instead to configure the underlying Cloud Logging and Monitoring resources."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"
