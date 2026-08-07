@@ -6,7 +6,11 @@ Tracks skill status for every first-wave service. Update whenever a skill progre
 
 **v0.1 target:** All first-wave services at `validated` before release tag.
 
-Last updated: 2026-07-23 (Phase 1 crawl complete — 75/75 sources resolve, 70 unique URLs live, gate green)
+**v0.2 target:** every skill conformant with the [Agent Skills specification](https://agentskills.io/specification)
+and discoverable under [Agent Plugins 1.0.0](https://agent-plugins.org/specification) — met at v0.2.0
+(17/17 valid per the upstream `skills-ref` reference validator).
+
+Last updated: 2026-08-07 (v0.2.0 — Agent Plugins 1.0.0 conformance; 17/17 skills valid, 102 URLs resolve, gate green)
 
 ---
 
