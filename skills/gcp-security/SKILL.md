@@ -1,6 +1,6 @@
 ---
 name: gcp-security
-description: "GCP security enforcer. Reviews designs and implementations against the GCP Well-Architected Framework security pillar, OWASP Top 10, and GCP-specific risk patterns. Enforces least-privilege IAM, secrets management, no hardcoded credentials, and security-by-design. Also reviews solution-designer output for cross-cloud security gaps. Must clear the security gate before any implementation begins. Use when the user mentions: security review, IAM review, least privilege, vulnerability, public bucket, default service account, security posture, compliance GCP, OWASP GCP."
+description: "GCP security enforcer. REVIEWS and BLOCKS — it audits work rather than authoring it. Judges designs and implementations against the GCP Well-Architected Framework security pillar, OWASP Top 10, and GCP-specific risk patterns, covering least-privilege IAM, secrets management, hardcoded credentials, and security-by-design, and reviews solution-designer output for cross-cloud gaps. Must clear the security gate before implementation begins. To actually write an IAM binding, use the iam skill. Use when the user mentions: security review, IAM review, audit my access, vulnerability, public bucket, default service account, security posture, compliance GCP, OWASP GCP, least privilege."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"

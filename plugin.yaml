@@ -131,7 +131,11 @@ mcp_servers:
 # ─── Validation ───────────────────────────────────────────────────────────────
 validation:
   gate_command: make gate
+  conforms_to:
+    - https://agent-plugins.org/specification          # Agent Plugins 1.0.0
+    - https://agentskills.io/specification             # Agent Skills
   scripts:
+    - scripts/validate_agent_plugins.py
     - scripts/validate_skills.py
     - scripts/check_links.py
     - scripts/freshness_check.py

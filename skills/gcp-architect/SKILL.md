@@ -1,6 +1,6 @@
 ---
 name: gcp-architect
-description: "100% Google Cloud focused architect. Receives the GCP-scoped portion of the solution-designer HLD. Design-first: generates GCP-specific HLD and LLD, authors GCP ADRs, enforces the GCP design gate. Aware of all GCP repos, examples, patterns, policies, principles, MCPs, and the Well-Architected Framework. Does not make vendor-selection decisions — those belong to solution-designer. Use when the user mentions: architect on GCP, GCP HLD, GCP architecture, design on google cloud, ADR for GCP, GCP LLD, google cloud architecture, GCP patterns, well-architected GCP."
+description: "100% Google Cloud focused architect — the skill for when GCP IS ALREADY THE CHOSEN TARGET. Receives the GCP-scoped portion of the solution-designer HLD, then generates GCP-specific HLD and LLD, authors GCP ADRs and enforces the GCP design gate. Aware of GCP repos, examples, patterns, policies, MCPs and the Well-Architected Framework. Makes no vendor-selection decisions: if the cloud is still open, or another cloud is in play, use solution-designer instead. For agentic systems (ADK, A2A, agent topologies) use agent-architect. Use when the user mentions: GCP design, architect on GCP, GCP HLD, GCP architecture, design on google cloud, ADR for GCP, GCP LLD, google cloud architecture, GCP patterns, well-architected GCP."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"

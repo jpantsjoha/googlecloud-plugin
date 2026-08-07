@@ -32,14 +32,28 @@ Before any skill merges to main:
 
 ## Skill Contract
 
-Every `skills/<name>/SKILL.md` must have valid YAML frontmatter with:
-- `name` — matches directory name exactly
-- `description` — >20 chars, meaningful
-- `version` — string or number
-- `triggers` — non-empty list of routing phrases
-- `required_scopes` — list (can be empty `[]` for non-IAM skills)
+The frontmatter field set is **closed** by the Agent Skills specification. Only
+`name`, `description`, `license`, `compatibility`, `metadata` and `allowed-tools`
+are permitted — a skill carrying anything else is non-conformant, and Agent
+Plugins 1.0.0 requires clients to **skip** it. Never add a top-level field.
 
-Run `make validate` after any SKILL.md edit.
+Every `skills/<name>/SKILL.md` must have:
+- `name` — matches directory name exactly, lowercase, no `--`
+- `description` — meaningful, ≤1024 chars, **and carries every routing keyword**
+- `license`
+- `metadata` — string keys to **string** values, all namespaced
+  `googlecloud-plugin/…`. Required: `version`, `triggers`, `required-scopes`
+  (emit `""`, don't omit, when a skill needs no IAM scopes). Personas add
+  `persona`, `tier`, `gate`. Lists are comma-joined.
+
+**Routing lives in the description.** No client reads `metadata/triggers` — it is
+an index for this repo's own tooling, and `make validate` fails if any trigger is
+missing from the description. When two skills overlap, state in each description
+which one owns the case and name the other.
+
+Run `make validate` after any SKILL.md edit, and `make spec` after touching
+`plugin.json` or `mcp.json`. See
+`architecture/decisions/ADR-007-agent-plugins-conformance.md`.
 
 ## Safety Rules (Non-Negotiable)
 

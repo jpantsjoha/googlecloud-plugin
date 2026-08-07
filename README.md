@@ -146,13 +146,37 @@ The rule underneath every gate: **infer intent, never infer permission.** An AI 
 
 ---
 
+## Standards conformance
+
+This plugin conforms to **[Agent Plugins 1.0.0](https://agent-plugins.org/specification)** — the open, vendor-neutral packaging specification co-maintained by Amazon, Cursor, Google, Microsoft, OpenAI and Vercel — and to the **[Agent Skills specification](https://agentskills.io/specification)** it references.
+
+| Standard | Artefact | Verified by |
+|---|---|---|
+| Agent Plugins 1.0.0 manifest | `plugin.json` | [`plugin.schema.json`](https://agent-plugins.org/schemas/1.0.0/plugin.schema.json) |
+| Agent Plugins 1.0.0 MCP config | `mcp.json` | [`mcp.schema.json`](https://agent-plugins.org/schemas/1.0.0/mcp.schema.json) |
+| Agent Skills | `skills/*/SKILL.md` | `skills-ref`, the official reference validator |
+
+That means any conformant client loads it — no per-harness fork. The Claude Code, Antigravity/Gemini, Codex and Kimi manifests remain in place alongside, so existing installs are unaffected.
+
+Reproduce the conformance evidence yourself:
+
+```bash
+make spec       # Agent Plugins 1.0.0 conformance (plugin.json + mcp.json)
+
+# independent, third-party checks — nothing in this repo is trusted
+uvx --from 'git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref' \
+    skills-ref validate skills/cloud-run
+uvx check-jsonschema --schemafile https://agent-plugins.org/schemas/1.0.0/plugin.schema.json plugin.json
+```
+
 ## Validation
 
 The plugin validates itself. Every skill conforms to a machine-readable contract; every reference URL is checked live; every source carries a retrieval date and content hash for audit.
 
 ```bash
-make gate       # the 3-minute gate: validate + lint + test
-make validate   # SKILL.md frontmatter contract
+make gate       # the gate: spec + validate + manifest + mermaid + lint + test
+make spec       # Agent Plugins 1.0.0 conformance
+make validate   # SKILL.md frontmatter contract (Agent Skills + routing invariant)
 make lint       # every reference URL resolves (HTTP 200)
 make test       # skill smoke tests
 make check      # freshness: content-hash drift vs live GCP docs
@@ -169,6 +193,7 @@ Created and maintained by **Jaroslav Pantsjoha (JP)** — Technical Director and
 
 I built this to make my own Google Cloud work repeatable, then to share it. The model is the easy part; the durable engineering is the harness around it — the skills, rules, MCP servers, gates, and evals. GCP patterns outlast the week's model release, so they are worth encoding once and reusing. This plugin is that baseline aimed squarely at Google Cloud — the GCP companion to my [`join-the-team`](https://github.com/jpantsjoha/ai-native-developer-experience) harness. Part of the **#HarnessEngineering** body of work — the engineering discipline behind the Agentic Enterprise.
 
+- Website: [jpantsjoha.com](https://jpantsjoha.com)
 - LinkedIn: [uk.linkedin.com/in/johas](https://uk.linkedin.com/in/johas)
 - Google Developer Expert: [me.developers.google.com/u/jpantsjoha](https://me.developers.google.com/u/jpantsjoha)
 

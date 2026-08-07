@@ -26,6 +26,34 @@ gcloud auth activate-service-account --key-file=/path/to/sa-key.json
 gcloud auth application-default login --impersonate-service-account=SA@PROJECT.iam.gserviceaccount.com
 ```
 
+## What the plugin ships vs what you opt into
+
+The portable `mcp.json` (Agent Plugins 1.0.0) declares **one** server — `gcloud`
+— because that is the only one that starts with no user-supplied configuration:
+
+```json
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "gcloud": { "type": "stdio", "command": "npx", "args": ["-y", "@google-cloud/gcloud-mcp"] }
+  }
+}
+```
+
+Two consequences worth knowing:
+
+- **No `env` block.** Agent Plugins expands only `${PLUGIN_ROOT}` and
+  `${PLUGIN_DATA}`. A `${GCP_PROJECT_ID}` placeholder would be passed through
+  *literally* and mis-set your project. Export it in your own shell instead —
+  the client passes the ambient environment through:
+  ```bash
+  export CLOUDSDK_CORE_PROJECT=your-project-id
+  gcloud auth application-default login
+  ```
+- **The capability table below lists logical GCP capabilities**, not entries in
+  `mcp.json`. Most are reachable through the `gcloud` server; anything needing
+  its own config file is an opt-in you add to your client's own MCP settings.
+
 ## Google-Managed MCP Servers (v0.1)
 
 | Server | Capability | Required Role |
@@ -39,9 +67,16 @@ gcloud auth application-default login --impersonate-service-account=SA@PROJECT.i
 | `google-logging` | Cloud Logging query/ingest | `roles/logging.viewer` |
 | `google-monitoring` | Metrics, alerting | `roles/monitoring.viewer` |
 
-## GenAI Toolbox (Google's MCP for Databases)
+## GenAI Toolbox (Google's MCP for Databases) — opt-in
 
 Google's MCP Toolbox for Databases enables LLM agents to query Cloud SQL, AlloyDB, Spanner, BigQuery, and more safely.
+
+> **Why this is not in `mcp.json`.** Toolbox needs `--config <your tools.yaml>`,
+> a path only you can supply. No Agent Plugins placeholder can express it, so
+> shipping it in the portable manifest would mean a server that fails to start
+> on every fresh install. Add it to your own client config once you have a
+> `tools.yaml`. (A failing server is isolated by spec — it would not take the
+> skills down — but a broken default is still a broken default.)
 
 ```bash
 # Run the toolbox MCP server (requires a tools.yaml pointing at your database)

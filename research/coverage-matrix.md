@@ -6,7 +6,13 @@ Tracks skill status for every first-wave service. Update whenever a skill progre
 
 **v0.1 target:** All first-wave services at `validated` before release tag.
 
-Last updated: 2026-07-23 (Phase 1 crawl complete — 75/75 sources resolve, 70 unique URLs live, gate green)
+Last updated: 2026-08-07 (Agent Plugins 1.0.0 conformance — all 17 skills migrated to the
+Agent Skills frontmatter contract, 101/101 URLs live, gate green at 212 tests)
+
+**Conformance:** every skill validates against the official `skills-ref` reference
+validator (17/17), and `plugin.json` / `mcp.json` validate against the published
+Agent Plugins 1.0.0 schemas. See
+[ADR-007](../architecture/decisions/ADR-007-agent-plugins-conformance.md).
 
 ---
 

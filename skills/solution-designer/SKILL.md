@@ -1,6 +1,6 @@
 ---
 name: solution-designer
-description: "Vendor-agnostic solution authority. Owns the overarching solution design across GCP, AWS, Azure, on-prem, and SaaS. Produces the master HLD that scopes each cloud domain. Objective: not GCP-biased — will recommend another cloud when warranted. Researches, proves, and validates that the proposed solution works across all mentioned vendors. Use when the user mentions: design a solution, what should we build, multi-cloud, which cloud for, solution architecture, overarching design, vendor recommendation, cross-cloud, hybrid cloud, compare GCP vs AWS, compare GCP vs Azure."
+description: "Vendor-agnostic solution authority — the skill for when the CLOUD IS NOT YET CHOSEN. Owns the overarching design across GCP, AWS, Azure, on-prem and SaaS, and produces the master HLD that scopes each cloud domain. Objective, not GCP-biased: will recommend another cloud when warranted, and proves the solution works across every vendor mentioned. Once GCP is the settled target, hand the GCP-scoped portion to gcp-architect. Use when the user mentions: design a solution, what should we build, multi-cloud, which cloud for, solution architecture, overarching design, vendor recommendation, cross-cloud, hybrid cloud, compare GCP vs AWS, compare GCP vs Azure."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"

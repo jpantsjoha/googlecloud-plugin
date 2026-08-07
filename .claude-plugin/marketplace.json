@@ -3,7 +3,7 @@
   "description": "A full Google Cloud delivery team for coding agents — design-first, security-first, Well-Architected, with agentic (ADK / A2A / AP2 / MCP) coverage.",
   "owner": {
     "name": "Jaroslav Pantsjoha",
-    "url": "https://uk.linkedin.com/in/johas"
+    "url": "https://jpantsjoha.com"
   },
   "plugins": [
     {
@@ -13,7 +13,7 @@
       "source": "./",
       "author": {
         "name": "Jaroslav Pantsjoha",
-        "url": "https://uk.linkedin.com/in/johas"
+        "url": "https://jpantsjoha.com"
       }
     }
   ]

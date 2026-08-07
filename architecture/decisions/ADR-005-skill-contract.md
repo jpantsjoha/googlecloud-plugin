@@ -1,7 +1,20 @@
 # ADR-005: SKILL.md Frontmatter Contract
 
-**Status:** Accepted  
+**Status:** Superseded by [ADR-007](ADR-007-agent-plugins-conformance.md) (2026-08-07)
 **Date:** 2026-07-23
+
+> **Superseded.** The frontmatter shape below is non-conformant with the Agent
+> Skills specification, whose field set is closed. `version`, `triggers`,
+> `required_scopes`, `mcp_servers`, `persona`, `tier`, `gate` and `owns_eval`
+> are not permitted at the top level, and Agent Plugins 1.0.0 requires clients
+> to **skip** any skill that carries them — all 17 skills, in practice.
+>
+> The contract itself survives; only its location changed. Every field below now
+> lives under `metadata` as a namespaced string value, and routing keywords fold
+> into `description`. See ADR-007 for the current shape and the reasoning.
+>
+> Retained for the record: the *motivation* below still holds, and the gate
+> discipline it established is what made the drift detectable.
 
 ## Context
 

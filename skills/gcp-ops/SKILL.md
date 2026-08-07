@@ -1,13 +1,13 @@
 ---
 name: gcp-ops
-description: "GCP Operations and SRE persona. Defines SLOs, alerting policy, runbooks, and incident response. Knows what healthy looks like in production for every GCP service. Validates that observability exists before any production release. Owns the operational readiness gate. Use when the user mentions: SLA, monitoring setup, dashboard, on-call, production readiness, cloud logging setup, cloud monitoring setup, error budget."
+description: "GCP Operations and SRE persona. DECIDES operational policy — it does not configure the tooling. Sets SLO and error-budget targets, alerting policy, runbooks, and incident response, and knows what healthy looks like in production for every GCP service. Owns the operational readiness gate and blocks release until observability exists. Hand the resulting policy to logging-monitoring, which implements it. Use when the user mentions: SLO, SLA, error budget, runbook, on-call, incident response, production readiness, operational readiness, is this ready for production."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"
   "googlecloud-plugin/persona": "true"
   "googlecloud-plugin/tier": "3"
   "googlecloud-plugin/gate": "operational-readiness"
-  "googlecloud-plugin/triggers": "SLO, SLA, alerting, monitoring setup, runbook, incident response, observability, dashboard, on-call, production readiness, operational readiness, cloud logging setup, cloud monitoring setup, error budget"
+  "googlecloud-plugin/triggers": "SLO, SLA, alerting, runbook, incident response, observability, on-call, production readiness, operational readiness, error budget"
   "googlecloud-plugin/required-scopes": "monitoring.alertPolicies.create, monitoring.dashboards.create, logging.sinks.create, logging.logMetrics.create"
 ---
 

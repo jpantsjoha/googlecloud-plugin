@@ -18,17 +18,44 @@ version: "0.1"
 persona: true          # only for persona skills (solution-designer, gcp-*)
 tier: 1                # only for persona skills (1, 2, or 3)
 gate: <gate-name>      # only for persona skills
-triggers:
-  - "trigger phrase one"
-  - "trigger phrase two"
-required_scopes:       # list of GCP IAM permission strings (empty list [] for non-IAM skills)
-  - service.resource.verb
-mcp_servers:           # list of MCP server IDs this skill uses (empty list [] if none)
-  - server-id
+license: MIT
+metadata:              # Agent Skills defines metadata as string keys -> STRING values
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "trigger phrase one, trigger phrase two"
+  "googlecloud-plugin/required-scopes": "service.resource.verb"   # "" for non-IAM skills
+  "googlecloud-plugin/mcp-servers": "server-id"                   # omit if none
 ---
 ```
 
-All fields except `persona`, `tier`, and `gate` are required on every skill.
+The frontmatter field set is **closed**. Agent Skills permits only `name`,
+`description`, `license`, `compatibility`, `metadata` and `allowed-tools`; a
+skill carrying anything else is non-conformant, and Agent Plugins 1.0.0 requires
+clients to skip it. Everything this plugin needs therefore lives under
+`metadata`, namespaced, with lists comma-joined into strings. See
+[ADR-007](../architecture/decisions/ADR-007-agent-plugins-conformance.md).
+
+Persona skills add `"googlecloud-plugin/persona"`, `"googlecloud-plugin/tier"`
+and `"googlecloud-plugin/gate"` under the same namespace.
+
+`version`, `triggers` and `required-scopes` are required metadata keys on every
+skill; `required-scopes` is emitted as `""` rather than omitted when a skill
+needs no IAM scopes.
+
+**Routing lives in `description`.** No client reads `metadata/triggers` — a
+conformant client routes on the description alone, so every discriminating
+keyword must appear there. Where two skills overlap, say explicitly which one
+owns the case and name the other (see `gcp-ops` vs `logging-monitoring`).
+
+## MCP Server IDs
+
+`googlecloud-plugin/mcp-servers` names the **logical GCP capability** a skill
+reaches for (`google-bigquery`, `google-gke`, …). These are not keys in
+`mcp.json`. The portable `mcp.json` declares only servers that run with no
+user-supplied configuration — today that is the single `gcloud` server, which
+covers most of those capabilities through the `gcloud` CLI. Anything needing a
+user-specific config file, such as the GenAI Toolbox and its `tools.yaml`, stays
+a documented opt-in in `skills/mcp-servers/`. Do not "fix" the mismatch by
+inventing server entries that cannot start.
 
 ## References Directory
 

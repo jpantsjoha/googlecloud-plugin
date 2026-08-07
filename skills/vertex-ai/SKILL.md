@@ -1,6 +1,6 @@
 ---
 name: vertex-ai
-description: "Build and deploy ML models and generative AI applications on Vertex AI. Covers Model Garden, Gemini API, custom training, endpoint deployment, Agent Builder, and IAM. Warns before deploying endpoints (billable). Integrates with Vertex AI MCP server. Use when the user mentions: Gemini on GCP, vertex endpoint, generative AI GCP, vertex training, PaLM, vertex AI pipeline."
+description: "Build and deploy ML MODELS on Vertex AI — training, serving and inference, not agent architecture. Covers Model Garden, the Gemini API, custom training, endpoint deployment, pipelines and IAM. Warns before deploying endpoints (billable). Integrates with the Vertex AI MCP server. For designing a multi-agent system, ADK topology, or A2A/AP2 protocol work, use agent-architect instead. Use when the user mentions: vertex AI, Gemini on GCP, model garden, deploy ML model, vertex endpoint, generative AI GCP, agent builder, vertex training, PaLM, Gemini API, vertex AI pipeline."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"
