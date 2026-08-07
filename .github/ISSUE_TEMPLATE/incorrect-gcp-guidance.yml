@@ -1,0 +1,54 @@
+name: Incorrect GCP guidance
+description: A skill gave advice that is wrong, outdated, or unsafe
+labels: ["correctness"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most serious failure mode this plugin has — worse than a crash,
+        because it looks like it worked. Thank you for reporting it.
+
+  - type: input
+    id: skill
+    attributes:
+      label: Which skill
+      placeholder: cloud-run
+    validations:
+      required: true
+
+  - type: textarea
+    id: guidance
+    attributes:
+      label: What it told you
+      description: Paste the command, config, or advice as given.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: wrong
+    attributes:
+      label: Why it is wrong
+      description: What actually happens — an error, a deprecated flag, an unsafe default, a billing surprise.
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Authoritative source
+      description: A Google Cloud docs URL showing the correct behaviour. Every fix needs one.
+      placeholder: https://cloud.google.com/run/docs/...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Unsafe — could expose data, over-grant IAM, or cause unexpected cost
+        - Broken — the command fails or the config is rejected
+        - Outdated — works, but there is a better or current way
+    validations:
+      required: true
