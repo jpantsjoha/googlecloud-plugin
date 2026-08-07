@@ -1,27 +1,12 @@
 ---
 name: gke
-description: "Deploy and manage Kubernetes workloads on Google Kubernetes Engine (GKE). Covers Autopilot and Standard modes, Workload Identity, node pool management, networking, security, and gcloud/kubectl CLI patterns. Warns before cluster creation (billable)."
-version: "0.1"
-triggers:
-  - "GKE"
-  - "kubernetes on GCP"
-  - "google kubernetes engine"
-  - "create GKE cluster"
-  - "workload identity"
-  - "node pool"
-  - "GKE autopilot"
-  - "kubectl GCP"
-  - "GKE networking"
-  - "GKE security"
-required_scopes:
-  - container.clusters.create
-  - container.clusters.delete
-  - container.clusters.get
-  - container.clusters.list
-  - container.clusters.update
-  - container.nodes.list
-mcp_servers:
-  - google-gke
+description: "Deploy and manage Kubernetes workloads on Google Kubernetes Engine (GKE). Covers Autopilot and Standard modes, Workload Identity, node pool management, networking, security, and gcloud/kubectl CLI patterns. Warns before cluster creation (billable). Use when the user mentions: kubernetes on GCP, create GKE cluster, GKE autopilot, kubectl GCP, GKE networking, GKE security."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "GKE, kubernetes on GCP, google kubernetes engine, create GKE cluster, workload identity, node pool, GKE autopilot, kubectl GCP, GKE networking, GKE security"
+  "googlecloud-plugin/required-scopes": "container.clusters.create, container.clusters.delete, container.clusters.get, container.clusters.list, container.clusters.update, container.nodes.list"
+  "googlecloud-plugin/mcp-servers": "google-gke"
 ---
 
 # GKE — Google Kubernetes Engine

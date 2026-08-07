@@ -1,13 +1,36 @@
-"""Smoke tests — every SKILL.md must conform to the plugin contract.
+"""Smoke tests — the plugin must conform to Agent Plugins 1.0.0 and Agent Skills.
+
+Specs under test:
+  https://agent-plugins.org/specification
+  https://agentskills.io/specification
 
 Run: make test   (or: python -m pytest tests/skill-smoke-tests/ -v)
 """
+import json
+import re
 import pytest
 import yaml
 from pathlib import Path
 
-SKILLS_DIR = Path(__file__).parent.parent.parent / "skills"
-REQUIRED_FIELDS = ["name", "description", "version", "triggers", "required_scopes"]
+ROOT = Path(__file__).parent.parent.parent
+SKILLS_DIR = ROOT / "skills"
+
+SPEC_VERSION = "1.0.0"
+PLUGIN_SCHEMA = f"https://agent-plugins.org/schemas/{SPEC_VERSION}/plugin.schema.json"
+MCP_SCHEMA = f"https://agent-plugins.org/schemas/{SPEC_VERSION}/mcp.schema.json"
+
+# Closed field sets — anything outside these makes the artefact non-conformant.
+ALLOWED_SKILL_FIELDS = {
+    "name", "description", "license", "allowed-tools", "metadata", "compatibility",
+}
+ALLOWED_PLUGIN_FIELDS = {
+    "$schema", "name", "version", "description", "author",
+    "homepage", "repository", "license", "keywords", "extensions",
+}
+NS = "googlecloud-plugin/"
+REQUIRED_METADATA = {f"{NS}version", f"{NS}triggers", f"{NS}required-scopes"}
+MAX_DESCRIPTION = 1024
+EXPANDED = {"${PLUGIN_ROOT}", "${PLUGIN_DATA}"}
 
 
 def skill_files() -> list[Path]:
@@ -24,16 +47,27 @@ def parse_frontmatter(path: Path) -> dict:
     return fm
 
 
+# ─── Agent Skills conformance ────────────────────────────────────────────────
+
 @pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
 def test_frontmatter_parses(skill_file: Path) -> None:
-    fm = parse_frontmatter(skill_file)
-    assert fm, f"{skill_file}: Frontmatter is empty"
+    assert parse_frontmatter(skill_file), f"{skill_file}: Frontmatter is empty"
+
+
+@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
+def test_no_non_conformant_fields(skill_file: Path) -> None:
+    """A skill carrying extra top-level keys MUST be skipped by a conformant client."""
+    extra = sorted(set(parse_frontmatter(skill_file)) - ALLOWED_SKILL_FIELDS)
+    assert not extra, (
+        f"{skill_file}: non-conformant frontmatter fields {extra} — "
+        f"Agent Skills allows only {sorted(ALLOWED_SKILL_FIELDS)}"
+    )
 
 
 @pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
 def test_required_fields_present(skill_file: Path) -> None:
     fm = parse_frontmatter(skill_file)
-    missing = [f for f in REQUIRED_FIELDS if f not in fm]
+    missing = [f for f in ("name", "description") if f not in fm]
     assert not missing, f"{skill_file}: Missing required fields: {missing}"
 
 
@@ -47,43 +81,130 @@ def test_name_matches_directory(skill_file: Path) -> None:
 
 
 @pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
-def test_triggers_non_empty(skill_file: Path) -> None:
-    fm = parse_frontmatter(skill_file)
-    triggers = fm.get("triggers", [])
-    assert isinstance(triggers, list) and len(triggers) > 0, (
-        f"{skill_file}: 'triggers' must be a non-empty list"
-    )
+def test_name_format(skill_file: Path) -> None:
+    name = parse_frontmatter(skill_file)["name"]
+    assert len(name) <= 64, f"{skill_file}: name exceeds 64 chars"
+    assert name == name.lower(), f"{skill_file}: name must be lowercase"
+    assert not name.startswith("-") and not name.endswith("-")
+    assert "--" not in name, f"{skill_file}: consecutive hyphens in name"
+    assert all(c.isalnum() or c == "-" for c in name)
 
 
 @pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
-def test_required_scopes_is_list(skill_file: Path) -> None:
-    fm = parse_frontmatter(skill_file)
-    scopes = fm.get("required_scopes")
-    assert isinstance(scopes, list), (
-        f"{skill_file}: 'required_scopes' must be a list (can be empty [])"
+def test_description_within_limit(skill_file: Path) -> None:
+    description = parse_frontmatter(skill_file)["description"]
+    assert description.strip(), f"{skill_file}: description must be non-empty"
+    assert len(description) <= MAX_DESCRIPTION, (
+        f"{skill_file}: description is {len(description)} chars, limit {MAX_DESCRIPTION}"
     )
+
+
+# ─── Plugin contract, now carried under metadata ─────────────────────────────
+
+@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
+def test_metadata_is_string_map(skill_file: Path) -> None:
+    """Agent Skills defines metadata as a map from string keys to string values."""
+    metadata = parse_frontmatter(skill_file).get("metadata")
+    assert isinstance(metadata, dict), f"{skill_file}: 'metadata' must be a mapping"
+    for key, value in metadata.items():
+        assert isinstance(key, str), f"{skill_file}: metadata key {key!r} must be a string"
+        assert isinstance(value, str), (
+            f"{skill_file}: metadata['{key}'] must be a string, got {type(value).__name__}"
+        )
+
+
+@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
+def test_metadata_namespaced(skill_file: Path) -> None:
+    metadata = parse_frontmatter(skill_file)["metadata"]
+    unnamespaced = sorted(k for k in metadata if not k.startswith(NS))
+    assert not unnamespaced, f"{skill_file}: metadata keys not namespaced: {unnamespaced}"
+
+
+@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
+def test_required_metadata_present(skill_file: Path) -> None:
+    metadata = parse_frontmatter(skill_file)["metadata"]
+    missing = sorted(REQUIRED_METADATA - set(metadata))
+    assert not missing, f"{skill_file}: missing metadata keys {missing}"
+
+
+@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
+def test_triggers_non_empty(skill_file: Path) -> None:
+    triggers = parse_frontmatter(skill_file)["metadata"][f"{NS}triggers"]
+    assert triggers.strip(), f"{skill_file}: triggers must be non-empty"
 
 
 @pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
 def test_references_directory_exists(skill_file: Path) -> None:
     refs = skill_file.parent / "references"
-    assert refs.is_dir(), f"{skill_file.parent.name}: Missing references/ directory"
+    assert refs.is_dir(), f"{skill_file.parent}: Missing references/ directory"
 
 
-@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
-def test_version_is_string_or_number(skill_file: Path) -> None:
-    fm = parse_frontmatter(skill_file)
-    version = fm.get("version")
-    assert version is not None, f"{skill_file}: 'version' is required"
-    assert isinstance(version, (str, int, float)), (
-        f"{skill_file}: 'version' must be a string or number"
+# ─── Agent Plugins manifest conformance ──────────────────────────────────────
+
+def test_plugin_manifest_declares_schema() -> None:
+    manifest = json.loads((ROOT / "plugin.json").read_text())
+    assert manifest.get("$schema") == PLUGIN_SCHEMA, (
+        "plugin.json must declare the Agent Plugins manifest schema — it is a "
+        "required field on a closed schema, so omitting it is a FATAL violation"
     )
 
 
-@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
-def test_description_non_empty(skill_file: Path) -> None:
-    fm = parse_frontmatter(skill_file)
-    desc = fm.get("description", "").strip()
-    assert len(desc) > 20, (
-        f"{skill_file}: 'description' must be a meaningful string (>20 chars)"
+def test_plugin_manifest_fields_permitted() -> None:
+    manifest = json.loads((ROOT / "plugin.json").read_text())
+    extra = sorted(set(manifest) - ALLOWED_PLUGIN_FIELDS)
+    assert not extra, f"plugin.json has non-permitted top-level fields {extra}"
+
+
+def test_plugin_name_pattern() -> None:
+    name = json.loads((ROOT / "plugin.json").read_text())["name"]
+    assert re.match(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$", name)
+    assert 1 <= len(name) <= 64
+
+
+def test_mcp_config_conforms() -> None:
+    config = json.loads((ROOT / "mcp.json").read_text())
+    assert config.get("$schema") == MCP_SCHEMA
+    assert sorted(config) == ["$schema", "mcpServers"], (
+        "mcp.json permits only '$schema' and 'mcpServers' at the top level"
     )
+    assert config["mcpServers"], "mcp.json declares no servers"
+
+
+def test_mcp_servers_declare_transport() -> None:
+    """The schema discriminates transports on 'type' — a server without it is skipped."""
+    servers = json.loads((ROOT / "mcp.json").read_text())["mcpServers"]
+    for name, cfg in servers.items():
+        assert cfg.get("type") in ("stdio", "streamable-http", "sse"), (
+            f"mcp.json server '{name}' must declare a supported 'type'"
+        )
+
+
+def test_mcp_uses_only_expandable_placeholders() -> None:
+    """Only ${PLUGIN_ROOT} and ${PLUGIN_DATA} expand; anything else stays literal."""
+    servers = json.loads((ROOT / "mcp.json").read_text())["mcpServers"]
+    for name, cfg in servers.items():
+        candidates = list(cfg.get("args") or []) + list((cfg.get("env") or {}).values())
+        if isinstance(cfg.get("cwd"), str):
+            candidates.append(cfg["cwd"])
+        for value in candidates:
+            for found in re.findall(r"\$\{[^}]*\}", str(value)):
+                assert found in EXPANDED, (
+                    f"mcp.json server '{name}': placeholder {found} does not expand and "
+                    f"would be passed through literally"
+                )
+
+
+def test_mcp_schema_version_matches_plugin() -> None:
+    plugin = json.loads((ROOT / "plugin.json").read_text())["$schema"]
+    mcp = json.loads((ROOT / "mcp.json").read_text())["$schema"]
+    version = lambda s: re.search(r"/schemas/([^/]+)/", s).group(1)
+    assert version(plugin) == version(mcp), (
+        "mcp.json and plugin.json MUST target the same Agent Plugins version"
+    )
+
+
+def test_skills_discoverable_non_recursively() -> None:
+    """Clients discover skills only at skills/*/SKILL.md — never deeper."""
+    assert skill_files(), "no skills discoverable at skills/*/SKILL.md"
+    buried = list(SKILLS_DIR.glob("*/*/**/SKILL.md"))
+    assert not buried, f"SKILL.md below the discovery depth will be ignored: {buried}"

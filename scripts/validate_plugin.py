@@ -117,6 +117,8 @@ def check_mcp_consistency(errors: list[str]) -> None:
     agy = mcp_map(ROOT / "mcp_config.json")
     gemini = mcp_map(ROOT / "gemini-extension.json")
 
+    check_agent_plugins_mcp_subset(claude, errors)
+
     present = {n: s for n, s in (("claude .mcp.json", claude), ("agy mcp_config.json", agy), ("gemini inline", gemini)) if s is not None}
     if len(present) > 1:
         baseline_name, baseline = next(iter(present.items()))
@@ -141,6 +143,32 @@ def check_mcp_consistency(errors: list[str]) -> None:
                     errors.append(
                         f"MCP hardcoded value: '{name}' server '{srv}' env {k}='{v}' — use ${{{k}}} placeholder"
                     )
+
+
+def check_agent_plugins_mcp_subset(claude: dict | None, errors: list[str]) -> None:
+    """The spec-portable mcp.json must not declare servers the harnesses don't know.
+
+    mcp.json (Agent Plugins 1.0.0) is deliberately a SUBSET of the harness
+    manifests: it carries only servers that run with zero user-supplied config,
+    because the spec expands no placeholders beyond ${PLUGIN_ROOT}/${PLUGIN_DATA}.
+    Servers needing a user-specific config file stay documented opt-ins.
+    """
+    spec = _load_json(ROOT / "mcp.json", errors)
+    if spec is None or claude is None:
+        return
+    spec_servers = set(spec.get("mcpServers", {}))
+    if not spec_servers <= set(claude):
+        errors.append(
+            f"mcp.json declares server(s) {sorted(spec_servers - set(claude))} absent "
+            "from .mcp.json — the portable manifest must be a subset"
+        )
+    for name in spec_servers & set(claude):
+        spec_cmd = spec["mcpServers"][name].get("command")
+        if spec_cmd != claude[name]["command"]:
+            errors.append(
+                f"MCP drift: server '{name}' command differs between mcp.json "
+                f"({spec_cmd}) and .mcp.json ({claude[name]['command']})"
+            )
 
 
 def check_context_files(errors: list[str]) -> None:

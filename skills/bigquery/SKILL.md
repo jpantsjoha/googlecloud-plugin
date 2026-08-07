@@ -1,28 +1,12 @@
 ---
 name: bigquery
-description: "Query and manage data in Google BigQuery. Covers dataset and table management, IAM, cost-safe querying (dry-run first), partitioning, clustering, and bq CLI patterns. Always estimates cost before executing queries — BigQuery bills by bytes processed."
-version: "0.1"
-triggers:
-  - "BigQuery"
-  - "bigquery query"
-  - "bq"
-  - "dataset"
-  - "analytics on GCP"
-  - "BigQuery IAM"
-  - "BigQuery cost"
-  - "bigquery partition"
-  - "bigquery schema"
-  - "sql on GCP"
-required_scopes:
-  - bigquery.datasets.create
-  - bigquery.datasets.get
-  - bigquery.jobs.create
-  - bigquery.jobs.get
-  - bigquery.tables.create
-  - bigquery.tables.getData
-  - bigquery.tables.get
-mcp_servers:
-  - google-bigquery
+description: "Query and manage data in Google BigQuery. Covers dataset and table management, IAM, cost-safe querying (dry-run first), partitioning, clustering, and bq CLI patterns. Always estimates cost before executing queries — BigQuery bills by bytes processed. Use when the user mentions: bigquery query, analytics on GCP, BigQuery IAM, BigQuery cost, bigquery partition, bigquery schema, sql on GCP."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "BigQuery, bigquery query, bq, dataset, analytics on GCP, BigQuery IAM, BigQuery cost, bigquery partition, bigquery schema, sql on GCP"
+  "googlecloud-plugin/required-scopes": "bigquery.datasets.create, bigquery.datasets.get, bigquery.jobs.create, bigquery.jobs.get, bigquery.tables.create, bigquery.tables.getData, bigquery.tables.get"
+  "googlecloud-plugin/mcp-servers": "google-bigquery"
 ---
 
 # BigQuery

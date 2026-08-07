@@ -1,29 +1,12 @@
 ---
 name: vertex-ai
-description: "Build and deploy ML models and generative AI applications on Vertex AI. Covers Model Garden, Gemini API, custom training, endpoint deployment, Agent Builder, and IAM. Warns before deploying endpoints (billable). Integrates with Vertex AI MCP server."
-version: "0.1"
-triggers:
-  - "vertex AI"
-  - "Gemini on GCP"
-  - "model garden"
-  - "deploy ML model"
-  - "vertex endpoint"
-  - "generative AI GCP"
-  - "agent builder"
-  - "vertex training"
-  - "PaLM"
-  - "Gemini API"
-  - "vertex AI pipeline"
-required_scopes:
-  - aiplatform.endpoints.create
-  - aiplatform.endpoints.get
-  - aiplatform.endpoints.predict
-  - aiplatform.models.get
-  - aiplatform.models.list
-  - aiplatform.trainingPipelines.create
-  - aiplatform.trainingPipelines.get
-mcp_servers:
-  - google-vertex-ai
+description: "Build and deploy ML models and generative AI applications on Vertex AI. Covers Model Garden, Gemini API, custom training, endpoint deployment, Agent Builder, and IAM. Warns before deploying endpoints (billable). Integrates with Vertex AI MCP server. Use when the user mentions: Gemini on GCP, vertex endpoint, generative AI GCP, vertex training, PaLM, vertex AI pipeline."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "vertex AI, Gemini on GCP, model garden, deploy ML model, vertex endpoint, generative AI GCP, agent builder, vertex training, PaLM, Gemini API, vertex AI pipeline"
+  "googlecloud-plugin/required-scopes": "aiplatform.endpoints.create, aiplatform.endpoints.get, aiplatform.endpoints.predict, aiplatform.models.get, aiplatform.models.list, aiplatform.trainingPipelines.create, aiplatform.trainingPipelines.get"
+  "googlecloud-plugin/mcp-servers": "google-vertex-ai"
 ---
 
 # Vertex AI

@@ -1,25 +1,14 @@
 ---
 name: gcp-qa
-description: "GCP QA and review persona. Critiques and evaluates designs, implementations, and release candidates against acceptance criteria. Owns linting, freshness checks, link validation, and smoke tests. Raises blockers before release. Quality gate authority for both the plugin itself and solutions built with it."
-version: "0.1"
-persona: true
-tier: 3
-gate: quality
-triggers:
-  - "QA review"
-  - "quality gate"
-  - "validate implementation"
-  - "lint"
-  - "smoke test"
-  - "acceptance criteria"
-  - "release check"
-  - "skill validation"
-  - "check links"
-  - "freshness"
-  - "is this ready to ship"
-  - "pre-release review"
-required_scopes: []
-mcp_servers: []
+description: "GCP QA and review persona. Critiques and evaluates designs, implementations, and release candidates against acceptance criteria. Owns linting, freshness checks, link validation, and smoke tests. Raises blockers before release. Quality gate authority for both the plugin itself and solutions built with it. Use when the user mentions: QA review, validate implementation, release check, skill validation, check links, is this ready to ship, pre-release review."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/persona": "true"
+  "googlecloud-plugin/tier": "3"
+  "googlecloud-plugin/gate": "quality"
+  "googlecloud-plugin/triggers": "QA review, quality gate, validate implementation, lint, smoke test, acceptance criteria, release check, skill validation, check links, freshness, is this ready to ship, pre-release review"
+  "googlecloud-plugin/required-scopes": ""
 ---
 
 # GCP QA / Review

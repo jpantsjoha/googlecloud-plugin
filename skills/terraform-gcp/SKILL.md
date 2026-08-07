@@ -1,23 +1,11 @@
 ---
 name: terraform-gcp
-description: "Terraform patterns for Google Cloud using the official google and google-beta providers and Cloud Foundation Toolkit modules. Covers project structure, state management, IAM, and CFT blueprint usage. Warns before terraform apply (billable and potentially destructive)."
-version: "0.1"
-triggers:
-  - "terraform GCP"
-  - "terraform google"
-  - "IaC GCP"
-  - "cloud foundation toolkit"
-  - "CFT"
-  - "terraform plan GCP"
-  - "terraform apply GCP"
-  - "GCP modules"
-  - "landing zone terraform"
-  - "terraform google provider"
-required_scopes:
-  - resourcemanager.projects.get
-  - resourcemanager.projects.setIamPolicy
-  - serviceusage.services.enable
-mcp_servers: []
+description: "Terraform patterns for Google Cloud using the official google and google-beta providers and Cloud Foundation Toolkit modules. Covers project structure, state management, IAM, and CFT blueprint usage. Warns before terraform apply (billable and potentially destructive). Use when the user mentions: terraform GCP, terraform google, IaC GCP, terraform plan GCP, terraform apply GCP, GCP modules, landing zone terraform, terraform google provider."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "terraform GCP, terraform google, IaC GCP, cloud foundation toolkit, CFT, terraform plan GCP, terraform apply GCP, GCP modules, landing zone terraform, terraform google provider"
+  "googlecloud-plugin/required-scopes": "resourcemanager.projects.get, resourcemanager.projects.setIamPolicy, serviceusage.services.enable"
 ---
 
 # Terraform — GCP

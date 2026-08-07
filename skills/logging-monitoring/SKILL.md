@@ -1,30 +1,12 @@
 ---
 name: logging-monitoring
-description: "Configure observability on GCP using Cloud Logging, Cloud Monitoring, Cloud Trace, and Cloud Profiler. Covers log sinks, log-based metrics, alerting policies, dashboards, and uptime checks. Owns the operational readiness evidence for gcp-ops."
-version: "0.1"
-triggers:
-  - "cloud logging"
-  - "cloud monitoring"
-  - "logging setup"
-  - "monitoring setup"
-  - "alerting policy"
-  - "log sink"
-  - "dashboard GCP"
-  - "uptime check"
-  - "cloud trace"
-  - "error reporting"
-  - "log-based metric"
-  - "SLO monitoring"
-required_scopes:
-  - logging.sinks.create
-  - logging.sinks.get
-  - logging.logMetrics.create
-  - monitoring.alertPolicies.create
-  - monitoring.dashboards.create
-  - monitoring.uptimeCheckConfigs.create
-mcp_servers:
-  - google-logging
-  - google-monitoring
+description: "Configure observability on GCP using Cloud Logging, Cloud Monitoring, Cloud Trace, and Cloud Profiler. Covers log sinks, log-based metrics, alerting policies, dashboards, and uptime checks. Owns the operational readiness evidence for gcp-ops. Use when the user mentions: logging setup, monitoring setup, alerting policy, dashboard GCP, error reporting, SLO monitoring."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "cloud logging, cloud monitoring, logging setup, monitoring setup, alerting policy, log sink, dashboard GCP, uptime check, cloud trace, error reporting, log-based metric, SLO monitoring"
+  "googlecloud-plugin/required-scopes": "logging.sinks.create, logging.sinks.get, logging.logMetrics.create, monitoring.alertPolicies.create, monitoring.dashboards.create, monitoring.uptimeCheckConfigs.create"
+  "googlecloud-plugin/mcp-servers": "google-logging, google-monitoring"
 ---
 
 # Logging + Monitoring
