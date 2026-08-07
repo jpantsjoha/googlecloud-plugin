@@ -134,6 +134,19 @@ def test_triggers_non_empty(skill_file: Path) -> None:
 
 
 @pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
+def test_every_trigger_is_routable(skill_file: Path) -> None:
+    """A trigger absent from the description is unroutable — no client reads metadata."""
+    fm = parse_frontmatter(skill_file)
+    description = fm["description"].lower()
+    triggers = [t.strip() for t in fm["metadata"][f"{NS}triggers"].split(",") if t.strip()]
+    unroutable = [t for t in triggers if t.lower() not in description]
+    assert not unroutable, (
+        f"{skill_file}: trigger(s) {unroutable} appear only in metadata, so a "
+        f"conformant client routing on 'description' can never match them"
+    )
+
+
+@pytest.mark.parametrize("skill_file", skill_files(), ids=lambda p: p.parent.name)
 def test_references_directory_exists(skill_file: Path) -> None:
     refs = skill_file.parent / "references"
     assert refs.is_dir(), f"{skill_file.parent}: Missing references/ directory"
