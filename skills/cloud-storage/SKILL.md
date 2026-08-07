@@ -1,28 +1,12 @@
 ---
 name: cloud-storage
-description: "Manage object storage on Google Cloud Storage. Covers bucket creation, IAM, uniform access control, lifecycle policies, signed URLs, and gsutil/gcloud CLI patterns. Enforces private-by-default: never creates public buckets without explicit intent and gcp-security sign-off."
-version: "0.1"
-triggers:
-  - "cloud storage"
-  - "GCS"
-  - "bucket"
-  - "gsutil"
-  - "object storage"
-  - "upload to GCP"
-  - "storage IAM"
-  - "signed URL"
-  - "lifecycle policy"
-  - "storage class"
-required_scopes:
-  - storage.buckets.create
-  - storage.buckets.get
-  - storage.buckets.getIamPolicy
-  - storage.buckets.setIamPolicy
-  - storage.objects.create
-  - storage.objects.get
-  - storage.objects.list
-mcp_servers:
-  - google-storage
+description: "Manage object storage on Google Cloud Storage. Covers bucket creation, IAM, uniform access control, lifecycle policies, signed URLs, and gsutil/gcloud CLI patterns. Enforces private-by-default: never creates public buckets without explicit intent and gcp-security sign-off. Use when the user mentions: GCS, upload to GCP, storage IAM, lifecycle policy, storage class."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "cloud storage, GCS, bucket, gsutil, object storage, upload to GCP, storage IAM, signed URL, lifecycle policy, storage class"
+  "googlecloud-plugin/required-scopes": "storage.buckets.create, storage.buckets.get, storage.buckets.getIamPolicy, storage.buckets.setIamPolicy, storage.objects.create, storage.objects.get, storage.objects.list"
+  "googlecloud-plugin/mcp-servers": "google-storage"
 ---
 
 # Cloud Storage

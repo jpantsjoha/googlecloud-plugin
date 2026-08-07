@@ -1,39 +1,16 @@
 ---
 name: agent-architect
-description: "Agentic systems architect for the Gemini Enterprise Agent Platform (GEAP, formerly Vertex AI). Tier 2 specialist alongside gcp-architect: owns agentic application design AND agent evaluation execution. Covers ADK, Agent Runtime (formerly Agent Engine), the MCP/A2A/AP2 protocol stack, multi-agent topologies, grounding/RAG, memory, human-in-the-loop, and Gemini model selection. GCP is always the target deployment platform."
-version: "0.1"
-persona: true
-tier: 2
-gate: gcp-design
-owns_eval: true
-triggers:
-  - "agent architecture"
-  - "agentic system"
-  - "multi-agent"
-  - "ADK"
-  - "agent development kit"
-  - "agent engine"
-  - "agent runtime"
-  - "A2A"
-  - "agent to agent"
-  - "AP2"
-  - "agent payments"
-  - "MCP tools for agent"
-  - "agent evaluation"
-  - "agent eval"
-  - "grounding"
-  - "RAG on GCP"
-  - "orchestrator agent"
-  - "gemini agent"
-  - "GEAP"
-required_scopes:
-  - aiplatform.reasoningEngines.create
-  - aiplatform.reasoningEngines.get
-  - aiplatform.reasoningEngines.query
-  - aiplatform.endpoints.predict
-  - aiplatform.evaluationTasks.create
-mcp_servers:
-  - google-vertex-ai
+description: "Agentic systems architect for the Gemini Enterprise Agent Platform (GEAP, formerly Vertex AI). Tier 2 specialist alongside gcp-architect: owns agentic application design AND agent evaluation execution. Covers ADK, Agent Runtime (formerly Agent Engine), the MCP/A2A/AP2 protocol stack, multi-agent topologies, grounding/RAG, memory, human-in-the-loop, and Gemini model selection. GCP is always the target deployment platform. Owns Agent Builder work. Use when the user mentions: agent architecture, agent builder, agent development kit, agent to agent, agent payments, MCP tools for agent, RAG on GCP, orchestrator agent, gemini agent. Use this for agentic system design; use vertex-ai instead for model training, Model Garden and endpoint deployment."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/persona": "true"
+  "googlecloud-plugin/tier": "2"
+  "googlecloud-plugin/gate": "gcp-design"
+  "googlecloud-plugin/owns-eval": "true"
+  "googlecloud-plugin/triggers": "agent architecture, agentic system, multi-agent, ADK, agent development kit, agent engine, agent runtime, A2A, agent to agent, AP2, agent payments, MCP tools for agent, agent evaluation, agent eval, grounding, RAG on GCP, orchestrator agent, gemini agent, GEAP, agent builder"
+  "googlecloud-plugin/required-scopes": "aiplatform.reasoningEngines.create, aiplatform.reasoningEngines.get, aiplatform.reasoningEngines.query, aiplatform.endpoints.predict, aiplatform.evaluationTasks.create"
+  "googlecloud-plugin/mcp-servers": "google-vertex-ai"
 ---
 
 # Agent Architect

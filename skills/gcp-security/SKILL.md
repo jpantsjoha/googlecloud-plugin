@@ -1,26 +1,14 @@
 ---
 name: gcp-security
-description: "GCP security enforcer. Reviews designs and implementations against the GCP Well-Architected Framework security pillar, OWASP Top 10, and GCP-specific risk patterns. Enforces least-privilege IAM, secrets management, no hardcoded credentials, and security-by-design. Also reviews solution-designer output for cross-cloud security gaps. Must clear the security gate before any implementation begins."
-version: "0.1"
-persona: true
-tier: 3
-gate: security
-triggers:
-  - "security review"
-  - "IAM review"
-  - "least privilege"
-  - "secrets management"
-  - "GCP security"
-  - "security gate"
-  - "vulnerability"
-  - "hardcoded credentials"
-  - "public bucket"
-  - "default service account"
-  - "security posture"
-  - "compliance GCP"
-  - "OWASP GCP"
-required_scopes: []
-mcp_servers: []
+description: "GCP security enforcer. Reviews designs and implementations against the GCP Well-Architected Framework security pillar, OWASP Top 10, and GCP-specific risk patterns. Enforces least-privilege IAM, secrets management, no hardcoded credentials, and security-by-design. Also reviews solution-designer output for cross-cloud security gaps. Must clear the security gate before any implementation begins. Use when the user mentions: security review, IAM review, least privilege, vulnerability, public bucket, default service account, security posture, compliance GCP, OWASP GCP. Use this to review and gate; use iam instead to author or change bindings."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/persona": "true"
+  "googlecloud-plugin/tier": "3"
+  "googlecloud-plugin/gate": "security"
+  "googlecloud-plugin/triggers": "security review, IAM review, least privilege, secrets management, GCP security, security gate, vulnerability, hardcoded credentials, public bucket, default service account, security posture, compliance GCP, OWASP GCP"
+  "googlecloud-plugin/required-scopes": ""
 ---
 
 # GCP Security

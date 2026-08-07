@@ -10,25 +10,48 @@ Examples: `cloud-run`, `gcp-architect`, `logging-monitoring`
 
 ## SKILL.md Frontmatter Contract
 
+Frontmatter must conform to the [Agent Skills specification](https://agentskills.io/specification).
+The field set is **closed** — only `name`, `description`, `license`,
+`compatibility`, `allowed-tools` and `metadata` are permitted. A skill carrying
+any other top-level key is non-conformant, and
+[Agent Plugins 1.0.0](https://agent-plugins.org/specification) §6.1 requires a
+client to **skip** it. Everything specific to this plugin therefore lives under
+`metadata`, namespaced.
+
 ```yaml
 ---
-name: <matches directory name>
-description: "<meaningful, >20 chars>"
-version: "0.1"
-persona: true          # only for persona skills (solution-designer, gcp-*)
-tier: 1                # only for persona skills (1, 2, or 3)
-gate: <gate-name>      # only for persona skills
-triggers:
-  - "trigger phrase one"
-  - "trigger phrase two"
-required_scopes:       # list of GCP IAM permission strings (empty list [] for non-IAM skills)
-  - service.resource.verb
-mcp_servers:           # list of MCP server IDs this skill uses (empty list [] if none)
-  - server-id
+name: <matches directory name>          # 1-64 chars, lowercase, hyphens, no "--"
+description: "<what it does AND when to use it — max 1024 chars>"
+license: MIT
+metadata:                               # map of string keys to STRING values
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/persona": "true"           # persona skills only
+  "googlecloud-plugin/tier": "1"                 # persona skills only (1, 2, or 3)
+  "googlecloud-plugin/gate": "<gate-name>"       # persona skills only
+  "googlecloud-plugin/triggers": "phrase one, phrase two"
+  "googlecloud-plugin/required-scopes": "service.resource.verb, ..."   # "" if none
+  "googlecloud-plugin/mcp-servers": "server-id, ..."                   # omit if none
 ---
 ```
 
-All fields except `persona`, `tier`, and `gate` are required on every skill.
+Required on every skill: `name`, `description`, and the `version`, `triggers`
+and `required-scopes` metadata keys. `required-scopes` is present but empty for
+non-IAM skills — the empty string is meaningful, it asserts the skill needs no
+permissions.
+
+### Writing the description
+
+`description` is the only thing a conformant client routes on, so it carries the
+weight `triggers` used to. It must say **what the skill does and when to use
+it**, and end with the routing keywords: `Use when the user mentions: …`.
+
+Where two skills have adjacent scope, each description must name the other and
+draw the line — `Use this to author or change IAM; use gcp-security instead to
+audit an existing posture.` Without that, both match and routing is a coin flip.
+
+Lists in `metadata` are comma-joined strings, not YAML sequences: the spec
+defines `metadata` as a map from string keys to string values. Consumers split
+on `", "`.
 
 ## References Directory
 

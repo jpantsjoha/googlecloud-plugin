@@ -146,13 +146,45 @@ The rule underneath every gate: **infer intent, never infer permission.** An AI 
 
 ---
 
+## Standards and compliance
+
+This plugin conforms to the open, vendor-neutral packaging standards — not to any
+single vendor's plugin format.
+
+| Standard | Version | What conforms | How it's verified |
+|---|---|---|---|
+| [Agent Plugins](https://agent-plugins.org/specification) | 1.0.0 | `plugin.json`, `mcp.json`, the `skills/` layout | `make spec` + [`plugin.schema.json`](https://agent-plugins.org/schemas/1.0.0/plugin.schema.json) / [`mcp.schema.json`](https://agent-plugins.org/schemas/1.0.0/mcp.schema.json) |
+| [Agent Skills](https://agentskills.io/specification) | current | all 17 `SKILL.md` files | `make validate` + the official [`skills-ref`](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference validator |
+| [Model Context Protocol](https://modelcontextprotocol.io) | stdio transport | `mcp.json` server declarations | `make spec` transport + placeholder checks |
+
+Agent Plugins 1.0.0 is co-maintained by Amazon, Cursor, Google, Microsoft, OpenAI
+and Vercel. Conforming to it means one directory layout works across conformant
+clients instead of a bespoke wrapper per harness. The per-harness manifests
+(`.claude-plugin/`, `.kimi-plugin/`, `gemini-extension.json`, `.agents/`) remain
+alongside it, so existing installs are unaffected.
+
+Verify it yourself, without trusting this repo's own scripts:
+
+```bash
+uvx --from "git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref" \
+    skills-ref validate skills/cloud-run
+uvx check-jsonschema --schemafile https://agent-plugins.org/schemas/1.0.0/plugin.schema.json plugin.json
+```
+
+See [ADR-007](architecture/decisions/ADR-007-agent-plugins-conformance.md) for the
+adoption decision and its trade-offs.
+
+---
+
 ## Validation
 
 The plugin validates itself. Every skill conforms to a machine-readable contract; every reference URL is checked live; every source carries a retrieval date and content hash for audit.
 
 ```bash
-make gate       # the 3-minute gate: validate + lint + test
-make validate   # SKILL.md frontmatter contract
+make gate       # the full gate: spec + validate + manifest + mermaid + lint + test
+make spec       # Agent Plugins 1.0.0 conformance (plugin.json + mcp.json + skills/)
+make validate   # SKILL.md frontmatter vs the Agent Skills specification
+make manifest   # per-harness manifests present and consistent
 make lint       # every reference URL resolves (HTTP 200)
 make test       # skill smoke tests
 make check      # freshness: content-hash drift vs live GCP docs

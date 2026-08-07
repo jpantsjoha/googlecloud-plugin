@@ -1,19 +1,11 @@
 ---
 name: well-architected
-description: "Google Cloud Well-Architected Framework reference. Six pillars: operational excellence, security, reliability, cost optimization, performance, and sustainability. Referenced by gcp-architect and gcp-security for every design review."
-version: "0.1"
-triggers:
-  - "well-architected"
-  - "GCP framework"
-  - "architecture pillars"
-  - "reliability GCP"
-  - "cost optimization GCP"
-  - "performance GCP"
-  - "sustainability GCP"
-  - "operational excellence"
-  - "WAF review"
-required_scopes: []
-mcp_servers: []
+description: "Google Cloud Well-Architected Framework reference. Six pillars: operational excellence, security, reliability, cost optimization, performance, and sustainability. Referenced by gcp-architect and gcp-security for every design review. Use when the user mentions: GCP framework, architecture pillars, reliability GCP, cost optimization GCP, performance GCP, sustainability GCP, WAF review."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "well-architected, GCP framework, architecture pillars, reliability GCP, cost optimization GCP, performance GCP, sustainability GCP, operational excellence, WAF review"
+  "googlecloud-plugin/required-scopes": ""
 ---
 
 # GCP Well-Architected Framework

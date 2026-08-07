@@ -1,26 +1,12 @@
 ---
 name: cloud-run
-description: "Deploy and manage containerized workloads on Cloud Run. Covers service creation, traffic splitting, IAM, VPC connectivity, secrets integration, auto-scaling, and gcloud CLI patterns. Warns before billable deployments."
-version: "0.1"
-triggers:
-  - "deploy to cloud run"
-  - "create cloud run service"
-  - "cloud run"
-  - "serverless container"
-  - "scale cloud run"
-  - "cloud run IAM"
-  - "cloud run VPC"
-  - "cloud run secrets"
-  - "gcloud run"
-required_scopes:
-  - run.services.create
-  - run.services.delete
-  - run.services.get
-  - run.services.list
-  - run.services.update
-  - run.routes.invoke
-mcp_servers:
-  - google-cloud-run
+description: "Deploy and manage containerized workloads on Cloud Run. Covers service creation, traffic splitting, IAM, VPC connectivity, secrets integration, auto-scaling, and gcloud CLI patterns. Warns before billable deployments. Use when the user mentions: deploy to cloud run, create cloud run service, serverless container, scale cloud run, cloud run IAM, cloud run VPC, cloud run secrets, gcloud run."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "deploy to cloud run, create cloud run service, cloud run, serverless container, scale cloud run, cloud run IAM, cloud run VPC, cloud run secrets, gcloud run"
+  "googlecloud-plugin/required-scopes": "run.services.create, run.services.delete, run.services.get, run.services.list, run.services.update, run.routes.invoke"
+  "googlecloud-plugin/mcp-servers": "google-cloud-run"
 ---
 
 # Cloud Run

@@ -1,27 +1,12 @@
 ---
 name: mcp-servers
-description: "Configure, install, and maintain Google-managed and self-hosted MCP servers for GCP. Covers setup, auth (ADC and SA key), capability map, troubleshooting, and version tracking. Every MCP entry includes a gcloud CLI fallback."
-version: "0.1"
-triggers:
-  - "MCP server"
-  - "MCP setup"
-  - "google MCP"
-  - "model context protocol GCP"
-  - "MCP install"
-  - "MCP auth"
-  - "genai toolbox"
-  - "MCP tools GCP"
-  - "configure MCP"
-required_scopes: []
-mcp_servers:
-  - google-cloud-run
-  - google-bigquery
-  - google-gke
-  - google-storage
-  - google-vertex-ai
-  - google-iam
-  - google-logging
-  - google-monitoring
+description: "Configure, install, and maintain Google-managed and self-hosted MCP servers for GCP. Covers setup, auth (ADC and SA key), capability map, troubleshooting, and version tracking. Every MCP entry includes a gcloud CLI fallback. Use when the user mentions: MCP setup, google MCP, model context protocol GCP, MCP install, MCP auth, genai toolbox, MCP tools GCP, configure MCP."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "MCP server, MCP setup, google MCP, model context protocol GCP, MCP install, MCP auth, genai toolbox, MCP tools GCP, configure MCP"
+  "googlecloud-plugin/required-scopes": ""
+  "googlecloud-plugin/mcp-servers": "google-cloud-run, google-bigquery, google-gke, google-storage, google-vertex-ai, google-iam, google-logging, google-monitoring"
 ---
 
 # MCP Servers — Google Cloud

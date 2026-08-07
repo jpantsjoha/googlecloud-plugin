@@ -1,5 +1,5 @@
 name: googlecloud-plugin
-version: 0.1.0
+version: 0.2.0
 description: >
   Unified Google Cloud plugin. Installs a full operational GCP team:
   vendor-agnostic solution designer, GCP architect, security enforcer,

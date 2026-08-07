@@ -1,28 +1,11 @@
 ---
 name: networking
-description: "Design and manage GCP networking: VPC, subnets, firewall rules, Cloud Load Balancing, Cloud Armor, Private Google Access, and Shared VPC. Deny-by-default firewall posture. Warns before creating external load balancers (billable)."
-version: "0.1"
-triggers:
-  - "VPC"
-  - "firewall"
-  - "networking GCP"
-  - "cloud load balancer"
-  - "cloud armor"
-  - "private google access"
-  - "shared VPC"
-  - "subnet"
-  - "VPN GCP"
-  - "cloud NAT"
-  - "network design GCP"
-required_scopes:
-  - compute.firewalls.create
-  - compute.firewalls.get
-  - compute.firewalls.list
-  - compute.networks.create
-  - compute.networks.get
-  - compute.subnetworks.create
-  - compute.subnetworks.get
-mcp_servers: []
+description: "Design and manage GCP networking: VPC, subnets, firewall rules, Cloud Load Balancing, Cloud Armor, Private Google Access, and Shared VPC. Deny-by-default firewall posture. Warns before creating external load balancers (billable). Use when the user mentions: networking GCP, cloud load balancer, VPN GCP, cloud NAT, network design GCP."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "VPC, firewall, networking GCP, cloud load balancer, cloud armor, private google access, shared VPC, subnet, VPN GCP, cloud NAT, network design GCP"
+  "googlecloud-plugin/required-scopes": "compute.firewalls.create, compute.firewalls.get, compute.firewalls.list, compute.networks.create, compute.networks.get, compute.subnetworks.create, compute.subnetworks.get"
 ---
 
 # Networking
