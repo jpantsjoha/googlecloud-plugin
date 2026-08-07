@@ -5,6 +5,16 @@ All notable changes to this plugin are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `CONTRIBUTING.md` — the gate, the skill contract, and why each rule exists.
+- `SECURITY.md` — private reporting, and what counts as a vulnerability in a
+  plugin that ships instructions rather than a running service.
+- Issue templates for incorrect GCP guidance, skills not loading or routing, and
+  new-skill proposals; plus a pull-request template carrying the safety checks.
+
 ## [0.2.0] — 2026-08-07
 
 **Standards release.** The plugin now conforms to

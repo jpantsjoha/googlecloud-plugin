@@ -1,0 +1,52 @@
+name: Skill not loading or routing
+description: A skill is missing, or the wrong one activates
+labels: ["discovery"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, run `make spec` and `make validate` — they catch most
+        conformance causes. Include the output below if either fails.
+
+  - type: dropdown
+    id: harness
+    attributes:
+      label: Which agent
+      options:
+        - Claude Code
+        - Antigravity (agy)
+        - Codex
+        - Kimi
+        - Other conformant Agent Plugins client
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What happened
+      options:
+        - No skills appear at all
+        - Some skills load, others are missing
+        - The wrong skill activates for my request
+    validations:
+      required: true
+
+  - type: input
+    id: count
+    attributes:
+      label: How many skills does your agent see
+      description: Should be 17. A count of 0 usually means the manifest was rejected; a lower count means individual skills were skipped.
+      placeholder: "17"
+
+  - type: textarea
+    id: request
+    attributes:
+      label: What you asked, and which skill you expected
+      description: For routing problems, the exact phrasing matters — routing keys off the skill description.
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Output of `make spec && make validate`
+      render: shell

@@ -1,0 +1,50 @@
+name: Propose a new skill
+description: Suggest coverage for a GCP service or capability the plugin lacks
+labels: ["skill-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The plugin is **GCP-only and opinionated by design** — it covers what a
+        builder actually reaches for, not the whole service catalogue. Make the
+        case for why this one earns a place.
+
+  - type: input
+    id: service
+    attributes:
+      label: Service or capability
+      placeholder: Cloud Spanner
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: What would an agent do with it
+      description: Concrete tasks, not a feature list. What would you ask, and what should happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: overlap
+    attributes:
+      label: Overlap with existing skills
+      description: |
+        Which of the 17 existing skills come closest, and where is the boundary?
+        Every skill must name its neighbours and draw the line, otherwise both
+        match a request and routing becomes a coin flip.
+    validations:
+      required: true
+
+  - type: textarea
+    id: hazards
+    attributes:
+      label: Billable or destructive operations
+      description: Anything that costs money or cannot be undone needs a warning before the command.
+
+  - type: checkboxes
+    id: offer
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to draft this skill myself
