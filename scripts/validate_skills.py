@@ -91,6 +91,27 @@ def check_metadata(metadata) -> list[str]:
     return errors
 
 
+def check_triggers_routable(metadata: dict, description: str) -> list[str]:
+    """Every trigger must appear in the description, because that is what routes.
+
+    No conformant client reads metadata — it matches on `description` alone. A
+    trigger recorded only in metadata is therefore unroutable, and the two
+    copies silently rot apart. This keeps the metadata index a derived view of
+    the description rather than a competing source of truth.
+    """
+    raw = metadata.get(f"{NS}triggers") if isinstance(metadata, dict) else None
+    if not isinstance(raw, str):
+        return []
+    lowered = description.lower()
+    unroutable = [t.strip() for t in raw.split(",") if t.strip() and t.strip().lower() not in lowered]
+    if unroutable:
+        return [
+            f"trigger(s) {unroutable} appear in metadata but not in 'description' — "
+            "they are unroutable; add them to the description or drop them"
+        ]
+    return []
+
+
 def validate_skill(skill_path: Path) -> list[str]:
     content = skill_path.read_text()
 
@@ -141,6 +162,8 @@ def validate_skill(skill_path: Path) -> list[str]:
         errors.append("Missing 'metadata' (carries this plugin's skill contract)")
     else:
         errors.extend(check_metadata(fm["metadata"]))
+        if isinstance(fm.get("description"), str):
+            errors.extend(check_triggers_routable(fm["metadata"], fm["description"]))
 
     if not (skill_path.parent / "references").is_dir():
         errors.append("Missing references/ directory")
