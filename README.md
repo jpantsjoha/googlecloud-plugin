@@ -3,6 +3,9 @@
 </p>
 
 [![Listed on ClaudePluginHub](https://www.claudepluginhub.com/badge/jpantsjoha-googlecloud-plugin)](https://www.claudepluginhub.com/plugins/jpantsjoha-googlecloud-plugin?ref=badge)
+[![Agent Plugins 1.0.0](https://img.shields.io/badge/Agent%20Plugins-1.0.0%20conformant-4285F4)](https://agent-plugins.org/specification)
+[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-conformant-34A853)](https://agentskills.io/specification)
+
 # GoogleCloud Plugin
 
 > **Install once, and your coding agent gains a full Google Cloud delivery team — a vendor-objective solution designer, a GCP architect, an agentic-systems architect, plus security, SRE, and QA — wired into a design-first, security-first delivery gate.**
@@ -12,6 +15,8 @@
 Skill libraries for Google Cloud are everywhere. What they miss is the operating contract: who designs before anyone writes code, who signs off on least-privilege before anything deploys, what "done" means when an agent ships to a billable cloud. This plugin ships that contract, with the GCP know-how built in.
 
 One install gives an agent (Claude, Codex, or Antigravity) six personas, eleven service skills, and a research pipeline that keeps every reference current. A plugin that goes stale in silence is worse than none.
+
+**As of v0.2.0 this plugin conforms to [Agent Plugins 1.0.0](https://agent-plugins.org/specification)** — the open, vendor-neutral packaging standard co-maintained by Amazon, Cursor, Google, Microsoft, OpenAI and Vercel ([announcement](https://developers.googleblog.com/agent-plugins-package-your-skills-tools-and-more/)) — and to the [Agent Skills specification](https://agentskills.io/specification) it references. That means one directory layout works across conformant clients, rather than a bespoke wrapper per harness. Conformance is enforced in CI by `make spec` and verified against the official reference validator; see [Standards and compliance](#standards-and-compliance).
 
 The plugin is **GCP-only and opinionated by design**. It covers the services a builder reaches for — Firebase, Cloud Run, BigQuery, GKE — and the agent frameworks now built on top: ADK, and the MCP / A2A / AP2 protocol stack, deployed on the Gemini Enterprise Agent Platform. Refine it for your team. Keep the contract coherent as you do.
 
