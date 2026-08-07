@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "googlecloud-plugin",
   "description": "A full Google Cloud delivery team for your coding agent: vendor-objective solution designer, GCP architect, agentic-systems architect (ADK / Agent Runtime / MCP / A2A / AP2), plus security, SRE, and QA — wired into a design-first, security-first delivery gate. Eleven service skills (Cloud Run, GKE, IAM, BigQuery, Cloud Storage, Vertex AI, networking, observability), MCP server setup, and a self-validating research pipeline that keeps every reference current.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Jaroslav Pantsjoha",
     "url": "https://uk.linkedin.com/in/johas"
