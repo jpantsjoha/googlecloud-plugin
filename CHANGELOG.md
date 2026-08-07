@@ -12,6 +12,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `CONTRIBUTING.md` — the gate, the skill contract, and why each rule exists.
 - `SECURITY.md` — private reporting, and what counts as a vulnerability in a
   plugin that ships instructions rather than a running service.
+- `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1.
 - Issue templates for incorrect GCP guidance, skills not loading or routing, and
   new-skill proposals; plus a pull-request template carrying the safety checks.
 

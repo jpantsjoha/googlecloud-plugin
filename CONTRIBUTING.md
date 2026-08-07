@@ -125,6 +125,10 @@ when a cited page has drifted since it was captured.
   failure mode this plugin has, more serious than any crash.
 - **Security issue** — see [SECURITY.md](SECURITY.md). Don't open a public issue.
 
+## Code of conduct
+
+Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Licence
 
 Contributions are MIT, matching the project.
