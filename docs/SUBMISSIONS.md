@@ -2,7 +2,7 @@
 
 Where to list `googlecloud-plugin` so builders can find and install it. Each entry has the destination, what it needs, and the status.
 
-> **Standards note.** As of v0.2.0 this plugin conforms to [Agent Plugins 1.0.0](https://agent-plugins.org/specification)
+> **Standards note.** This plugin is compliant with [Agent Plugins 1.0.0](https://agent-plugins.org/specification)
 > and the [Agent Skills specification](https://agentskills.io/specification) — the vendor-neutral standards
 > ([announcement](https://developers.googleblog.com/agent-plugins-package-your-skills-tools-and-more/)).
 > Directory-layout advice written for a single client is a *subset* of what we ship: the per-harness manifests
