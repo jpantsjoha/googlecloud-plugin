@@ -22,6 +22,9 @@ jobs:
       - name: Install deps
         run: pip install pyyaml pytest
 
+      - name: Validate Agent Plugins 1.0.0 conformance
+        run: python3 scripts/validate_agent_plugins.py
+
       - name: Validate skill contracts
         run: python3 scripts/validate_skills.py
 
@@ -36,3 +39,20 @@ jobs:
 
       - name: Smoke tests
         run: python3 -m pytest tests/skill-smoke-tests/ -q
+
+      # Advisory: validates against UPSTREAM rather than our transcription of it,
+      # so it catches spec drift early. Network-dependent, so it warns instead of
+      # blocking — validate_agent_plugins.py above is the deterministic gate.
+      - name: Independent conformance check (upstream reference validator)
+        continue-on-error: true
+        run: |
+          pipx install uv >/dev/null 2>&1 || pip install uv
+          for skill in skills/*/; do
+            uvx --quiet --from \
+              'git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref' \
+              skills-ref validate "$skill" || exit 1
+          done
+          uvx --quiet check-jsonschema \
+            --schemafile https://agent-plugins.org/schemas/1.0.0/plugin.schema.json plugin.json
+          uvx --quiet check-jsonschema \
+            --schemafile https://agent-plugins.org/schemas/1.0.0/mcp.schema.json mcp.json
