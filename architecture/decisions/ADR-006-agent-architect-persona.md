@@ -22,7 +22,7 @@ Boundary decisions (operator-selected):
 - **Full agentic stack scope:** topologies, ADK, Agent Runtime, MCP/A2A/AP2 protocols, grounding/RAG, memory, human-in-the-loop, model selection, evaluation.
 
 Coherence rules:
-- Complements the join-the-team `adk-expert` (pure ADK how-to) and aligns to `gcp-expert` as GEAP platform-currency authority — reference, don't contradict.
+- Complements the devex-charter `adk-expert` (pure ADK how-to) and aligns to `gcp-expert` as GEAP platform-currency authority — reference, don't contradict.
 - Uses current GEAP naming in prose; preserves legacy `vertex-ai`/`agent_engine` literals in code, URLs, SDKs, and Terraform per the rebrand being branding-only.
 - Enforces the Gemini model deprecation discipline — never pin preview IDs; reverify GA IDs in Model Garden for the GEAP surface.
 

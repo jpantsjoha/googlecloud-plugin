@@ -14,7 +14,7 @@ Where to list `googlecloud-plugin` so builders can find and install it. Each ent
 
 - **Where:** https://www.claudepluginhub.com
 - **Needs:** a public repo with `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` (both present). Submit the repo URL.
-- **Precedent:** `join-the-team` is listed here.
+- **Precedent:** `devex-charter` (formerly `join-the-team`) is listed here: <https://www.claudepluginhub.com/plugins/jpantsjoha-devex-charter>.
 - **Install string once listed:**
   ```
   /plugin marketplace add jpantsjoha/googlecloud-plugin
