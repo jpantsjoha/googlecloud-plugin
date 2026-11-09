@@ -28,7 +28,7 @@ Never commit `_plugin/` content. Draft in `_plugin/staging/`, promote to `skills
 
 Before any skill merges to main:
 1. `make gate` passes (validate + lint + test)
-2. PR reviewed (join-the-team pr-reviewer or adversarial-gate for high-stakes changes)
+2. PR reviewed (devex-charter pr-reviewer or adversarial-gate for high-stakes changes)
 3. Coverage matrix updated in `research/coverage-matrix.md`
 
 ## Skill Contract

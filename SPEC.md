@@ -33,7 +33,7 @@ A **single, authoritative Google Cloud plugin** that unifies every Google Cloud 
 
 - **Public repository** (`googlecloud-plugin/`): curated skills, validated MCPs, peer-reviewed blueprints, public release branches only
 - **Working directory** (`_plugin/`): all research, planning, roadmaps, auditing, drafts (gitignored)
-- **Skill structure**: mirrors `join-the-team` — each service gets a `skills/<service>/SKILL.md` + `references/` + optional `scripts/`
+- **Skill structure**: mirrors `devex-charter` (formerly `join-the-team`) — each service gets a `skills/<service>/SKILL.md` + `references/` + optional `scripts/`
 - **Research infrastructure**:
   - `research/SOURCES.md` — every doc URL + retrieval date + content hash (audit trail)
   - `research/coverage-matrix.md` — service → skill status (missing / drafted / normalized / validated)
@@ -684,13 +684,13 @@ googlecloud-plugin/
 
 ---
 
-## 13. Ways of Working — Coherence with join-the-team (Added v0.2)
+## 13. Ways of Working — Coherence with DevEx Charter (formerly join-the-team) (Added v0.2)
 
-This plugin installs alongside the join-the-team harness. They must not conflict. Coherence rules:
+This plugin installs alongside the DevEx Charter harness. They must not conflict. Coherence rules:
 
 ### How they interlock
 
-| join-the-team skill | googlecloud-plugin equivalent | Relationship |
+| devex-charter skill | googlecloud-plugin equivalent | Relationship |
 |--------------------|-------------------------------|--------------|
 | `the-architect` | `gcp-architect` | gcp-architect is the GCP-specific instance; the-architect is the harness-level authority. For GCP work, gcp-architect leads and routes to the-architect for cross-system decisions |
 | `adversarial-gate` | `gcp-qa` | gcp-qa handles GCP-specific critique; adversarial-gate handles strategic/high-stakes decisions. Both can run on the same output |
@@ -701,7 +701,7 @@ This plugin installs alongside the join-the-team harness. They must not conflict
 
 ### Golden rule
 
-**The join-the-team harness sets risk tiers and authority. The googlecloud-plugin personas own GCP domain knowledge and GCP-specific gates. The harness always wins on authority; the plugin always wins on GCP specifics.**
+**The DevEx Charter harness sets risk tiers and authority. The googlecloud-plugin personas own GCP domain knowledge and GCP-specific gates. The harness always wins on authority; the plugin always wins on GCP specifics.**
 
 ### Plugin Ways of Working (in addition to harness rules)
 

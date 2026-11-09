@@ -204,7 +204,7 @@ Freshness is a feature, not a chore: `make check` runs weekly and flags any GCP 
 
 Created and maintained by **Jaroslav Pantsjoha (JP)** — Technical Director and Enterprise Agent Solution Architect at Cognizant, Google Developer Expert (Google Cloud), speaker, and author of *Building the Agentic Enterprise on Google Cloud* (Packt).
 
-I built this to make my own Google Cloud work repeatable, then to share it. The model is the easy part; the durable engineering is the harness around it — the skills, rules, MCP servers, gates, and evals. GCP patterns outlast the week's model release, so they are worth encoding once and reusing. This plugin is that baseline aimed squarely at Google Cloud — the GCP companion to my [`join-the-team`](https://github.com/jpantsjoha/ai-native-developer-experience) harness. Part of the **#HarnessEngineering** body of work — the engineering discipline behind the Agentic Enterprise.
+I built this to make my own Google Cloud work repeatable, then to share it. The model is the easy part; the durable engineering is the harness around it — the skills, rules, MCP servers, gates, and evals. GCP patterns outlast the week's model release, so they are worth encoding once and reusing. This plugin is that baseline aimed squarely at Google Cloud — the GCP companion to my [DevEx Charter](https://github.com/jpantsjoha/ai-native-developer-experience) harness. Part of the **#HarnessEngineering** body of work — the engineering discipline behind the Agentic Enterprise.
 
 - LinkedIn: [uk.linkedin.com/in/johas](https://uk.linkedin.com/in/johas)
 - Google Developer Expert: [me.developers.google.com/u/jpantsjoha](https://me.developers.google.com/u/jpantsjoha)
