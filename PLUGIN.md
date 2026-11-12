@@ -57,7 +57,11 @@ Route agent prompts to the correct skill using the trigger list below. When in d
 
 | Trigger Pattern | Skill |
 |----------------|-------|
-| MCP server, MCP setup, GenAI Toolbox | `skills/mcp-servers/` |
+| MCP server, MCP setup, GenAI Toolbox, Developer Knowledge | `skills/mcp-servers/` |
+| Any gcloud command: syntax, flags, dry run, destructive operations | `skills/gcloud-guardrails/` |
+| Product depth this plugin does not cover (GKE troubleshooting, Agent Platform tuning, Genkit, Gemini API, AlloyDB, Spanner, Firebase) | `skills/google-skills-catalog/` |
+
+**Every `gcloud` call follows `gcloud-guardrails`**, whichever skill proposed it. For product depth beyond this plugin, `google-skills-catalog` fetches the matching skill from Google's public catalog; the gate still owns design, security and release decisions.
 
 ---
 

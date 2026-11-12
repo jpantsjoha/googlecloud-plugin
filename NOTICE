@@ -1,0 +1,14 @@
+googlecloud-plugin
+Copyright (c) Jaroslav Pantsjoha. Licensed under the MIT License (see LICENSE).
+
+This product includes material adapted from Google's google/skills repository
+(https://github.com/google/skills), plugin google-cloud-developer v1.1.17,
+Copyright Google LLC, licensed under the Apache License, Version 2.0
+(https://www.apache.org/licenses/LICENSE-2.0):
+
+- skills/gcloud-guardrails/      adapted from skills/gcloud (v1.0.3)
+- skills/google-skills-catalog/  adapted from skills/finding-google-skills (v1.1.0)
+                                 and rules/google-cloud-discovery.md
+
+The adapted text was rewritten and modified; each skill's references/upstream.md
+lists the changes.

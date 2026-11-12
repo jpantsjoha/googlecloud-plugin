@@ -19,6 +19,10 @@
         "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
         "TOOLBOX_TOOLS_FILE": "${TOOLBOX_TOOLS_FILE}"
       }
+    },
+    "developer-knowledge": {
+      "httpUrl": "https://developerknowledge.googleapis.com/mcp",
+      "authProviderType": "google_credentials"
     }
   }
 }

@@ -88,6 +88,14 @@ def check_codex(errors: list[str]) -> None:
         errors.append(".agents/skills resolves but contains no SKILL.md files")
 
 
+REMOTE_URL_KEYS = ("url", "serverUrl", "httpUrl")
+
+
+def remote_url(cfg: dict) -> str | None:
+    """Return a remote MCP server's endpoint under whichever key its harness uses."""
+    return next((cfg[k] for k in REMOTE_URL_KEYS if cfg.get(k)), None)
+
+
 def check_mcp_consistency(errors: list[str]) -> None:
     """The three MCP manifests must declare the same server names (drift guard).
 
@@ -110,6 +118,10 @@ def check_mcp_consistency(errors: list[str]) -> None:
                 "command": cfg.get("command"),
                 "args": cfg.get("args"),
                 "env": {k: v for k, v in (cfg.get("env") or {}).items() if not k.startswith("_")},
+                # Remote servers: each harness spells the endpoint differently
+                # (Claude `url`, AGY `serverUrl`, Gemini `httpUrl`). Auth differs
+                # by design (API-key header vs ADC), so only the URL is compared.
+                "url": remote_url(cfg),
             }
         return cleaned
 

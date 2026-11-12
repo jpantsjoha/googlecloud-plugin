@@ -221,3 +221,42 @@ def test_skills_discoverable_non_recursively() -> None:
     assert skill_files(), "no skills discoverable at skills/*/SKILL.md"
     buried = list(SKILLS_DIR.glob("*/*/**/SKILL.md"))
     assert not buried, f"SKILL.md below the discovery depth will be ignored: {buried}"
+
+
+# ─── Harness MCP drift guard (scripts/validate_plugin.py) ────────────────────
+
+def _load_packaging_validator():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "validate_plugin", ROOT / "scripts" / "validate_plugin.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("key", ["url", "serverUrl", "httpUrl"])
+def test_remote_url_read_under_every_harness_key(key: str) -> None:
+    validator = _load_packaging_validator()
+    assert validator.remote_url({key: "https://example.test/mcp"}) == "https://example.test/mcp"
+
+
+def test_harness_manifests_currently_agree() -> None:
+    validator = _load_packaging_validator()
+    errors: list[str] = []
+    validator.check_mcp_consistency(errors)
+    assert errors == []
+
+
+def test_remote_server_url_drift_is_caught(tmp_path, monkeypatch) -> None:
+    """A remote server whose endpoint differs between harnesses must fail the gate."""
+    validator = _load_packaging_validator()
+    for name in (".mcp.json", "mcp_config.json", "gemini-extension.json", "mcp.json"):
+        (tmp_path / name).write_text((ROOT / name).read_text())
+    agy = json.loads((tmp_path / "mcp_config.json").read_text())
+    agy["mcpServers"]["developer-knowledge"]["serverUrl"] = "https://drifted.example.test/mcp"
+    (tmp_path / "mcp_config.json").write_text(json.dumps(agy))
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    errors: list[str] = []
+    validator.check_mcp_consistency(errors)
+    assert any("developer-knowledge" in e for e in errors), errors

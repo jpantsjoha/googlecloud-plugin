@@ -45,6 +45,8 @@ Last updated: 2026-08-07 (v0.2.0 — Agent Plugins 1.0.0 conformance; 17/17 skil
 | MCP Servers | `skills/mcp-servers/` | normalized | References live, gate green |
 | Well-Architected | `skills/well-architected/` | normalized | All 6 pillars, references live |
 | Terraform GCP | `skills/terraform-gcp/` | normalized | CFT + google provider, references live |
+| gcloud Guardrails | `skills/gcloud-guardrails/` | normalized | Command-level ADR-004; adapted from Google's `gcloud` skill (Apache-2.0) |
+| Google Skills Catalog | `skills/google-skills-catalog/` | normalized | On-demand router to google/skills; adapted from `finding-google-skills` (Apache-2.0) |
 
 ## Second-Wave (v0.2 — not in scope for v0.1)
 

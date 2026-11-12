@@ -22,6 +22,11 @@
         "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
         "TOOLBOX_TOOLS_FILE": "${TOOLBOX_TOOLS_FILE}"
       }
+    },
+    "developer-knowledge": {
+      "_note": "Google Developer Knowledge MCP — answers grounded in official Google Cloud, Firebase, Android, Web and Gemini docs. Antigravity attaches ADC through authProviderType, so no API key is needed. Requires the Developer Knowledge API enabled on the ADC quota project.",
+      "serverUrl": "https://developerknowledge.googleapis.com/mcp",
+      "authProviderType": "google_credentials"
     }
   }
 }

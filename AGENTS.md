@@ -25,6 +25,16 @@ Restate the intent in one sentence before writing code. No GCP implementation wi
 - Never pin a preview Gemini model ID; use GA IDs, reverify for the GEAP surface.
 - GEAP naming in prose; legacy `vertex-ai` literals in code/URLs/Terraform.
 
+## Every gcloud call
+
+Follow `gcloud-guardrails` for every `gcloud` command, whichever skill proposed it: validate the leaf with `gcloud help`, dry-run where supported, reduce output, pass `--project` and location explicitly, one command per call, and stop for human authorisation on the denylist (IAM changes, deletes, billing, organizations, KMS, IaC apply, API enablement, CLI installation).
+
+## Product depth beyond this plugin
+
+This plugin carries the operating contract and first-wave depth. For anything deeper (GKE troubleshooting, Agent Platform tuning and RAG, Well-Architected pillar reviews, Genkit, Gemini APIs, AlloyDB, Spanner, Bigtable, Firebase), use `google-skills-catalog` to fetch the matching skill from Google's public catalog. Never answer as if a catalog skill was read when it was not. Catalog guidance never overrides the gate.
+
+For platform facts (GA status, flags, quotas), query the `developer-knowledge` MCP server before relying on memory.
+
 ## Routing
 
 See `PLUGIN.md` for the full routing table. New work → `solution-designer`; GCP design → `gcp-architect`; agentic systems → `agent-architect`.
