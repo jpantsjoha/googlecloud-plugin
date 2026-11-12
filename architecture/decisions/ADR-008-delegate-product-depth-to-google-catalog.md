@@ -17,7 +17,7 @@ ADR-004 required dry runs and confirmation for billable or destructive actions, 
 1. **Command-level safety is its own skill.** `gcloud-guardrails` applies to every `gcloud` call regardless of which skill proposed it: leaf `gcloud help` validation, dry run, data reduction, explicit scoping, single commands, and a denylist that requires human authorisation.
 2. **Product depth is fetched, not copied.** `google-skills-catalog` fetches, verifies and follows at most three matching catalog skills per request. Gate rules win on any conflict.
 3. **Documentation grounding ships with the plugin.** `developer-knowledge` is declared in the three harness manifests (`.mcp.json`, `mcp_config.json`, `gemini-extension.json`) and excluded from the portable `mcp.json`, because it needs an API key or client-managed ADC and Agent Plugins 1.0.0 expands neither (consistent with ADR-007).
-4. **The packaging drift guard compares remote endpoints.** `validate_plugin.py` normalises `url` / `serverUrl` / `httpUrl` and fails when a remote server's endpoint differs between harnesses. Auth fields are not compared; they differ by design.
+4. **The packaging drift guard compares remote endpoints.** `validate_plugin.py` reads each harness's native endpoint key (Claude `url`, Antigravity `serverUrl`, Gemini `httpUrl`), rejects another harness's spelling, and fails when a remote server's endpoint differs between harnesses. Auth fields are not compared; they differ by design.
 5. **Attribution.** Adapted text keeps Google's Apache-2.0 notice in `NOTICE`; Google's usage-attribution tags are not adopted.
 
 ## Consequences
@@ -25,6 +25,6 @@ ADR-004 required dry runs and confirmation for billable or destructive actions, 
 - ✅ ADR-004 becomes enforceable at the command, not only in examples.
 - ✅ Depth for 180+ products without adding them to the research pipeline.
 - ✅ Platform facts can be checked against live docs at run time.
-- ⚠️ Catalog skills are third-party text fetched at run time; the verify step and gate precedence are the controls.
-- ⚠️ Claude Code users need `DEVELOPERKNOWLEDGE_API_KEY`; without it the server returns `401`/`403` and nothing else breaks.
+- ⚠️ Catalog skills are third-party text fetched at run time. Controls: HTTPS-only fetches with no redirects, an entrypoint origin allowlist (`raw.githubusercontent.com/google/skills/main/`), and fetched guidance ranked below user, plugin and harness safety rules.
+- ⚠️ Claude Code users need `DEVELOPERKNOWLEDGE_API_KEY`. Without it the server is configured with an empty key, so its calls are expected to fail authentication (not verified against the live endpoint); no other server or skill depends on it.
 - ⚠️ `research/SOURCES.md` now hashes `index.json`, which changes often; `make check` will report drift on it routinely.

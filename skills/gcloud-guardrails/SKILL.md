@@ -22,7 +22,7 @@ Every `gcloud` task, whether executed now or written up as a plan, follows these
 1. **Validate syntax** — run `gcloud help <group> <resource> <verb>` on the exact leaf command. Help on a parent group (`gcloud help compute`) does not validate a leaf.
 2. **Verify parameters** — confirm required flags, the flags the user named, and whether the command supports `--dry-run` or `--validate-only`.
 3. **Dry run** — if either flag is supported, run it before the real command and show the result.
-4. **Propose or execute** — if the command matches the denylist below, stop and ask a named human to authorise it. Otherwise run it under the execution rules.
+4. **Classify, then propose or execute** — see *Authorisation* below. Read-only commands run under the execution rules. Everything else is proposed with its effect and waits for a named human to authorise it.
 
 `gcloud help` is the authority for syntax. Do not substitute web search or recall. Use the Developer Knowledge MCP for *concepts* (which service, which role), not for flag spelling.
 
@@ -33,7 +33,7 @@ Every `gcloud` task, whether executed now or written up as a plan, follows these
 | One `gcloud` command per call. No `&&`, `;`, pipes, redirection or `$(...)`. | Each step must be inspectable and its exit code attributable. |
 | Pass `--project=PROJECT_ID` on every command. Never rely on the active configuration. | The active project is ambient state the user may not be looking at. |
 | Pass the location flag (`--region`, `--zone`, `--location`) the resource needs. | An omitted location triggers an interactive prompt, which hangs a non-interactive agent. |
-| Add `--quiet` to commands that would prompt, **after** the denylist check. | `--quiet` accepts defaults, including "yes" to destructive prompts. It is never a way round authorisation. |
+| Add `--quiet` to commands that would prompt, only once the command is read-only or authorised, and never to a denylisted command. | `--quiet` accepts defaults, including "yes" to destructive prompts. It is never a way round authorisation. |
 | Add `--async` to long-running operations that support it, then poll with `describe`. | Avoids tool-call timeouts on cluster or instance creation. |
 | Preserve every flag the user specified in each proposed command. | Dropping `--project` or `--impersonate-service-account` silently retargets the command. |
 
@@ -49,14 +49,25 @@ Unbounded output exhausts the context window and hides the answer. Every `list` 
 
 Never run a bare `list`. To learn a resource's field names before projecting, fetch one record: `gcloud <group> <resource> list --project=PROJECT_ID --limit=1 --format=json`.
 
-## Denylist — human authorisation required
+## Authorisation
 
-Never execute these autonomously, and never chain them into a plan as a step that "will run". State that the command needs authorisation, show the exact command and its effect, and wait.
+Permission is decided by what a command does, not by how it is spelt. The default is **stop and ask**.
+
+| Class | Examples | Rule |
+|-------|----------|------|
+| **Read-only** | `help`, `list`, `describe`, `get-iam-policy`, `config list`, `logging read`, `--dry-run`, `--validate-only` | Run under the execution rules. |
+| **Consequential** — anything that creates, changes, stops, removes or bills | `create`, `deploy`, `update`, `patch`, `set-*`, `stop`, `reset`, `resize`, `rm`, `remove`, `disable`, `import`, `apply` | Propose the exact command and its effect, then wait for a named human to authorise it. |
+
+When unsure which class a command is, treat it as consequential. A cost-warning comment or a successful dry run is information for the human, not approval. Authorisation covers the exact command shown; a changed flag needs a fresh yes.
+
+## Denylist — never autonomous, never `--quiet`
+
+These are consequential commands with outsized blast radius. In addition to the rule above: never chain them into a plan as a step that "will run", never add `--quiet` to them, and route IAM changes through the `iam` skill and the security gate.
 
 | Command pattern | Risk |
 |-----------------|------|
 | Any IAM change: `add-iam-policy-binding`, `remove-iam-policy-binding`, `set-iam-policy`, `iam roles create/update`, `iam service-accounts keys create` | Privilege escalation or lock-out. Route through the `iam` skill and the security gate. |
-| `gcloud * delete` | Irreversible destruction. |
+| `gcloud * delete`, `gcloud storage rm`, any other remove or purge | Irreversible destruction. |
 | `gcloud billing *` | Service disruption or unbounded cost. |
 | `gcloud organizations *`, `gcloud resource-manager folders *` | Changes reach every project beneath. |
 | `gcloud kms *` (destroy, disable, rotate) | Can make data permanently unreadable. |
@@ -64,7 +75,7 @@ Never execute these autonomously, and never chain them into a plan as a step tha
 | `gcloud services enable` | Enabling an API can start billing. Assume needed APIs are on; if a call fails with a disabled-API error, report it and ask. |
 | Installing or updating the `gcloud` CLI or its components | Host modification. Ask first. |
 
-Billable creates that are not on the denylist (a Cloud Run deploy, a VM) still carry the ADR-004 comment and the cost warning:
+Billable creates that are not on the denylist (a Cloud Run deploy, a VM) still need authorisation, and the proposal carries the ADR-004 comment and cost warning:
 
 ```bash
 # Billable action — confirm cost before running
@@ -78,7 +89,7 @@ User: "Create a Cloud SQL Postgres instance for staging."
 1. `gcloud help sql instances create`
 2. Required: instance name, `--database-version`, `--tier` or `--cpu`/`--memory`, `--region`. No `--dry-run` support.
 3. No dry run available — say so.
-4. Not on the denylist, but billable. Propose:
+4. Consequential and billable, not on the denylist. Propose it and wait for authorisation:
 
 ```bash
 # Billable action — confirm cost before running

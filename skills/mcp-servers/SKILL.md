@@ -77,8 +77,8 @@ ADC, and Agent Plugins 1.0.0 expands neither. For Claude Code:
 export DEVELOPERKNOWLEDGE_API_KEY=...   # in your shell profile, never in a repo
 ```
 
-If the variable is unset, the server loads with an empty key and calls return
-`401`/`403`; the rest of the plugin is unaffected.
+If the variable is unset, the server is configured with an empty key and its
+calls fail authentication; the rest of the plugin is unaffected.
 
 ## Google-Managed MCP Servers (v0.1)
 
