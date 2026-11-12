@@ -9,12 +9,41 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `gcloud-guardrails` skill — rules for every `gcloud` call: check the exact
+  subcommand with `gcloud help`, dry-run where supported, cut output down, name
+  project and location, one command per call. Read-only commands run;
+  anything that creates, changes, stops, removes or bills waits for a named
+  person, with a stricter denylist on top. Adapted from Google's `gcloud`
+  skill (Apache-2.0). ([#13](https://github.com/jpantsjoha/googlecloud-plugin/issues/13),
+  [#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
+- `google-skills-catalog` skill — fetches at most three matching skills from
+  Google's public catalog (`google/skills`) for product depth beyond this
+  plugin: HTTPS only, no redirects, Google-repository entrypoints only, and
+  fetched guidance ranked below user, plugin and harness rules. Adapted from
+  Google's `finding-google-skills` (Apache-2.0). ([#13](https://github.com/jpantsjoha/googlecloud-plugin/issues/13),
+  [#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
+- `developer-knowledge` remote MCP server (official Google documentation) in
+  `.mcp.json` (API key from `DEVELOPERKNOWLEDGE_API_KEY`), `mcp_config.json` and
+  `gemini-extension.json` (Google credentials). Not in the portable `mcp.json`.
+  ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
+- `NOTICE` for the adapted Apache-2.0 text; ADR-008 (Proposed) records the
+  decision. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
 - `CONTRIBUTING.md` — the gate, the skill contract, and why each rule exists.
 - `SECURITY.md` — private reporting, and what counts as a vulnerability in a
   plugin that ships instructions rather than a running service.
 - `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1.
 - Issue templates for incorrect GCP guidance, skills not loading or routing, and
   new-skill proposals; plus a pull-request template carrying the safety checks.
+
+### Changed
+
+- The packaging gate (`make manifest`) now checks that a remote MCP server's
+  endpoint matches across harnesses, using each harness's own key (`url`,
+  `serverUrl`, `httpUrl`), and rejects a key meant for another harness.
+  ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
+- `AGENTS.md` and `GEMINI.md` route every `gcloud` call through
+  `gcloud-guardrails` and send product-depth questions to
+  `google-skills-catalog`. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
 
 ## [0.2.0] — 2026-08-07
 
