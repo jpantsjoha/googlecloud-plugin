@@ -28,6 +28,12 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
 - `NOTICE` for the adapted Apache-2.0 text; ADR-008 (Proposed) records the
   decision. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
+- `CONTRIBUTING.md` — the gate, the skill contract, and why each rule exists.
+- `SECURITY.md` — private reporting, and what counts as a vulnerability in a
+  plugin that ships instructions rather than a running service.
+- `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1.
+- Issue templates for incorrect GCP guidance, skills not loading or routing, and
+  new-skill proposals; plus a pull-request template carrying the safety checks.
 
 ### Changed
 
@@ -38,12 +44,6 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `AGENTS.md` and `GEMINI.md` route every `gcloud` call through
   `gcloud-guardrails` and send product-depth questions to
   `google-skills-catalog`. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
-- `CONTRIBUTING.md` — the gate, the skill contract, and why each rule exists.
-- `SECURITY.md` — private reporting, and what counts as a vulnerability in a
-  plugin that ships instructions rather than a running service.
-- `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1.
-- Issue templates for incorrect GCP guidance, skills not loading or routing, and
-  new-skill proposals; plus a pull-request template carrying the safety checks.
 
 ## [0.2.0] — 2026-08-07
 
