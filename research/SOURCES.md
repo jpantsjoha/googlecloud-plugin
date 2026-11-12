@@ -649,3 +649,36 @@ Every source URL is stored with retrieval date and content hash for audit.
 - **Retrieved**: 2026-07-23T18:42:53.636252+00:00
 - **Hash**: 1f2f8e375e739f7929870b2a81d5f897a24f7757fbc64105d568e75449d47fe2
 - **Status**: OK
+
+## gcloud-guardrails
+### gcloud CLI reference
+- **URL**: https://cloud.google.com/sdk/gcloud/reference
+- **Retrieved**: 2026-11-12T16:17:09.417451+00:00
+- **Hash**: d4a33c5df09a570e43392b18e579c2723840cc64aeeebeddbfd0e707998729df
+- **Status**: OK
+
+### google-cloud-developer plugin (upstream)
+- **URL**: https://github.com/google/skills/tree/main/plugins/cloud/google-cloud-developer
+- **Retrieved**: 2026-11-12T16:17:09.971709+00:00
+- **Hash**: 58705beaa719ade04b34b8fde330af4d13acdbe7a297bf98829b656213f80cfa
+- **Status**: OK
+
+
+## google-skills-catalog
+### Google skills catalog index
+- **URL**: https://raw.githubusercontent.com/google/skills/main/index.json
+- **Retrieved**: 2026-11-12T16:17:10.221007+00:00
+- **Hash**: e8a61d13ab004acccbfbbaa9bce45056e38a22a3d060a7d3971725f7e825c3f2
+- **Status**: OK
+
+### Google Cloud skills tree
+- **URL**: https://github.com/google/skills/tree/main/skills/cloud
+- **Retrieved**: 2026-11-12T16:17:10.785103+00:00
+- **Hash**: 2d7c516b2df0a0e77090af4ee817b7e33ad524c94b4674028313ea7a2ef0c5d8
+- **Status**: OK
+
+### Repository tree API (fallback)
+- **URL**: https://api.github.com/repos/google/skills/git/trees/main?recursive=1
+- **Retrieved**: 2026-11-12T16:17:11.197301+00:00
+- **Hash**: 75b3e071e0b523c5d24cd472ac4de7dddf4f12f1d7f034eb7971e2b51800190d
+- **Status**: OK

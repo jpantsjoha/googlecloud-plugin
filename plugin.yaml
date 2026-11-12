@@ -85,6 +85,14 @@ skills:
     path: skills/terraform-gcp/SKILL.md
     wave: 1
     status: normalized
+  - name: gcloud-guardrails
+    path: skills/gcloud-guardrails/SKILL.md
+    wave: 2
+    status: normalized
+  - name: google-skills-catalog
+    path: skills/google-skills-catalog/SKILL.md
+    wave: 2
+    status: normalized
 
 # ─── MCP server listings ──────────────────────────────────────────────────────
 mcp_servers:
@@ -121,6 +129,12 @@ mcp_servers:
       capability: Metrics, alerting policy management
       auth: ADC
       status: available
+  google_remote:
+    - id: developer-knowledge
+      capability: Grounded answers from official Google Cloud, Firebase, Android, Web and Gemini docs
+      endpoint: https://developerknowledge.googleapis.com/mcp
+      auth: API key (Claude Code, DEVELOPERKNOWLEDGE_API_KEY) or ADC (Antigravity, Gemini)
+      status: declared
   community:
     - id: genai-toolbox
       capability: Database access for LLM agents (Cloud SQL, Spanner, BigQuery, AlloyDB)

@@ -88,6 +88,31 @@ def check_codex(errors: list[str]) -> None:
         errors.append(".agents/skills resolves but contains no SKILL.md files")
 
 
+REMOTE_URL_KEYS = ("url", "serverUrl", "httpUrl")
+# The one endpoint key each harness actually reads for a streamable-HTTP server.
+NATIVE_URL_KEY = {
+    ".mcp.json": "url",                  # Claude Code
+    "mcp_config.json": "serverUrl",      # Antigravity
+    "gemini-extension.json": "httpUrl",  # Gemini CLI extension
+}
+
+
+def remote_url(cfg: dict, manifest: str, server: str, errors: list[str]) -> str | None:
+    """Return the endpoint the manifest's harness will use, under its native key.
+
+    Another harness's spelling is an error, not an alias: the harness would not
+    read it, and a matching foreign key could otherwise mask a drifted native one.
+    """
+    native = NATIVE_URL_KEY[manifest]
+    foreign = [k for k in REMOTE_URL_KEYS if k != native and k in cfg]
+    if foreign:
+        errors.append(
+            f"MCP endpoint key: '{manifest}' server '{server}' uses {foreign}; "
+            f"this harness reads only '{native}'"
+        )
+    return cfg.get(native)
+
+
 def check_mcp_consistency(errors: list[str]) -> None:
     """The three MCP manifests must declare the same server names (drift guard).
 
@@ -110,6 +135,10 @@ def check_mcp_consistency(errors: list[str]) -> None:
                 "command": cfg.get("command"),
                 "args": cfg.get("args"),
                 "env": {k: v for k, v in (cfg.get("env") or {}).items() if not k.startswith("_")},
+                # Remote servers: each harness spells the endpoint differently
+                # (Claude `url`, AGY `serverUrl`, Gemini `httpUrl`). Auth differs
+                # by design (API-key header vs ADC), so only the URL is compared.
+                "url": remote_url(cfg, path.name, name, errors),
             }
         return cleaned
 

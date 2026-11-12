@@ -221,3 +221,71 @@ def test_skills_discoverable_non_recursively() -> None:
     assert skill_files(), "no skills discoverable at skills/*/SKILL.md"
     buried = list(SKILLS_DIR.glob("*/*/**/SKILL.md"))
     assert not buried, f"SKILL.md below the discovery depth will be ignored: {buried}"
+
+
+# ─── Harness MCP drift guard (scripts/validate_plugin.py) ────────────────────
+
+def _load_packaging_validator():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "validate_plugin", ROOT / "scripts" / "validate_plugin.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize(
+    "manifest,key",
+    [(".mcp.json", "url"), ("mcp_config.json", "serverUrl"), ("gemini-extension.json", "httpUrl")],
+)
+def test_remote_url_read_under_native_key(manifest: str, key: str) -> None:
+    validator = _load_packaging_validator()
+    errors: list[str] = []
+    assert validator.remote_url({key: "https://example.test/mcp"}, manifest, "srv", errors) == "https://example.test/mcp"
+    assert errors == []
+
+
+def test_harness_manifests_currently_agree() -> None:
+    validator = _load_packaging_validator()
+    errors: list[str] = []
+    validator.check_mcp_consistency(errors)
+    assert errors == []
+
+
+def _drift_errors(tmp_path, monkeypatch, manifest: str, mutate) -> list[str]:
+    validator = _load_packaging_validator()
+    for name in (".mcp.json", "mcp_config.json", "gemini-extension.json", "mcp.json"):
+        (tmp_path / name).write_text((ROOT / name).read_text())
+    data = json.loads((tmp_path / manifest).read_text())
+    mutate(data["mcpServers"]["developer-knowledge"])
+    (tmp_path / manifest).write_text(json.dumps(data))
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    errors: list[str] = []
+    validator.check_mcp_consistency(errors)
+    return errors
+
+
+def test_remote_server_url_drift_is_caught(tmp_path, monkeypatch) -> None:
+    """A remote server whose endpoint differs between harnesses must fail the gate."""
+    def drift(cfg):
+        cfg["serverUrl"] = "https://drifted.example.test/mcp"
+    errors = _drift_errors(tmp_path, monkeypatch, "mcp_config.json", drift)
+    assert any("developer-knowledge" in e for e in errors), errors
+
+
+def test_foreign_endpoint_key_is_rejected(tmp_path, monkeypatch) -> None:
+    """Swapping Gemini's httpUrl for Claude's `url` passes a naive compare but Gemini would not read it."""
+    def swap(cfg):
+        cfg["url"] = cfg.pop("httpUrl")
+    errors = _drift_errors(tmp_path, monkeypatch, "gemini-extension.json", swap)
+    assert any("reads only 'httpUrl'" in e for e in errors), errors
+
+
+def test_matching_shadow_key_cannot_mask_native_drift(tmp_path, monkeypatch) -> None:
+    def shadow(cfg):
+        cfg["url"] = cfg["httpUrl"]
+        cfg["httpUrl"] = "https://drifted.example.test/mcp"
+    errors = _drift_errors(tmp_path, monkeypatch, "gemini-extension.json", shadow)
+    assert any("reads only 'httpUrl'" in e for e in errors), errors
+    assert any("differs" in e and "developer-knowledge" in e for e in errors), errors
