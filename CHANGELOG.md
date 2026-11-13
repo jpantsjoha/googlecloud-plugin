@@ -7,6 +7,30 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-11-13
+
+**Keyless docs grounding.** The Developer Knowledge MCP server now works in
+Claude Code from your gcloud login — no API key — and the plugin has a logo.
+
+### Added
+
+- Claude Code authenticates the `developer-knowledge` server from gcloud ADC
+  through a `headersHelper` (`scripts/dk_adc_headers.py`): a Bearer token plus
+  the `X-Goog-User-Project` quota project that user credentials require. It
+  sends both or neither, so the optional `DEVELOPERKNOWLEDGE_API_KEY` header
+  still applies when gcloud is unavailable. Tested live in Claude Code 2.1.323
+  with no key set. ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25))
+- `assets/logo.svg` — square plugin mark, used as the Codex and Kimi listing
+  icon. ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25))
+
+### Changed
+
+- The packaging gate checks that listing icons and the `headersHelper` script
+  resolve inside the repository. ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25))
+- `mcp-servers` documents ADC-first auth, the quota-project requirement, and how
+  a Developer Knowledge server you configured yourself shadows the plugin's in
+  Claude Code. ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25))
+
 ## [0.3.0] — 2026-11-13
 
 **Safe execution and depth release.** Every `gcloud` call now follows
@@ -176,7 +200,8 @@ Not verified: Codex (usage limit at time of release) and Toolbox (opt-in).
 Initial release. Six persona skills, eleven service skills, MCP server setup,
 and a self-validating research pipeline.
 
-[Unreleased]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jpantsjoha/googlecloud-plugin/releases/tag/v0.1.0

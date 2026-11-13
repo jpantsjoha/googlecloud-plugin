@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-11-13 (release v0.3.0). What is happening now and what waits on whom. One entry per working session; pruned, not grown.
+Last updated: 2026-11-13 (release v0.4.0). What is happening now and what waits on whom. One entry per working session; pruned, not grown.
 
 ## 2026-11-13 — Google `google-cloud-developer` borrow, follow-ups landed
 
@@ -20,15 +20,15 @@ Gate on `a4180b4`: 273 tests pass, 19/19 skills conform, 4 harness manifests agr
 
 ## Released
 
-`v0.3.0` ([#23](https://github.com/jpantsjoha/googlecloud-plugin/issues/23)): all manifests at `0.3.0`; ADR-008 accepted as the operator's decision (JP, 2026-11-13).
+- `v0.4.0` ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)): Developer Knowledge works in Claude Code from gcloud ADC with no API key — verified live; square logo for Codex and Kimi.
+- `v0.3.0` ([#23](https://github.com/jpantsjoha/googlecloud-plugin/issues/23)): the work in the table above; ADR-008 accepted as the operator's decision (JP, 2026-11-13).
 
 ## Waiting on the operator
 
 | # | Decision | Recommendation | Unblocks | Cost if wrong | Reversibility |
 |---|---|---|---|---|---|
-| 1 | Developer Knowledge key variable ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14)) | Export `DEVELOPERKNOWLEDGE_API_KEY` (the name Google's plugin uses) and smoke-test the server; your user-scope server reads `GOOGLE_DEVELOPER_KNOWLEDGE_API_KEY` | Live evidence for the Developer Knowledge server, shipped in `v0.3.0` and untested | A dead or duplicated server in your own setup only | cheap |
-| 2 | Plugin logo ([#20](https://github.com/jpantsjoha/googlecloud-plugin/pull/20)) | Supply a square SVG for `.codex-plugin/plugin.json` and the Kimi manifest | A listing icon on Codex and Kimi | None beyond a missing icon | cheap |
-| 3 | Listing re-index ([docs/SUBMISSIONS.md](docs/SUBMISSIONS.md)) | Resubmit the repo to Claude Plugin Hub so the listing shows `v0.3.0` | Directory visitors see the new skills | None | cheap |
+| 1 | Your own Claude Code Developer Knowledge server ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)) | Remove it — `claude mcp remove google-developer-knowledge` — so the plugin's keyless server takes over; it currently reads the unset `GOOGLE_DEVELOPER_KNOWLEDGE_API_KEY` and every call fails with `API key not valid` | Working docs grounding in your sessions | Losing a server you re-add in one command | cheap |
+| 2 | Listing re-index ([docs/SUBMISSIONS.md](docs/SUBMISSIONS.md)) | Resubmit the repo to Claude Plugin Hub so the listing shows `v0.4.0` | Directory visitors see the new skills | None | cheap |
 
 ## Not done, and why
 
@@ -37,5 +37,6 @@ Gate on `a4180b4`: 273 tests pass, 19/19 skills conform, 4 harness manifests agr
 
 ## Open
 
-- Live behaviour of both remote MCP servers is untested ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14), [#21](https://github.com/jpantsjoha/googlecloud-plugin/pull/21)): with no API key, the Developer Knowledge server is expected to reject calls; `cloudcli.googleapis.com` did not appear in `gcloud services list --available`.
+- The remote Cloud CLI MCP is untested live ([#21](https://github.com/jpantsjoha/googlecloud-plugin/pull/21)); `cloudcli.googleapis.com` did not appear in `gcloud services list --available`. Developer Knowledge was verified live in [#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25).
+- The Kimi manifest's `interface.logo` key is assumed, not checked against a Kimi schema ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)).
 - `make check` will report drift on `research/SOURCES.md` for the Google catalog `index.json`, which changes often ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14)).

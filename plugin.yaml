@@ -1,5 +1,5 @@
 name: googlecloud-plugin
-version: 0.3.0
+version: 0.4.0
 description: >
   Unified Google Cloud plugin. Installs a full operational GCP team:
   vendor-agnostic solution designer, GCP architect, security enforcer,
@@ -133,7 +133,7 @@ mcp_servers:
     - id: developer-knowledge
       capability: Grounded answers from official Google Cloud, Firebase, Android, Web and Gemini docs
       endpoint: https://developerknowledge.googleapis.com/mcp
-      auth: API key (Claude Code, DEVELOPERKNOWLEDGE_API_KEY) or ADC (Antigravity, Gemini)
+      auth: ADC — Claude Code via headersHelper (scripts/dk_adc_headers.py, optional DEVELOPERKNOWLEDGE_API_KEY fallback); Antigravity and Gemini via authProviderType
       status: declared
     - id: gcloud-remote
       capability: Remote gcloud execution (run_gcloud_command) in a Google-managed environment
