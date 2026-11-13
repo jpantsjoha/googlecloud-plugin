@@ -39,6 +39,7 @@ ADC_DEFAULT = Path.home() / ".config" / "gcloud" / "application_default_credenti
 # ("example.com:my-project"). Anything else (an unexpanded "${VAR}",
 # "(unset)", a typo) is reported as invalid instead of being a candidate.
 PROJECT_ID = re.compile(r"^(?:[a-z0-9-]+(?:\.[a-z0-9-]+)+:)?[a-z][a-z0-9-]{4,28}[a-z0-9]$")
+UNTERMINATED = "<unterminated quoted value>"
 DOTENV_KEY = re.compile(r"\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
 
 
@@ -55,9 +56,11 @@ def parse_dotenv_projects(text: str) -> list[tuple[str, str]]:
     """Return (key, value) for project keys only, parsing quotes like a dotenv loader.
 
     Values of every other key are scanned past, never kept, so a multi-line
-    quoted secret cannot be mistaken for an assignment. A malformed project
-    value (unclosed quote) is returned as-is so it is reported invalid rather
-    than silently repaired.
+    quoted secret cannot be mistaken for an assignment. Inside double quotes a
+    backslash escapes the next character, as dotenv loaders treat it. An
+    unclosed quote makes the rest of the file that value; for a project key it
+    is reported as UNTERMINATED, never with its contents, which would be the
+    rest of the file.
     """
     found: list[tuple[str, str]] = []
     pos, n = 0, len(text)
@@ -75,9 +78,9 @@ def parse_dotenv_projects(text: str) -> list[tuple[str, str]]:
             start += 1
         quote = text[start] if start < n and text[start] in "'\"" else None
         if quote:
-            close = text.find(quote, start + 1)
+            close = _closing_quote(text, start + 1, quote)
             if close == -1:  # unclosed: the rest of the file is this value
-                value, pos = text[start:].rstrip("\r\n"), n
+                value, pos = UNTERMINATED, n
             else:
                 value = text[start + 1:close]
                 nxt = text.find("\n", close)
@@ -90,6 +93,18 @@ def parse_dotenv_projects(text: str) -> list[tuple[str, str]]:
         if key in PROJECT_ENV_VARS:
             found.append((key, value))
     return found
+
+
+def _closing_quote(text: str, i: int, quote: str) -> int:
+    """Index of the quote that closes a value starting at i, or -1. Backslash escapes only in double quotes."""
+    while i < len(text):
+        if quote == '"' and text[i] == "\\":
+            i += 2
+            continue
+        if text[i] == quote:
+            return i
+        i += 1
+    return -1
 
 
 def _dotenv_projects(path: Path) -> list[tuple[str, str]]:

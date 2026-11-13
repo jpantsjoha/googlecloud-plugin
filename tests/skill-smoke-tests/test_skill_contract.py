@@ -633,13 +633,34 @@ def test_legacy_domain_scoped_id_is_valid(tmp_path, monkeypatch) -> None:
     ("GOOGLE_CLOUD_PROJECT=beta-proj # app\r\n", [("GOOGLE_CLOUD_PROJECT", "beta-proj")]),
     ("export GCP_PROJECT_ID='beta-proj'\n", [("GCP_PROJECT_ID", "beta-proj")]),
     ('GCLOUD_PROJECT="beta-proj # suffix"\n', [("GCLOUD_PROJECT", "beta-proj # suffix")]),
-    ('CLOUDSDK_CORE_PROJECT="unclosed\n', [("CLOUDSDK_CORE_PROJECT", '"unclosed')]),
+    ('CLOUDSDK_CORE_PROJECT="unclosed\nAPI_SECRET=do-not-print\n',
+     [("CLOUDSDK_CORE_PROJECT", "<unterminated quoted value>")]),
+    ('TOKEN="first \\"\nGCP_PROJECT_ID=leaked-value\nlast"\nGOOGLE_CLOUD_PROJECT=real-proj\n',
+     [("GOOGLE_CLOUD_PROJECT", "real-proj")]),
+    ("TOKEN='single \\'\nGOOGLE_CLOUD_PROJECT=real-proj\n", [("GOOGLE_CLOUD_PROJECT", "real-proj")]),
     ("# GOOGLE_CLOUD_PROJECT=commented-out\n", []),
     ('SECRET="first\nGCP_PROJECT_ID=inside-secret\nlast"\nGOOGLE_CLOUD_PROJECT=real-proj\n',
      [("GOOGLE_CLOUD_PROJECT", "real-proj")]),
 ])
 def test_dotenv_parser(text, expected) -> None:
     assert _load_preflight().parse_dotenv_projects(text) == expected
+
+
+@pytest.mark.parametrize("dotenv", [
+    'GOOGLE_CLOUD_PROJECT="unclosed\nAPI_SECRET=do-not-print\n',
+    'TOKEN="a \\"\nGCP_PROJECT_ID=do-not-print\nz"\nGOOGLE_CLOUD_PROJECT=alpha-proj\n',
+])
+@pytest.mark.parametrize("as_json", [True, False])
+def test_preflight_output_never_leaks_dotenv_secrets(tmp_path, dotenv, as_json) -> None:
+    bin_dir = _gcloud_stub(tmp_path / "bin", "alpha-proj")
+    home = tmp_path / "home"
+    (home / ".config" / "gcloud").mkdir(parents=True)
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".env").write_text(dotenv)
+    args = [sys.executable, str(PREFLIGHT), "--project-dir", str(repo)] + (["--json"] if as_json else [])
+    out = subprocess.run(args, capture_output=True, text=True, timeout=30, env={"PATH": str(bin_dir), "HOME": str(home)})
+    assert "do-not-print" not in out.stdout + out.stderr
 
 
 def test_quoted_comment_value_is_invalid_not_truncated(tmp_path, monkeypatch) -> None:
