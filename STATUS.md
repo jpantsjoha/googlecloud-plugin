@@ -20,23 +20,23 @@ Gate on `a4180b4`: 273 tests pass, 19/19 skills conform, 4 harness manifests agr
 
 ## Released
 
-- `v0.5.1` — tagged when release PR [#33](https://github.com/jpantsjoha/googlecloud-plugin/pull/33) merges ([#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32)): project guard false positives fixed; README quick start, comparison and troubleshooting ([#31](https://github.com/jpantsjoha/googlecloud-plugin/pull/31)).
+- `v0.5.1` (tag on `42c42c2`, release PR [#33](https://github.com/jpantsjoha/googlecloud-plugin/pull/33); [#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32)): project guard false positives fixed; README quick start, comparison and troubleshooting ([#31](https://github.com/jpantsjoha/googlecloud-plugin/pull/31)).
 - `v0.5.0` ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27), [#29](https://github.com/jpantsjoha/googlecloud-plugin/pull/29)): project resolution from env, `.env` and gcloud config, enforced in Claude Code by a hook that asks on conflict; `gcloud` MCP no longer receives a literal `${GCP_PROJECT_ID}`; GenAI Toolbox no longer shipped.
 - `v0.4.0` ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)): Developer Knowledge works in Claude Code from gcloud ADC with no API key — verified live; square logo for Codex and Kimi.
 - `v0.3.0` ([#23](https://github.com/jpantsjoha/googlecloud-plugin/issues/23)): the work in the table above; ADR-008 accepted as the operator's decision (JP, 2026-11-13).
 
 ## Waiting on the operator
 
-Ordered so the one that compounds comes first: the installed v0.5.0 guard blocks ordinary commands that mention `gcloud` until v0.5.1 is installed.
+v0.5.1 is released and installed; on 2026-11-13 it ran the former false positives cleanly and still stopped a real project conflict.
 
 | # | Decision | Recommendation | Unblocks | Cost if wrong | Reversibility |
 |---|---|---|---|---|---|
-| 1 | Release v0.5.1 ([#33](https://github.com/jpantsjoha/googlecloud-plugin/pull/33)) | Approve #33: merge, tag `v0.5.1`, publish the release, update the installed plugin, re-sync the Hub listing | Installed copies stop blocking commands that only mention `gcloud` ([#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32)); merging alone would publish, since installs read the version from `main` | A defective tag needs a `0.5.2`; users who updated keep it | one-way |
+| 1 | Claude Plugin Hub listing at `95d15d7` | Sign in on the owned-plugin page and press Re-sync | The listing shows v0.5.1 | None: a stale listing only lags | cheap |
 | 2 | OpenAI API review lane at its project spend cap (HTTP 429 `project_spend_limit_exceeded`, 2026-11-13) | Leave the cap as it is: reviews fall back to the Codex subscription lane, then to a fresh Claude reviewer under your 2026-11-09 rule | Nothing today: on 2026-11-13 the subscription lane covered reviews until it hit its own quota, and a fresh Claude Sonnet reviewer covered the rest | While both Codex lanes stay quota-blocked, reviews have no cross-model second opinion — Claude reviews Claude-written work | cheap |
 
 The README usage section is done ([#31](https://github.com/jpantsjoha/googlecloud-plugin/pull/31)).
 
-Claude Plugin Hub listing last re-synced at `95d15d7` (v0.5.0 plus README, 2026-11-13): 20 skills, hooks, documentation score 100.
+Claude Plugin Hub listing last re-synced at `95d15d7` (v0.5.0 plus README, 2026-11-13): 20 skills, hooks, documentation score 100. Re-syncing after v0.5.1 needs a signed-in browser; the agent's Chrome session was signed out.
 
 ## Not done, and why
 
@@ -45,7 +45,7 @@ Claude Plugin Hub listing last re-synced at `95d15d7` (v0.5.0 plus README, 2026-
 
 ## Open
 
-- The `gcloud` MCP server failed on the first Claude Code session after install and after update (2026-11-13), then connected after Claude Code's 15-minute retry cache; cause unknown — tracked in [#34](https://github.com/jpantsjoha/googlecloud-plugin/issues/34).
+- The `gcloud` MCP server failed on the first Claude Code session after install and after update (2026-11-13), then connected after Claude Code's 15-minute retry cache; cause unknown — tracked in [#34](https://github.com/jpantsjoha/googlecloud-plugin/issues/34); did not reproduce on the v0.5.0 → v0.5.1 update with `--debug`.
 - The remote Cloud CLI MCP is untested live ([#21](https://github.com/jpantsjoha/googlecloud-plugin/pull/21)); `cloudcli.googleapis.com` did not appear in `gcloud services list --available`. Developer Knowledge was verified live in [#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25).
 - The Kimi manifest's `interface.logo` key is assumed, not checked against a Kimi schema ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)).
 - `make check` will report drift on `research/SOURCES.md` for the Google catalog `index.json`, which changes often ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14)).
