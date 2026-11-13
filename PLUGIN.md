@@ -1,7 +1,7 @@
 ---
 name: googlecloud-plugin
 description: "Unified Google Cloud plugin. Installs a full operational GCP team: vendor-agnostic solution designer, GCP architect, security enforcer, SRE/ops, and QA — plus 11 service skills and MCP server configurations. Design-first, security-first, Well-Architected aligned."
-version: "0.1.0"
+version: "0.5.1"
 ---
 
 # GoogleCloud Plugin

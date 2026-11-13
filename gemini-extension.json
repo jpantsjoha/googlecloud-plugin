@@ -1,7 +1,7 @@
 {
   "name": "googlecloud-plugin",
   "description": "A full Google Cloud delivery team for your coding agent: solution designer, GCP architect, agentic-systems architect (ADK / Agent Runtime / MCP / A2A / AP2), plus security, SRE, and QA — wired into a design-first, security-first delivery gate, with eleven service skills and MCP server setup.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "contextFileName": "GEMINI.md",
   "mcpServers": {
     "gcloud": {

@@ -7,6 +7,28 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-11-13
+
+**The project guard stops getting in the way.** v0.5.0's guard blocked
+ordinary commands that only mentioned `gcloud`; this release fixes that without
+opening the gaps a review found along the way.
+
+### Fixed
+
+- The project guard no longer blocks commands that merely mention `gcloud`: names
+  such as `gcloud-mcp` or `googlecloud-plugin:gcloud`, heredocs that write a file, and
+  command substitutions that run project-agnostic commands (`$(gcloud config get-value
+  project)`). Substitutions and heredocs are now parsed and judged rather than
+  refused; heredocs fed to a shell or interpreter, run-time command names and
+  interpreter code calling `gcloud` still block. ([#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32))
+
+### Added
+
+- README: quick start, capabilities, and a comparison with Google's
+  `google-cloud-developer` plugin ([#31](https://github.com/jpantsjoha/googlecloud-plugin/pull/31)); a Troubleshooting section,
+  including the `gcloud` MCP server failing on the first session after install or
+  update and Claude Code's 15-minute retry cache ([#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32)).
+
 ## [0.5.0] — 2026-11-13
 
 **The right project, every time.** The plugin now works out which Google Cloud
@@ -238,7 +260,8 @@ Not verified: Codex (usage limit at time of release) and Toolbox (opt-in).
 Initial release. Six persona skills, eleven service skills, MCP server setup,
 and a self-validating research pipeline.
 
-[Unreleased]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.2.0...v0.3.0

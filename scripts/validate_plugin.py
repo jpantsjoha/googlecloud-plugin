@@ -9,12 +9,13 @@ Exit 0: installable. Exit 1: one or more packaging violations.
 """
 import sys
 import json
+import re
 import yaml
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 EXPECTED_NAME = "googlecloud-plugin"
-EXPECTED_VERSION = "0.5.0"
+EXPECTED_VERSION = "0.5.1"
 
 
 def _load_json(path: Path, errors: list[str]) -> dict | None:
@@ -263,6 +264,12 @@ def check_context_files(errors: list[str]) -> None:
     for ctx in ("PLUGIN.md", "GEMINI.md", "AGENTS.md"):
         if not (ROOT / ctx).exists():
             errors.append(f"MISSING  {ctx}")
+    # PLUGIN.md is the routing file AGENTS.md and GEMINI.md point agents to; its version must agree.
+    plugin_md = ROOT / "PLUGIN.md"
+    if plugin_md.exists():
+        match = re.search(r'^version:\s*"?([^"\n]+)"?\s*$', plugin_md.read_text(), re.M)
+        if not match or match.group(1) != EXPECTED_VERSION:
+            errors.append(f"PLUGIN.md: version {match.group(1) if match else None!r} != '{EXPECTED_VERSION}'")
 
 
 def check_yaml_index_consistency(errors: list[str]) -> None:
