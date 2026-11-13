@@ -771,6 +771,15 @@ def _blocked(tool, tool_input) -> bool:
     ("Bash", {"command": "eval 'gcloud run services list'"}, True),
     ("Bash", {"command": "ls -la && echo gcloud"}, False),
     ("Bash", {"command": "grep -r gcloud docs/"}, False),
+    ("Bash", {"command": "bash -lc 'gcloud run services list'"}, True),
+    ("Bash", {"command": "bash -lc 'gcloud run services list --project=alpha-proj'"}, False),
+    ("Bash", {"command": "sudo -u root gcloud run services list"}, True),
+    ("Bash", {"command": "if true; then gcloud run services list; fi"}, True),
+    ("Bash", {"command": "for p in a b; do gcloud run services list; done"}, True),
+    ("Bash", {"command": "if true; then gcloud run services list --project=alpha-proj; fi"}, False),
+    ("Bash", {"command": "ssh box 'gcloud run services list'"}, True),
+    ("Bash", {"command": "sh -c \"sh -c 'sh -c \\\"sh -c gcloud\\\"'\""}, True),
+    ("Bash", {"command": "echo 'gcloud run services list'"}, False),
     ("Bash", {"command": "gcloud help run deploy"}, False),
     ("Read", {"file_path": "/tmp/x"}, False),
 ])
@@ -782,6 +791,7 @@ def test_guard_falls_back_to_blocking_when_resolution_fails(monkeypatch) -> None
     guard = _load_guard()
     def boom(cwd):
         raise RuntimeError("resolver failed")
+    monkeypatch.setattr(guard, "resolve", lambda cwd: ([], {"status": "resolved"}))
     monkeypatch.setattr(guard, "guidance", boom)
     reason = guard.decide({"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}, "cwd": "/tmp"})
     assert reason == guard.FALLBACK
@@ -791,7 +801,7 @@ def test_guard_falls_back_to_blocking_when_resolution_is_slow(monkeypatch) -> No
     import time as _time
     guard = _load_guard()
     monkeypatch.setattr(guard, "RESOLVE_BUDGET", 0.2)
-    monkeypatch.setattr(guard, "guidance", lambda cwd: (_time.sleep(2), "late")[1])
+    monkeypatch.setattr(guard, "resolve", lambda cwd: (_time.sleep(2), ([], {}))[1])
     reason = guard.decide({"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}, "cwd": "/tmp"})
     assert reason == guard.FALLBACK
 
@@ -881,6 +891,22 @@ EXPLICIT = {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "l
     ([_tool_use("q1", "AskUserQuestion"), _tool_result("q1", '{"answers": {"Which project?": "alpha-proj"}}')], False),
     ([_tool_use("b1", "Bash"), _tool_result("b1", "alpha-proj")], True),
     ([_user("use alpha-proj-2")], True),
+    ([_user("Do not use alpha-proj. Ask me which project to use.")], True),
+    ([_user("compare alpha-proj and beta-proj")], True),
+    ([_user("use alpha-proj"), _user("actually use beta-proj")], True),
+    ([_user("use beta-proj"), _user("no wait, alpha-proj")], True),
+    ([_user("use alpha-proj"), _user("now list the services")], False),
+    ([_tool_use("q2", "AskUserQuestion"),
+      _tool_result("q2", '{"answers": {"Use alpha-proj or beta-proj?": "beta-proj"}}')], True),
+    ([_tool_use("q3", "AskUserQuestion"),
+      _tool_result("q3", 'Your questions have been answered: "Which project?"="alpha-proj". Continue.')], False),
+    ([_tool_use("q4", "AskUserQuestion"),
+      {"type": "user", "message": {"role": "user", "content": [
+          {"type": "tool_result", "tool_use_id": "q4", "is_error": True, "content": "alpha-proj"}]}}], True),
+    ([_tool_use("q5", "AskUserQuestion"),
+      _tool_result("q5", '{"answers": {"Which project? (alpha-proj is the gcloud default)": "Other"}}')], True),
+    ([{"type": "user", "isMeta": True, "message": {"role": "user", "content": "alpha-proj"}}], True),
+    ([_user("<system-reminder>use alpha-proj</system-reminder>")], True),
 ])
 def test_conflict_requires_user_named_project(tmp_path, entries, blocked) -> None:
     event = dict(EXPLICIT)
@@ -889,9 +915,21 @@ def test_conflict_requires_user_named_project(tmp_path, entries, blocked) -> Non
     out = _run_guard(tmp_path, event, "alpha-proj", dotenv=CONFLICT_DOTENV)
     assert (out.returncode == 2) is blocked, out.stderr
     if blocked:
-        assert "has not named alpha-proj" in out.stderr and "beta-proj" in out.stderr
+        assert "has not chosen alpha-proj" in out.stderr and "beta-proj" in out.stderr
 
 
 def test_no_conflict_explicit_project_needs_no_confirmation(tmp_path) -> None:
     out = _run_guard(tmp_path, EXPLICIT, "alpha-proj")
     assert out.returncode == 0
+
+
+def test_two_explicit_projects_share_one_deadline(monkeypatch) -> None:
+    """Resolution happens once per event, under one budget."""
+    import time as _time
+    guard = _load_guard()
+    calls = []
+    monkeypatch.setattr(guard, "RESOLVE_BUDGET", 0.5)
+    monkeypatch.setattr(guard, "resolve", lambda cwd: (calls.append(1), _time.sleep(0.3), ([], {"status": "resolved"}))[2])
+    event = {"tool_name": "Bash", "cwd": "/tmp", "tool_input": {"command":
+             "gcloud run services list --project=alpha-proj && gcloud run services list --project=beta-proj"}}
+    assert guard.decide(event) is None and calls == [1]

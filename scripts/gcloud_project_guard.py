@@ -39,9 +39,18 @@ VALUE_FLAGS = {"--account", "--billing-project", "--configuration", "--flags-fil
                "--impersonate-service-account", "--project", "--verbosity", "--access-token-file",
                "--trace-token", "--filter", "--limit", "--sort-by", "--page-size"}
 HELP_FLAGS = {"--help", "-h"}
-# Prefixes that run the rest of the line as a command.
-WRAPPERS = {"sudo", "exec", "time", "nohup", "command", "xargs", "nice"}
-SHELLS = {"sh", "bash", "zsh", "dash"}
+# Prefixes that run the rest of the line as a command, and their options that take a value.
+WRAPPERS = {"sudo", "exec", "time", "nohup", "command", "xargs", "nice", "watch", "doas"}
+WRAPPER_VALUE_OPTS = {"-u", "-g", "-U", "-C", "-D", "-h", "-p", "-r", "-t", "-T", "-n", "-I", "-L", "-P",
+                      "--user", "--group", "--chdir"}
+SHELLS = {"sh", "bash", "zsh", "dash", "ksh"}
+SHELL_KEYWORDS = {"then", "do", "else", "elif", "if", "while", "until", "{", "}", "!", "time"}
+# Commands that only print or search text: "gcloud" among their arguments is data.
+TEXT_COMMANDS = {"echo", "printf", "grep", "egrep", "rg", "ag", "cat", "less", "more", "head", "tail", "man",
+                 "which", "type", "whereis", "ls", "find", "sed", "awk", "wc", "sort", "uniq", "diff", "git",
+                 "tee", "cut", "tr", "jq", "yq", "python3", "python", "node"}
+GCLOUD_WORD = re.compile(r"(?:^|[\s;&|(/])gcloud(?:\s|$)")
+MAX_DEPTH = 3
 SHELL_OPERATORS = {"&&", "||", ";", "|", "&", "|&", ";;", "(", ")", "\n"}
 RESOLVE_BUDGET = 8.0  # seconds; the hook timeout is 15
 
@@ -73,7 +82,9 @@ def _segments(tokens: list[str]) -> list[list[str]]:
 def _strip_prefixes(seg: list[str]) -> list[str]:
     while seg:
         head = seg[0]
-        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", head):
+        if head in SHELL_KEYWORDS:
+            seg = seg[1:]
+        elif re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", head):
             seg = seg[1:]
         elif head == "env":
             seg = seg[1:]
@@ -87,7 +98,7 @@ def _strip_prefixes(seg: list[str]) -> list[str]:
         elif Path(head).name in WRAPPERS:
             seg = seg[1:]
             while seg and seg[0].startswith("-"):
-                seg = seg[1:]
+                seg = seg[2:] if (seg[0] in WRAPPER_VALUE_OPTS and len(seg) > 1) else seg[1:]
         else:
             return seg
     return seg
@@ -109,14 +120,18 @@ def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
         if not seg:
             continue
         exe = Path(seg[0]).name
-        if exe in SHELLS and "-c" in seg[1:] and depth < 3:
-            idx = seg.index("-c")
-            if idx + 1 < len(seg):
-                found += shell_gcloud_invocations(seg[idx + 1], depth + 1)
-        elif exe == "eval" and re.search(r"\bgcloud\b", " ".join(seg[1:])):
-            raise Unanalysable("gcloud inside eval")
+        script_idx = next((i for i, a in enumerate(seg[1:], 1)
+                           if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", a)), None) if exe in SHELLS else None
+        if script_idx is not None:
+            if script_idx + 1 >= len(seg):
+                continue
+            if depth >= MAX_DEPTH:
+                raise Unanalysable("shell commands nested too deeply to check")
+            found += shell_gcloud_invocations(seg[script_idx + 1], depth + 1)
         elif exe == "gcloud":
             found.append(seg[1:])
+        elif exe not in TEXT_COMMANDS and any(GCLOUD_WORD.search(a) for a in seg[1:]):
+            raise Unanalysable(f"gcloud run through {exe}")
     return found
 
 
@@ -164,22 +179,41 @@ def is_project_scoped(argv: list[str]) -> bool:
     return group is not None and group not in EXEMPT_GROUPS
 
 
-def user_confirmed_text(transcript_path: str | None) -> str:
-    """Text the user typed this session, plus their answers to AskUserQuestion."""
+NEGATION = re.compile(r"\b(not|don'?t|never|avoid|instead|except|rather than|no)\b", re.I)
+
+
+def _answers(content) -> list[str]:
+    """The selected answers in an AskUserQuestion result, never its question text."""
+    text = content if isinstance(content, str) else json.dumps(content)
+    try:
+        data = json.loads(text)
+        if isinstance(data, dict) and isinstance(data.get("answers"), dict):
+            return [str(v) for v in data["answers"].values()]
+    except ValueError:
+        pass
+    if isinstance(content, list):
+        text = " ".join(str(b.get("text", "")) for b in content if isinstance(b, dict))
+    return re.findall(r'"[^"]*"="([^"]*)"', text)
+
+
+def user_turns(transcript_path: str | None) -> list[str]:
+    """In order: messages the user typed, and their selected AskUserQuestion answers."""
     if not transcript_path:
-        return ""
+        return []
     try:
         lines = Path(transcript_path).read_text(errors="replace").splitlines()
     except OSError:
-        return ""
+        return []
     ask_ids: set[str] = set()
-    chunks: list[str] = []
+    turns: list[str] = []
     for line in lines:
         try:
             entry = json.loads(line)
         except ValueError:
             continue
-        message = entry.get("message") if isinstance(entry, dict) else None
+        if not isinstance(entry, dict) or entry.get("isMeta") or entry.get("isCompactSummary"):
+            continue
+        message = entry.get("message")
         if not isinstance(message, dict):
             continue
         content = message.get("content")
@@ -187,21 +221,32 @@ def user_confirmed_text(transcript_path: str | None) -> str:
             ask_ids |= {b.get("id") for b in content
                         if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") == "AskUserQuestion"}
         elif entry.get("type") == "user":
-            if isinstance(content, str):
-                chunks.append(content)
-            elif isinstance(content, list):
-                for b in content:
-                    if not isinstance(b, dict):
-                        continue
-                    if b.get("type") == "text":
-                        chunks.append(str(b.get("text", "")))
-                    elif b.get("type") == "tool_result" and b.get("tool_use_id") in ask_ids:
-                        chunks.append(json.dumps(b.get("content")))
-    return "\n".join(chunks)
+            blocks = [{"type": "text", "text": content}] if isinstance(content, str) else content
+            for b in blocks if isinstance(blocks, list) else []:
+                if not isinstance(b, dict):
+                    continue
+                if b.get("type") == "text":
+                    text = str(b.get("text", ""))
+                    if not text.lstrip().startswith(("<command-", "<local-command", "<system-reminder", "<task-notification")):
+                        turns.append(text)
+                elif (b.get("type") == "tool_result" and b.get("tool_use_id") in ask_ids
+                      and not b.get("is_error")):
+                    turns += _answers(b.get("content"))
+    return turns
 
 
-def user_named(project: str, transcript_path: str | None) -> bool:
-    return re.search(rf"(?<![a-z0-9:.-]){re.escape(project)}(?![a-z0-9-])", user_confirmed_text(transcript_path)) is not None
+def _names(text: str, project: str) -> bool:
+    return re.search(rf"(?<![a-z0-9:.-]){re.escape(project)}(?![a-z0-9-])", text) is not None
+
+
+def user_chose(project: str, candidates: list[str], transcript_path: str | None) -> bool:
+    """True when the latest user turn naming any candidate names exactly this one, affirmatively."""
+    pool = set(candidates) | {project}
+    for turn in reversed(user_turns(transcript_path)):
+        named = {c for c in pool if _names(turn, c)}
+        if named:
+            return named == {project} and not NEGATION.search(turn)
+    return False
 
 
 def needs_project(argv: list[str]) -> bool:
@@ -251,40 +296,22 @@ FALLBACK = (HEADER + "\nThe project sources could not be read in time. Ask the u
             "then re-run with --project=PROJECT_ID.")
 
 
-UNCONFIRMED = ("\nThe user has not named {project} in this session. Ask them to choose; "
+UNCONFIRMED = ("\nThe user has not chosen {project} in this session. Ask them to choose; "
                "re-run only with the project they name.")
 
 
-def _within_budget(fn):
-    box: dict = {}
-
-    def work() -> None:
-        try:
-            box["value"] = fn()
-        except Exception:  # resolver failure must still block, not crash open
-            pass
-
-    worker = threading.Thread(target=work, daemon=True)
-    worker.start()
-    worker.join(RESOLVE_BUDGET)
-    return box.get("value")
-
-
-def guidance_within_budget(cwd: Path) -> str:
-    return _within_budget(lambda: guidance(cwd)) or FALLBACK
-
-
-def conflict_reason(cwd: Path, project: str, transcript_path: str | None) -> str | None:
-    """Block an explicit --project while sources disagree and the user has not named it."""
-    def check():
-        resolved = resolve(cwd)
-        if resolved[1]["status"] != "conflict" or user_named(project, transcript_path):
-            return ""
-        return guidance(cwd, resolved) + UNCONFIRMED.format(project=project)
-    outcome = _within_budget(check)
-    if outcome is None:
-        return FALLBACK
-    return outcome or None
+def verdict(cwd: Path, scoped: list[list[str]], transcript_path: str | None) -> str | None:
+    """Resolve the sources once and decide for every invocation in the event."""
+    resolved = resolve(cwd)
+    if any(project_flag(argv) is None for argv in scoped):
+        return guidance(cwd, resolved)
+    candidates, result = resolved
+    if result["status"] != "conflict":
+        return None
+    for project in dict.fromkeys(project_flag(argv) for argv in scoped):
+        if not user_chose(project, result["choices"], transcript_path):
+            return guidance(cwd, resolved) + UNCONFIRMED.format(project=project)
+    return None
 
 
 def decide(event: dict) -> str | None:
@@ -300,13 +327,18 @@ def decide(event: dict) -> str | None:
     if not scoped:
         return None
     cwd = Path(event.get("cwd") or Path.cwd())
-    if any(project_flag(argv) is None for argv in scoped):
-        return guidance_within_budget(cwd)
-    for project in dict.fromkeys(project_flag(argv) for argv in scoped):
-        reason = conflict_reason(cwd, project, event.get("transcript_path"))
-        if reason:
-            return reason
-    return None
+    box: dict = {}
+
+    def work() -> None:
+        try:
+            box["reason"] = verdict(cwd, scoped, event.get("transcript_path"))
+        except Exception:  # resolver failure must still block, not crash open
+            pass
+
+    worker = threading.Thread(target=work, daemon=True)
+    worker.start()
+    worker.join(RESOLVE_BUDGET)  # one deadline for the whole event
+    return box["reason"] if "reason" in box else FALLBACK
 
 
 def main() -> None:
