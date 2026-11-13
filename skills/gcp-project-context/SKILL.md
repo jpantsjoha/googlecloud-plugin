@@ -15,7 +15,7 @@ Running a command against the wrong project is the cheapest mistake to make and 
 
 ## Enforcement in Claude Code
 
-The plugin ships a `PreToolUse` hook (`hooks/hooks.json` → `scripts/gcloud_project_guard.py`). It blocks any project-scoped `gcloud` call, through the MCP server or the shell, that lacks `--project`, and returns what the sources say: one project to retry with, the choices to put to the user, or a pointer to `gcloud init`. Clients without hooks rely on this skill alone.
+The plugin ships a `PreToolUse` hook (`hooks/hooks.json` → `scripts/gcloud_project_guard.py`). It blocks a project-scoped `gcloud` call that lacks `--project` — through the MCP server or the shell, judging each invocation in a chained or `sh -c` command on its own flags — and returns what the sources say: one project to retry with, the choices to put to the user, or a pointer to `gcloud init`. A `gcloud` call inside a command substitution or `eval` cannot be checked and is blocked outright. `--billing-project` does not count as a project. While sources disagree, even an explicit `--project` is held until the user has named that project in the session — typed, or as their answer to a question — so the agent cannot settle a conflict by picking the gcloud default. The hook needs `python3`; without it Claude Code reports a hook error and the call proceeds. Clients without hooks rely on this skill alone.
 
 ## Step 1 — Collect every source
 

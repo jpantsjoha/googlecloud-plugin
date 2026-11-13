@@ -2,74 +2,231 @@
 """PreToolUse guard: no project-scoped gcloud call runs without an explicit --project.
 
 Claude Code runs this before the plugin's `run_gcloud_command` MCP tool and
-before Bash commands. When a project-scoped gcloud command lacks --project, it
-blocks the call and tells the agent what the project sources say (see
-gcp-project-context): one project → retry with it; several → ask the user;
-none → ask the user or suggest `gcloud init`. Everything else passes untouched.
+before Bash commands. When a project-scoped gcloud invocation lacks --project,
+it blocks the call (exit 2) and tells the agent what the project sources say
+(see gcp-project-context): one project → retry with it; several → ask the
+user; none → ask the user or suggest `gcloud init`.
 
-Reads the hook event as JSON on stdin. Never prints .env contents beyond the
-project IDs the resolver already validates.
+Shell commands are split into individual invocations, so each gcloud call is
+judged on its own flags; `sh -c` and common prefixes (sudo, env, timeout…) are
+looked through. A gcloud call hidden in a command substitution cannot be
+analysed and is blocked conservatively. If resolution itself fails or runs out
+of time, the call is still blocked, with a generic reason.
+
+When the project sources disagree, an explicit --project is accepted only if
+the user has named that project in this session — in a message they typed or
+an answer to a question (AskUserQuestion) — read from the session transcript,
+which the agent cannot write. Otherwise the agent could settle the conflict
+by quietly picking the gcloud default.
+
+Reads the hook event as JSON on stdin; a malformed event is allowed through.
+Requires python3 on PATH; without it Claude Code reports a hook error and the
+call proceeds. Never prints .env contents beyond validated project IDs.
 """
 import json
+import re
 import shlex
 import sys
+import threading
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import preflight  # noqa: E402  (sibling script, shared resolver)
 
 MCP_TOOL_SUFFIX = "__run_gcloud_command"
 # Command groups that are not project-scoped, or take the project positionally.
 EXEMPT_GROUPS = {"auth", "components", "config", "help", "info", "init", "meta", "topic", "version",
                  "projects", "organizations", "billing"}
-PROJECT_FLAGS = ("--project", "--billing-project")
+# gcloud-wide flags that take a value; skipped with their value when finding the command group.
+VALUE_FLAGS = {"--account", "--billing-project", "--configuration", "--flags-file", "--flatten", "--format",
+               "--impersonate-service-account", "--project", "--verbosity", "--access-token-file",
+               "--trace-token", "--filter", "--limit", "--sort-by", "--page-size"}
+HELP_FLAGS = {"--help", "-h"}
+# Prefixes that run the rest of the line as a command.
+WRAPPERS = {"sudo", "exec", "time", "nohup", "command", "xargs", "nice"}
+SHELLS = {"sh", "bash", "zsh", "dash"}
+SHELL_OPERATORS = {"&&", "||", ";", "|", "&", "|&", ";;", "(", ")", "\n"}
+RESOLVE_BUDGET = 8.0  # seconds; the hook timeout is 15
 
 
-def gcloud_argv(tool_name: str, tool_input: dict) -> list[str] | None:
-    """The gcloud arguments (without 'gcloud') this call would run, or None if it is not a gcloud call."""
+class Unanalysable(Exception):
+    """A shell construct that may run gcloud but cannot be checked."""
+
+
+def _tokens(command: str) -> list[str]:
+    lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    return list(lexer)
+
+
+def _segments(tokens: list[str]) -> list[list[str]]:
+    segments, current = [], []
+    for tok in tokens:
+        if tok in SHELL_OPERATORS or (tok and set(tok) <= set("&|;()")):
+            if current:
+                segments.append(current)
+            current = []
+        else:
+            current.append(tok)
+    if current:
+        segments.append(current)
+    return segments
+
+
+def _strip_prefixes(seg: list[str]) -> list[str]:
+    while seg:
+        head = seg[0]
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", head):
+            seg = seg[1:]
+        elif head == "env":
+            seg = seg[1:]
+            while seg and (seg[0].startswith("-") or "=" in seg[0]):
+                seg = seg[2:] if seg[0] in ("-u", "--unset") else seg[1:]
+        elif head == "timeout":
+            seg = seg[1:]
+            while seg and seg[0].startswith("-"):
+                seg = seg[1:]
+            seg = seg[1:]  # the duration
+        elif Path(head).name in WRAPPERS:
+            seg = seg[1:]
+            while seg and seg[0].startswith("-"):
+                seg = seg[1:]
+        else:
+            return seg
+    return seg
+
+
+def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
+    """Argument lists (without 'gcloud') of every gcloud invocation in a shell command."""
+    if re.search(r"\$\(|`", command) and re.search(r"\bgcloud\b", command):
+        raise Unanalysable("gcloud inside a command substitution")
+    try:
+        tokens = _tokens(command)
+    except ValueError as exc:
+        if re.search(r"\bgcloud\b", command):
+            raise Unanalysable("unparseable shell command containing gcloud") from exc
+        return []
+    found = []
+    for seg in _segments(tokens):
+        seg = _strip_prefixes(seg)
+        if not seg:
+            continue
+        exe = Path(seg[0]).name
+        if exe in SHELLS and "-c" in seg[1:] and depth < 3:
+            idx = seg.index("-c")
+            if idx + 1 < len(seg):
+                found += shell_gcloud_invocations(seg[idx + 1], depth + 1)
+        elif exe == "eval" and re.search(r"\bgcloud\b", " ".join(seg[1:])):
+            raise Unanalysable("gcloud inside eval")
+        elif exe == "gcloud":
+            found.append(seg[1:])
+    return found
+
+
+def gcloud_invocations(tool_name: str, tool_input: dict) -> list[list[str]]:
     if tool_name.endswith(MCP_TOOL_SUFFIX):
         if isinstance(tool_input.get("args"), list):
-            return [str(a) for a in tool_input["args"]]
+            return [[str(a) for a in tool_input["args"]]]
         command = tool_input.get("command")
-    elif tool_name == "Bash":
-        command = tool_input.get("command")
-    else:
-        return None
-    if not isinstance(command, str):
-        return None
+        if isinstance(command, str):
+            argv = _tokens(command)
+            return [argv[1:] if argv and Path(argv[0]).name == "gcloud" else argv]
+        return []
+    if tool_name == "Bash" and isinstance(tool_input.get("command"), str):
+        return shell_gcloud_invocations(tool_input["command"])
+    return []
+
+
+def command_group(argv: list[str]) -> str | None:
+    i = 0
+    while i < len(argv):
+        tok = argv[i]
+        if tok.startswith("-"):
+            i += 2 if (tok in VALUE_FLAGS and "=" not in tok) else 1
+            continue
+        if tok in ("alpha", "beta", "preview"):
+            i += 1
+            continue
+        return tok
+    return None
+
+
+def project_flag(argv: list[str]) -> str | None:
+    for i, a in enumerate(argv):
+        if a.startswith("--project="):
+            return a.split("=", 1)[1]
+        if a == "--project" and i + 1 < len(argv):
+            return argv[i + 1]
+    return None
+
+
+def is_project_scoped(argv: list[str]) -> bool:
+    if any(a in HELP_FLAGS for a in argv):
+        return False
+    group = command_group(argv)
+    return group is not None and group not in EXEMPT_GROUPS
+
+
+def user_confirmed_text(transcript_path: str | None) -> str:
+    """Text the user typed this session, plus their answers to AskUserQuestion."""
+    if not transcript_path:
+        return ""
     try:
-        tokens = shlex.split(command)
-    except ValueError:
-        return None
-    # Bash: only a command that starts with gcloud (optionally after env assignments).
-    while tokens and "=" in tokens[0] and not tokens[0].startswith("-"):
-        tokens = tokens[1:]
-    if tokens and tokens[0] == "env":
-        tokens = tokens[1:]
-        while tokens and ("=" in tokens[0] or tokens[0] in ("-u", "-i")):
-            tokens = tokens[2:] if tokens[0] == "-u" else tokens[1:]
-    if not tokens or Path(tokens[0]).name != "gcloud":
-        return None if tool_name == "Bash" else tokens
-    return tokens[1:]
+        lines = Path(transcript_path).read_text(errors="replace").splitlines()
+    except OSError:
+        return ""
+    ask_ids: set[str] = set()
+    chunks: list[str] = []
+    for line in lines:
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        message = entry.get("message") if isinstance(entry, dict) else None
+        if not isinstance(message, dict):
+            continue
+        content = message.get("content")
+        if entry.get("type") == "assistant" and isinstance(content, list):
+            ask_ids |= {b.get("id") for b in content
+                        if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") == "AskUserQuestion"}
+        elif entry.get("type") == "user":
+            if isinstance(content, str):
+                chunks.append(content)
+            elif isinstance(content, list):
+                for b in content:
+                    if not isinstance(b, dict):
+                        continue
+                    if b.get("type") == "text":
+                        chunks.append(str(b.get("text", "")))
+                    elif b.get("type") == "tool_result" and b.get("tool_use_id") in ask_ids:
+                        chunks.append(json.dumps(b.get("content")))
+    return "\n".join(chunks)
+
+
+def user_named(project: str, transcript_path: str | None) -> bool:
+    return re.search(rf"(?<![a-z0-9:.-]){re.escape(project)}(?![a-z0-9-])", user_confirmed_text(transcript_path)) is not None
 
 
 def needs_project(argv: list[str]) -> bool:
-    if any(a == f or a.startswith(f + "=") for a in argv for f in PROJECT_FLAGS):
+    if any(a == "--project" or a.startswith("--project=") for a in argv):
         return False
-    groups = [a for a in argv if not a.startswith("-")]
-    while groups and groups[0] in ("alpha", "beta"):
-        groups = groups[1:]
-    return bool(groups) and groups[0] not in EXEMPT_GROUPS
+    if any(a in HELP_FLAGS for a in argv):
+        return False
+    group = command_group(argv)
+    return group is not None and group not in EXEMPT_GROUPS
 
 
-def guidance(cwd: Path) -> str:
+def resolve(cwd: Path) -> tuple[list[dict], dict]:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import preflight  # sibling script: the shared resolver
     candidates = preflight.collect_project_candidates(cwd)
-    result = preflight.resolve_project(candidates)
+    return candidates, preflight.resolve_project(candidates)
+
+
+def guidance(cwd: Path, resolved: tuple[list[dict], dict] | None = None) -> str:
+    candidates, result = resolved or resolve(cwd)
     by_value: dict[str, list[str]] = {}
     for c in candidates:
         if c["valid"]:
             by_value.setdefault(c["value"], []).append(c["source"])
-    lines = ["Blocked: this gcloud command is project-scoped and has no --project (gcp-project-context)."]
+    lines = [HEADER]
     if result["status"] == "resolved":
         sources = ", ".join(by_value[result["project"]])
         lines.append(f"One project found: {result['project']} (from {sources}). "
@@ -89,12 +246,67 @@ def guidance(cwd: Path) -> str:
     return "\n".join(lines)
 
 
+HEADER = "Blocked: this gcloud command is project-scoped and has no --project (gcp-project-context)."
+FALLBACK = (HEADER + "\nThe project sources could not be read in time. Ask the user which project to use, "
+            "then re-run with --project=PROJECT_ID.")
+
+
+UNCONFIRMED = ("\nThe user has not named {project} in this session. Ask them to choose; "
+               "re-run only with the project they name.")
+
+
+def _within_budget(fn):
+    box: dict = {}
+
+    def work() -> None:
+        try:
+            box["value"] = fn()
+        except Exception:  # resolver failure must still block, not crash open
+            pass
+
+    worker = threading.Thread(target=work, daemon=True)
+    worker.start()
+    worker.join(RESOLVE_BUDGET)
+    return box.get("value")
+
+
+def guidance_within_budget(cwd: Path) -> str:
+    return _within_budget(lambda: guidance(cwd)) or FALLBACK
+
+
+def conflict_reason(cwd: Path, project: str, transcript_path: str | None) -> str | None:
+    """Block an explicit --project while sources disagree and the user has not named it."""
+    def check():
+        resolved = resolve(cwd)
+        if resolved[1]["status"] != "conflict" or user_named(project, transcript_path):
+            return ""
+        return guidance(cwd, resolved) + UNCONFIRMED.format(project=project)
+    outcome = _within_budget(check)
+    if outcome is None:
+        return FALLBACK
+    return outcome or None
+
+
 def decide(event: dict) -> str | None:
     """Reason to block, or None to allow."""
-    argv = gcloud_argv(str(event.get("tool_name", "")), event.get("tool_input") or {})
-    if argv is None or not needs_project(argv):
+    try:
+        invocations = gcloud_invocations(str(event.get("tool_name", "")), event.get("tool_input") or {})
+    except Unanalysable as exc:
+        return (f"Blocked: {exc}; it cannot be checked for --project. Run each gcloud command on its own, "
+                "with --project=PROJECT_ID (see gcp-project-context and gcloud-guardrails).")
+    except ValueError:
         return None
-    return guidance(Path(event.get("cwd") or Path.cwd()))
+    scoped = [argv for argv in invocations if is_project_scoped(argv)]
+    if not scoped:
+        return None
+    cwd = Path(event.get("cwd") or Path.cwd())
+    if any(project_flag(argv) is None for argv in scoped):
+        return guidance_within_budget(cwd)
+    for project in dict.fromkeys(project_flag(argv) for argv in scoped):
+        reason = conflict_reason(cwd, project, event.get("transcript_path"))
+        if reason:
+            return reason
+    return None
 
 
 def main() -> None:
@@ -102,6 +314,8 @@ def main() -> None:
         event = json.load(sys.stdin)
     except (ValueError, OSError):
         return  # not our input; never block on a parse failure
+    if not isinstance(event, dict):
+        return
     reason = decide(event)
     if reason:
         print(reason, file=sys.stderr)
