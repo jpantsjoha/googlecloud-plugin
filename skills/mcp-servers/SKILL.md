@@ -1,6 +1,6 @@
 ---
 name: mcp-servers
-description: "Configure, install, and maintain Google-managed and self-hosted MCP servers for GCP. Covers setup, auth (ADC and SA key), capability map, troubleshooting, and version tracking. Every MCP entry includes a gcloud CLI fallback. Use when the user mentions: MCP setup, google MCP, model context protocol GCP, MCP install, MCP auth, genai toolbox, MCP tools GCP, configure MCP, developer knowledge."
+description: "Configure, install, and maintain Google-managed and self-hosted MCP servers for GCP. Covers setup, auth (ADC and service-account impersonation), capability map, troubleshooting, and version tracking. Every MCP entry includes a gcloud CLI fallback. Use when the user mentions: MCP setup, google MCP, model context protocol GCP, MCP install, MCP auth, genai toolbox, MCP tools GCP, configure MCP, developer knowledge."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"
@@ -11,7 +11,7 @@ metadata:
 
 # MCP Servers — Google Cloud
 
-Configure and maintain Model Context Protocol (MCP) servers for Google Cloud. All auth flows through ADC or explicit SA key path — no credential values stored anywhere.
+Configure and maintain Model Context Protocol (MCP) servers for Google Cloud. All auth flows through ADC, optionally impersonating a service account — no downloaded keys, no credential values stored anywhere.
 
 ## Auth Architecture
 
@@ -21,10 +21,11 @@ All GCP MCP servers authenticate via Application Default Credentials (ADC):
 # Authenticate locally (developer machine)
 gcloud auth application-default login
 
-# Authenticate for a service account (CI/CD or production agent)
-gcloud auth activate-service-account --key-file=/path/to/sa-key.json
+# Act as a service account (agent or automation) — no key file
 gcloud auth application-default login --impersonate-service-account=SA@PROJECT.iam.gserviceaccount.com
 ```
+
+CI outside Google Cloud uses Workload Identity Federation instead. See `shared/auth/README.md` for both patterns and the key-file exception.
 
 ## What the plugin ships vs what you opt into
 

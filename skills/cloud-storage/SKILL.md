@@ -61,10 +61,13 @@ gcloud storage buckets update gs://BUCKET_NAME \
 ### Generate a signed URL (time-limited access)
 
 ```bash
+# Signs as the service account through impersonation — no private key file
 gcloud storage sign-url gs://BUCKET_NAME/OBJECT \
   --duration=1h \
-  --private-key-file=KEY_FILE
+  --impersonate-service-account=SA_NAME@PROJECT_ID.iam.gserviceaccount.com
 ```
+
+The caller needs `roles/iam.serviceAccountTokenCreator` on that service account.
 
 ## References
 

@@ -58,7 +58,7 @@ gcloud projects add-iam-policy-binding PROJECT_ID \
 ## Never Do
 
 - Grant `roles/owner` or `roles/editor` to service accounts or automation
-- Create SA key files when Workload Identity is available
+- Create SA key files when impersonation, an attached service account or Workload Identity Federation can do the job (see `shared/auth/README.md`)
 - Share service account keys across environments
 
 ## References

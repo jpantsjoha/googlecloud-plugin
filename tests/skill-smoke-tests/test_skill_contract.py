@@ -289,3 +289,22 @@ def test_matching_shadow_key_cannot_mask_native_drift(tmp_path, monkeypatch) -> 
     errors = _drift_errors(tmp_path, monkeypatch, "gemini-extension.json", shadow)
     assert any("reads only 'httpUrl'" in e for e in errors), errors
     assert any("differs" in e and "developer-knowledge" in e for e in errors), errors
+
+
+# ─── Auth: no key-file recipes (shared/auth/README.md, issue #16) ─────────────
+
+KEY_FILE_RECIPES = re.compile(
+    r"activate-service-account[^\n]*--key-file|--private-key-file|"
+    r"GOOGLE_APPLICATION_CREDENTIALS=\S*sa-key"
+)
+
+
+def test_no_service_account_key_recipes() -> None:
+    """Examples must use impersonation, attached service accounts or Workload Identity Federation."""
+    offenders = []
+    for path in [*SKILLS_DIR.glob("*/SKILL.md"), *SKILLS_DIR.glob("*/references/*.md"),
+                 *(ROOT / "shared").rglob("*.md"), ROOT / "PLUGIN.md", ROOT / "AGENTS.md", ROOT / "GEMINI.md"]:
+        for lineno, line in enumerate(path.read_text().splitlines(), 1):
+            if KEY_FILE_RECIPES.search(line):
+                offenders.append(f"{path.relative_to(ROOT)}:{lineno}: {line.strip()}")
+    assert not offenders, "service-account key recipe found:\n" + "\n".join(offenders)

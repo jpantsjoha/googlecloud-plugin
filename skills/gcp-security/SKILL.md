@@ -37,7 +37,7 @@ Tier 3 — cross-cutting security enforcer. Reviews both the solution-designer o
 - [ ] No secrets in environment variables committed to source control
 - [ ] Secret Manager used for all sensitive config
 - [ ] No hardcoded credentials in Terraform, scripts, or skills
-- [ ] SA key files referenced by path only — values never recorded
+- [ ] No service-account keys; impersonation, attached service accounts or Workload Identity Federation instead. Any exception is documented (reason, owner, expiry) and referenced by path only
 
 ### Network
 - [ ] VPC firewall rules deny-by-default; only necessary ingress/egress open
