@@ -167,6 +167,10 @@ def _outside_quotes(line: str, pos: int) -> bool:
     return not (single or double)
 
 
+# A redirection operator on its own: >, >>, <, <<<, &>, &>>, >&, 2>&, >|, …
+REDIRECT = re.compile(r"\d*&?[<>]{1,3}[&|]?-?")
+
+
 def _command_name(word: str) -> str:
     """Executable name without path or version suffix: /usr/bin/python3.12 -> python3."""
     name = Path(word).name
@@ -189,10 +193,10 @@ def _line_commands(line: str) -> list[str]:
         while True:
             before = list(seg)
             seg = _strip_prefixes(seg)
-            if seg and seg[0].isdigit() and len(seg) > 1 and re.fullmatch(r"[<>]+&?", seg[1]):
+            if seg and seg[0].isdigit() and len(seg) > 1 and REDIRECT.fullmatch(seg[1]):
                 seg = seg[1:]  # file descriptor split from its operator
-            if seg and re.fullmatch(r"\d*[<>]+&?\d*", seg[0]):
-                seg = seg[2:] if re.fullmatch(r"\d*[<>]+&?", seg[0]) else seg[1:]
+            if seg and REDIRECT.fullmatch(seg[0]):
+                seg = seg[2:]  # operator and its target
             if seg == before:
                 break
         if seg:

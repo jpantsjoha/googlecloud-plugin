@@ -1031,6 +1031,10 @@ def test_project_context_skill_says_when_not_to_ask() -> None:
     ("cat <<'EOF' | 2>/dev/null bash\ngcloud run services list\nEOF", True),
     ("cat <<'EOF' | >/dev/null command bash\ngcloud run services list\nEOF", True),
     ("cat <<'EOF' 2>/dev/null > notes.md\ngcloud run services list\nEOF", False),
+    ("cat <<'EOF' | &>/dev/null bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | &>>/tmp/log bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | 2>&1 bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' &>/dev/null > notes.md\ngcloud run services list\nEOF", False),
 ])
 def test_guard_false_positives_and_real_cases(command, blocked) -> None:
     assert _blocked("Bash", {"command": command}) is blocked
