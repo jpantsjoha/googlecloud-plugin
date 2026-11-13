@@ -41,7 +41,7 @@ Where to list `googlecloud-plugin` so builders can find and install it. Each ent
 - **Where:** https://claude.ai/settings/plugins/submit or https://platform.claude.com/plugins/submit
 - **Needs:** public repo with `.claude-plugin/plugin.json` + `marketplace.json` (both present and valid).
 - **Note:** complementary to Claude Plugin Hub, not competing — per the hub's own guidance.
-- **Status:** not yet submitted. Eligible: latest release v0.5.1.
+- **Status:** not yet submitted. Eligible: latest tagged release (v0.5.0; v0.5.1 once PR #33 merges).
 
 ## 4. awesome-claude-code — community list
 
