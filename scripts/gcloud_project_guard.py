@@ -46,10 +46,12 @@ WRAPPER_VALUE_OPTS = {"-u", "-g", "-U", "-C", "-D", "-h", "-p", "-r", "-t", "-T"
 SHELLS = {"sh", "bash", "zsh", "dash", "ksh"}
 SHELL_KEYWORDS = {"then", "do", "else", "elif", "if", "while", "until", "{", "}", "!", "time"}
 # Commands that only print or search text: "gcloud" among their arguments is data.
-TEXT_COMMANDS = {"echo", "printf", "grep", "egrep", "rg", "ag", "cat", "less", "more", "head", "tail", "man",
-                 "which", "type", "whereis", "ls", "find", "sed", "awk", "wc", "sort", "uniq", "diff", "git",
-                 "tee", "cut", "tr", "jq", "yq", "python3", "python", "node"}
-GCLOUD_WORD = re.compile(r"(?:^|[\s;&|(/])gcloud(?:\s|$)")
+# Nothing that can execute another program belongs here (no interpreters, find,
+# awk or sed), or it becomes a way round the guard.
+TEXT_COMMANDS = {"echo", "printf", "grep", "egrep", "fgrep", "rg", "ag", "cat", "less", "more", "head", "tail",
+                 "man", "which", "type", "whereis", "ls", "wc", "sort", "uniq", "diff", "git", "cut", "tr",
+                 "jq", "yq"}
+GCLOUD_WORD = re.compile(r"(?:^|[^\w.-])gcloud(?:[^\w.-]|$)")
 MAX_DEPTH = 3
 SHELL_OPERATORS = {"&&", "||", ";", "|", "&", "|&", ";;", "(", ")", "\n"}
 RESOLVE_BUDGET = 8.0  # seconds; the hook timeout is 15
@@ -221,17 +223,22 @@ def user_turns(transcript_path: str | None) -> list[str]:
             ask_ids |= {b.get("id") for b in content
                         if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") == "AskUserQuestion"}
         elif entry.get("type") == "user":
+            # One message (or one set of answers) is one turn: its parts are judged together.
             blocks = [{"type": "text", "text": content}] if isinstance(content, str) else content
+            typed, answered = [], []
             for b in blocks if isinstance(blocks, list) else []:
                 if not isinstance(b, dict):
                     continue
                 if b.get("type") == "text":
                     text = str(b.get("text", ""))
                     if not text.lstrip().startswith(("<command-", "<local-command", "<system-reminder", "<task-notification")):
-                        turns.append(text)
+                        typed.append(text)
                 elif (b.get("type") == "tool_result" and b.get("tool_use_id") in ask_ids
                       and not b.get("is_error")):
-                    turns += _answers(b.get("content"))
+                    answered += _answers(b.get("content"))
+            for part in (typed, answered):
+                if part:
+                    turns.append("\n".join(part))
     return turns
 
 

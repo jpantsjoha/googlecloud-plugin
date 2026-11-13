@@ -780,6 +780,10 @@ def _blocked(tool, tool_input) -> bool:
     ("Bash", {"command": "ssh box 'gcloud run services list'"}, True),
     ("Bash", {"command": "sh -c \"sh -c 'sh -c \\\"sh -c gcloud\\\"'\""}, True),
     ("Bash", {"command": "echo 'gcloud run services list'"}, False),
+    ("Bash", {"command": "python3 -c 'import subprocess; subprocess.run([\"gcloud\", \"run\", \"services\", \"list\"])'"}, True),
+    ("Bash", {"command": "find . -exec gcloud run services list \\;"}, True),
+    ("Bash", {"command": "awk 'BEGIN { system(\"gcloud run services list\") }'"}, True),
+    ("Bash", {"command": "git commit -m 'docs: gcloud run services list example'"}, False),
     ("Bash", {"command": "gcloud help run deploy"}, False),
     ("Read", {"file_path": "/tmp/x"}, False),
 ])
@@ -906,6 +910,10 @@ EXPLICIT = {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "l
     ([_tool_use("q5", "AskUserQuestion"),
       _tool_result("q5", '{"answers": {"Which project? (alpha-proj is the gcloud default)": "Other"}}')], True),
     ([{"type": "user", "isMeta": True, "message": {"role": "user", "content": "alpha-proj"}}], True),
+    ([{"type": "user", "message": {"role": "user", "content": [
+        {"type": "text", "text": "Compare beta-proj"}, {"type": "text", "text": "and alpha-proj"}]}}], True),
+    ([_tool_use("q6", "AskUserQuestion"),
+      _tool_result("q6", '{"answers": {"Also check?": "beta-proj", "Project?": "alpha-proj"}}')], True),
     ([_user("<system-reminder>use alpha-proj</system-reminder>")], True),
 ])
 def test_conflict_requires_user_named_project(tmp_path, entries, blocked) -> None:
