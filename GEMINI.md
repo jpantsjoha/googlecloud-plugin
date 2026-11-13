@@ -29,11 +29,11 @@ This is the always-on context for the `googlecloud-plugin` on Antigravity. It in
 
 ## Settle the project first
 
-Before the first project-scoped command, use `gcp-project-context`: collect the project from exported variables, the repository's `.env` files and the active gcloud configuration. One ID → use it and say so. Several → ask the user which. None → stop and point them at `gcloud init`. Then pass that ID as `--project` on every command.
+Before the first project-scoped command, use `gcp-project-context`: collect the project from exported variables, the repository's `.env` files and the active gcloud configuration. One ID → use it and say so. Several → ask the user which. None → stop and point them at `gcloud init`. Then pass that ID as `--project` on every project-scoped command. Documentation, best-practice, design and review work needs no project — do not ask for one.
 
 ## Every gcloud call
 
-Follow `gcloud-guardrails` for every `gcloud` command, whichever skill proposed it: validate the leaf with `gcloud help`, dry-run where supported, reduce output, pass `--project` and location explicitly, one command per call, and stop for human authorisation on the denylist (IAM changes, deletes, billing, organizations, KMS, IaC apply, API enablement, CLI installation).
+Follow `gcloud-guardrails` for every `gcloud` command, whichever skill proposed it: validate the leaf with `gcloud help`, dry-run where supported, reduce output, pass `--project` (on project-scoped commands) and the location explicitly, one command per call, and stop for human authorisation on the denylist (IAM changes, deletes, billing, organizations, KMS, IaC apply, API enablement, CLI installation).
 
 ## Product depth beyond this plugin
 
