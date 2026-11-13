@@ -14,7 +14,7 @@
 
 Skill libraries for Google Cloud are everywhere. What they miss is the operating contract: who designs before anyone writes code, who signs off on least-privilege before anything deploys, what "done" means when an agent ships to a billable cloud. This plugin ships that contract, with the GCP know-how built in.
 
-One install gives an agent (Claude, Codex, Antigravity or Kimi) six personas, eleven service skills, three safety-and-depth skills, live Google documentation, and a research pipeline that keeps every reference current. A plugin that goes stale in silence is worse than none.
+One install gives an agent (Claude, Codex, Antigravity or Kimi) six personas, eleven service skills, three safety-and-depth skills, live Google documentation (wired for Claude Code, Antigravity and Gemini CLI), and a research pipeline that keeps every reference current. A plugin that goes stale in silence is worse than none.
 
 **Compliant with [Agent Plugins 1.0.0](https://agent-plugins.org/specification)** — the open, vendor-neutral packaging standard co-maintained by Amazon, Cursor, Google, Microsoft, OpenAI and Vercel ([announcement](https://developers.googleblog.com/agent-plugins-package-your-skills-tools-and-more/)) — and with the [Agent Skills specification](https://agentskills.io/specification) it references. One directory layout works across conformant clients, rather than a bespoke wrapper per harness. Enforced in CI by `make spec` and verified against the official reference validator; see [Standards and compliance](#standards-and-compliance).
 
@@ -63,18 +63,20 @@ make hooks    # runs `make gate` (validate + manifest + mermaid + lint + test) o
 
 ## Quick start
 
-**1. Log in once.** The plugin uses your gcloud login; no API keys.
+**1. Log in once.** With a working gcloud login, no API key is needed.
 
 ```bash
 gcloud auth application-default login
-gcloud config set project PROJECT_ID     # also the quota project for the docs server
+gcloud auth application-default set-quota-project PROJECT_ID   # bills docs-server calls to this project
 ```
+
+The quota project needs the Developer Knowledge API enabled (an administrator task). Claude Code's docs connection also needs `python3`.
 
 **2. Ask in plain language.** Most questions need no project at all:
 
 | Ask | What happens |
 | :--- | :--- |
-| *"What does Google recommend for Cloud Run service-to-service auth? Check the docs."* | Answers from official Google documentation via the Developer Knowledge server, with sources. No project needed. |
+| *"What does Google recommend for Cloud Run service-to-service auth? Check the docs."* | Answers from official Google documentation via the Developer Knowledge server, with sources. No target project needed. |
 | *"Design a Cloud Run service for this app and take it through the security gate."* | Solution → GCP design → security gate, before any code. |
 | *"Review my architecture against the Well-Architected Framework."* | Pillar-by-pillar gaps from `well-architected`, with deeper Google skills fetched on demand. |
 | *"List the Cloud Run services in my project."* | Settles the project first (below), then runs `gcloud` with `--project`, one command at a time. |
@@ -82,12 +84,12 @@ gcloud config set project PROJECT_ID     # also the quota project for the docs s
 **3. The project is settled only when a command needs one.** The plugin reads `CLOUDSDK_CORE_PROJECT`, `GOOGLE_CLOUD_PROJECT`, `GCP_PROJECT_ID`, `GCLOUD_PROJECT`, your repository's `.env` / `.env.local` (those keys only) and your active gcloud configuration:
 
 - **one project** — it says which, and proceeds;
-- **several** — it asks you to pick, and runs nothing until you do;
+- **several** — it asks you to pick, and runs no project-scoped command until you do;
 - **none** — it tells you to run `gcloud init`.
 
-In Claude Code a hook enforces this: a project-scoped `gcloud` call without `--project` is stopped and the agent is told what the sources say. Check your own setup with `python3 scripts/preflight.py` (exit 0 resolved, 3 conflict, 2 missing).
+In Claude Code a hook enforces this for the `gcloud` MCP tool and shell commands (it needs `python3`): a project-scoped call without `--project` is stopped and the agent is told what the sources say. Other clients rely on the skill's instructions. Check your own setup with `python3 scripts/preflight.py` (exit 0 ready, 3 sources disagree, 2 project or credentials missing).
 
-**4. Consequential commands wait for you.** Anything that creates, changes, deletes or bills is shown with its effect and waits for your yes; IAM changes, deletes, billing, KMS and organization changes never run unattended (`gcloud-guardrails`).
+**4. Consequential commands wait for you.** `gcloud-guardrails` instructs the agent to show anything that creates, changes, deletes or bills, with its effect, and wait for your yes; IAM changes, deletes, billing, KMS and organization changes are never to run unattended. This is instruction, not a hook; your client's own permission prompts still apply.
 
 ---
 
@@ -185,7 +187,7 @@ The rule underneath every gate: **infer intent, never infer permission.** An AI 
 
 | Skill | Does |
 | :--- | :--- |
-| `gcloud-guardrails` | Every `gcloud` call: syntax checked with `gcloud help`, dry run first, output trimmed, one command at a time, consequential commands held for your approval. |
+| `gcloud-guardrails` | Every `gcloud` call: syntax checked with `gcloud help`, dry run first where supported, output trimmed, one command at a time, consequential commands held for your approval. |
 | `gcp-project-context` | Works out which project a command targets from env, `.env` and gcloud config; asks when they disagree. Skipped for docs, design and review work. |
 | `google-skills-catalog` | Fetches the matching skill from Google's public catalog (180+ product skills) when a question needs more depth than this plugin carries. HTTPS only, Google's repository only. |
 
@@ -194,29 +196,29 @@ The rule underneath every gate: **infer intent, never infer permission.** An AI 
 | Component | Status | Notes |
 | :--- | :--- | :--- |
 | `gcloud` (local, `@google-cloud/gcloud-mcp`) | shipped | Inherits your project the way `gcloud` does. |
-| `developer-knowledge` (Google, remote) | shipped | Official Google Cloud, Firebase, Android and Gemini docs. Claude Code authenticates from your gcloud login; Antigravity and Gemini CLI use their own Google sign-in. |
-| Project guard hook (Claude Code) | shipped | Stops project-scoped `gcloud` calls without `--project`; asks on conflict. |
+| `developer-knowledge` (Google, remote) | shipped (Claude Code, Antigravity, Gemini CLI) | Official Google Cloud, Firebase, Android and Gemini docs. Claude Code authenticates from your gcloud login; Antigravity and Gemini CLI use their own Google sign-in. Codex and Kimi: add it to your own MCP config (see `mcp-servers`). |
+| Project guard hook (Claude Code) | shipped | Stops project-scoped `gcloud` calls (MCP tool and shell) without `--project`; asks on conflict. Needs `python3`. |
 | GenAI Toolbox, remote Cloud CLI MCP | opt-in | Need a `tools.yaml`, or an enabled API and IAM grant; setup in `mcp-servers`. |
 
 ---
 
 ## How it compares with Google's plugin
 
-Google published [`google-cloud-developer`](https://cloud.google.com/blog/topics/developers-practitioners/google-cloud-developer-plugin-now-available-in-antigravity-marketplace) on 3 November 2026 (v1.1.17 compared here). The two are complementary: Google's is a lean starter kit; this plugin is a delivery team. Parts of Google's work are adapted here under Apache-2.0 (see `NOTICE`).
+Google announced [`google-cloud-developer`](https://cloud.google.com/blog/topics/developers-practitioners/google-cloud-developer-plugin-now-available-in-antigravity-marketplace) on 3 November 2026; the comparison below is against its repository as read on 9 November 2026 (v1.1.17). The two are complementary: Google's bundles a small set of skills and fetches the rest; this plugin adds delivery roles and gates on top. Parts of Google's work are adapted here under Apache-2.0 (see `NOTICE`).
 
 | | Google `google-cloud-developer` | This plugin |
 | :--- | :--- | :--- |
 | **Purpose** | Onboarding, auth guidance, safe `gcloud`, docs grounding | The same, plus a design → security → quality → operations delivery gate |
 | **Skills** | 5 (`gcloud`, auth and onboarding recipes, docs retrieval, catalog finder) | 20: six personas, eleven service skills, three safety-and-depth skills |
 | **Product depth** | Fetches Google's catalog on demand | Its own service skills, plus the same catalog on demand |
-| **`gcloud` safety** | Leaf `gcloud help`, dry run, denylist | Same rules, adapted; plus approval for every consequential command |
-| **Project selection** | Explicit `--project` advised | Resolved from env, `.env` and gcloud config; asks on conflict; enforced by a hook in Claude Code |
+| **`gcloud` safety** | Leaf `gcloud help`, dry run, trimmed output, denylist | Same rules, adapted; plus approval asked for every consequential command |
+| **Project selection** | Explicit `--project` and location required | Same rule; plus reconciling env, `.env` and gcloud config, asking on conflict, and a hook that enforces it in Claude Code |
 | **Docs MCP auth** | Google sign-in in Antigravity and Gemini CLI; API key in Claude Code | Google sign-in in Claude Code, Antigravity and Gemini CLI — no key |
-| **Clients** | Antigravity-first; manifests for Claude, Codex, Gemini | Claude Code, Antigravity, Codex, Kimi, Gemini CLI |
+| **Clients** | Antigravity Marketplace listing; manifests for Antigravity, Claude, Codex, Gemini | Manifests for Claude Code, Antigravity, Codex, Kimi, Gemini CLI |
 | **Packaging** | Agent Plugins manifest with extra display fields | Agent Plugins 1.0.0 conformant; validated in CI |
 | **Licence** | Apache-2.0 | MIT |
 
-Use Google's when you want the smallest footprint. Use this one when an agent will design, secure and ship real workloads.
+Choose Google's for a small bundled skill set. Choose this one when you also want delivery roles, gate guidance and project-selection enforcement.
 
 ---
 
