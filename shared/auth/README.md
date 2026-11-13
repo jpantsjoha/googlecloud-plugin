@@ -56,14 +56,27 @@ Cloud Run, Compute Engine and Cloud Functions take an attached service account; 
 
 ## Pattern 4 — Workload Identity Federation (CI and other clouds)
 
-GitHub, GitLab, AWS and Azure workloads exchange their own identity token for a short-lived Google token. The configuration file this produces holds **no secret** — it points at the external token source:
+GitHub, GitLab, AWS and Azure workloads exchange their own identity token for a short-lived Google token. The configuration file this produces holds **no secret** — it says where to read the external token and which service account to impersonate.
+
+Prerequisites, each an IAM or trust change a named human authorises:
+
+1. A workload identity pool and provider for the external issuer, with an **attribute condition** that pins the exact workload (for GitHub: the repository, and ideally the branch or environment). Trusting the issuer alone admits every workload that issuer serves.
+2. `roles/iam.workloadIdentityUser` **on the target service account**, granted to the narrowest principal set the mapping allows (for example `principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/attribute.repository/OWNER/REPO`) — never to the whole pool. This flow does not use `roles/iam.serviceAccountTokenCreator`.
+3. The service account itself holds only the roles the workload needs on its target resources.
+
+Example for a workload whose OIDC token is written to a file:
 
 ```bash
 gcloud iam workload-identity-pools create-cred-config \
   projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID \
   --service-account=SA_NAME@PROJECT_ID.iam.gserviceaccount.com \
+  --credential-source-file=PATH_TO_OIDC_TOKEN \
   --output-file=wif-credentials.json
+
+export GOOGLE_APPLICATION_CREDENTIALS=wif-credentials.json   # ADC now uses federation
 ```
+
+Other environments swap the source flag: `--credential-source-url` (token served over HTTP, with `--credential-source-headers` if needed), `--aws`, or `--azure`. Validate the exact form with `gcloud help iam workload-identity-pools create-cred-config`.
 
 ## Service-account keys — exception only
 

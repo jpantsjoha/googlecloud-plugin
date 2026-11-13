@@ -293,10 +293,42 @@ def test_matching_shadow_key_cannot_mask_native_drift(tmp_path, monkeypatch) -> 
 
 # ─── Auth: no key-file recipes (shared/auth/README.md, issue #16) ─────────────
 
+# Shell continuations are joined first, so a recipe split across lines is still
+# one command. Only fenced code is scanned: prose may name a flag to forbid it.
 KEY_FILE_RECIPES = re.compile(
-    r"activate-service-account[^\n]*--key-file|--private-key-file|"
-    r"GOOGLE_APPLICATION_CREDENTIALS=\S*sa-key"
+    r"gcloud\s+auth\s+activate-service-account\b[^\n]*--key-file"
+    r"|gcloud\s+storage\s+sign-url\b[^\n]*--private-key-file"
+    r"|gcloud\s+iam\s+service-accounts\s+keys\s+create\b"
 )
+FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
+
+
+def key_file_recipes(text: str) -> list[str]:
+    hits = []
+    for block in FENCE.findall(text):
+        joined = re.sub(r"\\\n\s*", " ", block)
+        hits += [line.strip() for line in joined.splitlines() if KEY_FILE_RECIPES.search(line)]
+    return hits
+
+
+@pytest.mark.parametrize("snippet", [
+    "```bash\ngcloud auth activate-service-account --key-file=/x/credentials.json\n```",
+    "```bash\ngcloud auth activate-service-account \\\n  --key-file=/x/anything.json\n```",
+    "```bash\ngcloud storage sign-url gs://b/o \\\n  --duration=1h \\\n  --private-key-file=k.json\n```",
+    "```bash\ngcloud iam service-accounts keys create out.json --iam-account=SA\n```",
+])
+def test_key_file_guard_catches(snippet: str) -> None:
+    assert key_file_recipes(snippet), snippet
+
+
+@pytest.mark.parametrize("snippet", [
+    "```bash\nexport GOOGLE_APPLICATION_CREDENTIALS=wif-credentials.json\n```",
+    "```bash\nexport GOOGLE_APPLICATION_CREDENTIALS=sa-keyless-wif.json\n```",
+    "Never use `--private-key-file` or `activate-service-account --key-file`.",
+    "```bash\ngcloud storage sign-url gs://b/o --impersonate-service-account=SA\n```",
+])
+def test_key_file_guard_allows(snippet: str) -> None:
+    assert not key_file_recipes(snippet), snippet
 
 
 def test_no_service_account_key_recipes() -> None:
@@ -304,7 +336,5 @@ def test_no_service_account_key_recipes() -> None:
     offenders = []
     for path in [*SKILLS_DIR.glob("*/SKILL.md"), *SKILLS_DIR.glob("*/references/*.md"),
                  *(ROOT / "shared").rglob("*.md"), ROOT / "PLUGIN.md", ROOT / "AGENTS.md", ROOT / "GEMINI.md"]:
-        for lineno, line in enumerate(path.read_text().splitlines(), 1):
-            if KEY_FILE_RECIPES.search(line):
-                offenders.append(f"{path.relative_to(ROOT)}:{lineno}: {line.strip()}")
+        offenders += [f"{path.relative_to(ROOT)}: {hit}" for hit in key_file_recipes(path.read_text())]
     assert not offenders, "service-account key recipe found:\n" + "\n".join(offenders)

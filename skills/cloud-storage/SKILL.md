@@ -67,7 +67,10 @@ gcloud storage sign-url gs://BUCKET_NAME/OBJECT \
   --impersonate-service-account=SA_NAME@PROJECT_ID.iam.gserviceaccount.com
 ```
 
-The caller needs `roles/iam.serviceAccountTokenCreator` on that service account.
+Two identities, two permissions — both IAM grants a named human authorises:
+
+- **The caller** needs `roles/iam.serviceAccountTokenCreator` on the signing service account (to sign as it).
+- **The signing service account** needs `storage.objects.get` on the object, typically `roles/storage.objectViewer` on the bucket. Without it the URL signs successfully but returns `403` when used.
 
 ## References
 
