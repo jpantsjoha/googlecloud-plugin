@@ -61,7 +61,17 @@ GIT_GLOBAL_VALUE_OPTS = {"-C", "--git-dir", "--work-tree", "--namespace", "--exe
 GCLOUD_WORD = re.compile(r"(?:^|[\s;&|(`'\"=/!{,])gcloud(?=[\s;&|)`'\"},$]|$)")
 # Inside interpreter code (python -c, ruby -e, …): the CLI used as a command
 # ("gcloud run …", any delimiter before it) or as a quoted list element.
-CODE_GCLOUD = re.compile(r"gcloud\s+[a-z]|['\"]gcloud['\"]\s*[,\])]")
+# Command groups of the CLI, used to tell "gcloud run …" (a command) from prose
+# such as "plugin:gcloud docs" inside interpreter code.
+CLI_GROUPS = ("access-context-manager|ai|ai-platform|alloydb|alpha|app|artifacts|asset|auth|beta|bigtable|"
+              "billing|builds|certificate-manager|composer|compute|config|container|data-catalog|dataflow|"
+              "dataproc|datastore|deploy|deployment-manager|dns|domains|endpoints|eventarc|filestore|"
+              "firebase|firestore|functions|healthcare|help|iam|iap|identity|info|init|kms|logging|memcache|"
+              "metastore|ml|monitoring|network-connectivity|network-management|network-security|"
+              "network-services|notebooks|organizations|policy-intelligence|preview|privateca|projects|"
+              "pubsub|recaptcha|recommender|redis|resource-manager|run|scc|scheduler|secrets|services|"
+              "source|spanner|sql|storage|tasks|topic|transfer|version|workflows|workstations")
+CODE_GCLOUD = re.compile(r"gcloud\s+(?:" + CLI_GROUPS + r")\b|['\"]gcloud['\"]\s*[,\])]")
 ANY_GCLOUD = re.compile(r"gcloud", re.I)
 SUBSTITUTION = re.compile(r"\$\(((?:[^()]|\([^()]*\))*)\)|`([^`]*)`")
 HEREDOC = re.compile(r"<<(-?)[ \t]*((?:'[^'\n]*'|\"[^\"\n]*\"|[^\s;&|<>()'\"])+)")
@@ -157,6 +167,32 @@ def _outside_quotes(line: str, pos: int) -> bool:
     return not (single or double)
 
 
+def _command_name(word: str) -> str:
+    """Executable name without path or version suffix: /usr/bin/python3.12 -> python3."""
+    name = Path(word).name
+    return re.sub(r"(?<=[a-z])(\d+)(?:\.\d+)+$", r"\1", name)
+
+
+def _line_commands(line: str) -> list[str]:
+    """The executable of each pipeline/list segment on one line, quotes and comments understood."""
+    try:
+        lexer = shlex.shlex(line, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        lexer.commenters = "#"
+        tokens = list(lexer)
+    except ValueError:
+        return ["sh"]  # unparseable: assume it may execute
+    names = []
+    for seg in _segments(tokens):
+        seg = _strip_prefixes(seg)
+        # Skip redirection operators and their targets ("> file").
+        while seg and re.fullmatch(r"\d*[<>]+&?", seg[0]):
+            seg = seg[2:]
+        if seg:
+            names.append(_command_name(seg[0]))
+    return names
+
+
 def _split_heredocs(command: str) -> tuple[str, list[dict]]:
     """Remove heredoc bodies; return the command and one record per heredoc.
 
@@ -184,10 +220,10 @@ def _split_heredocs(command: str) -> tuple[str, list[dict]]:
                 records.append({"unterminated": True, "body": "\n".join(lines[i:])})
                 continue  # keep the remaining lines in the command
             i = j + 1
-            words = [Path(w).name for w in re.findall(r"[^\s;&|()<>]+", line)]
-            first = next((w for w in words if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w)
-                          and w not in SHELL_KEYWORDS and w not in WRAPPERS), "")
-            executes = any(w in STDIN_EXECUTORS or w in SHELLS for w in words)
+            commands = _line_commands(line[:match.start()] + " " + line[match.end():])
+            first = commands[0] if commands else ""
+            executes = any(c in STDIN_EXECUTORS or c in SHELLS for c in commands)
+            words = commands
             records.append({"unterminated": False, "body": "\n".join(body),
                             "quoted": "'" in word or '"' in word,
                             "data": first in DATA_SINKS and not executes,
@@ -227,7 +263,7 @@ def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
         inner = match.group(1) if match.group(1) is not None else match.group(2)
         if GCLOUD_WORD.search(inner):
             found += shell_gcloud_invocations(inner, depth + 1)
-    has_any = bool(ANY_GCLOUD.search(command))
+    has_any = bool(GCLOUD_WORD.search(command) or CODE_GCLOUD.search(command))
     command = SUBSTITUTION.sub("__SUBST__", command)
     if ("$(" in command or "`" in command) and GCLOUD_WORD.search(command):
         raise Unanalysable("gcloud inside a command substitution that could not be parsed")
@@ -241,7 +277,7 @@ def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
         seg = _strip_prefixes(seg)
         if not seg:
             continue
-        exe = Path(seg[0]).name
+        exe = _command_name(seg[0])
         if has_any and (exe.startswith("$") or "__SUBST__" in seg[0]):
             raise Unanalysable("a command name built at run time, with gcloud in the line")
         script_idx = next((i for i, a in enumerate(seg[1:], 1)

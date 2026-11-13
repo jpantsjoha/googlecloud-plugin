@@ -1020,6 +1020,14 @@ def test_project_context_skill_says_when_not_to_ask() -> None:
     # Data heredocs with unusual delimiters stay data.
     ("cat <<'EOF.txt'\ngcloud notes\nEOF.txt", False),
     ("cat <<'END-1' > x.md\ngcloud run services list\nEND-1", False),
+    # Round 3: quoted and versioned executors run; filenames and comments do not.
+    ("cat <<'EOF' | 'bash'\ngcloud run services list\nEOF", True),
+    ("python3.12 <<'EOF'\nimport subprocess; subprocess.run(['gcloud', 'run', 'services', 'list'])\nEOF", True),
+    ("cat > bash <<'EOF'\ngcloud run services list\nEOF", False),
+    ("cat > notes.md <<'EOF' # bash\ngcloud run services list\nEOF", False),
+    ("echo gcloud-mcp; \"$PYTHON\" --version", False),
+    ("bash -c 'echo \"$(pwd)/gcloud-mcp\"'", False),
+    ("python3 -c \"print('plugin:gcloud docs')\"", False),
 ])
 def test_guard_false_positives_and_real_cases(command, blocked) -> None:
     assert _blocked("Bash", {"command": command}) is blocked
