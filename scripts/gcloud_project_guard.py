@@ -49,8 +49,10 @@ SHELL_KEYWORDS = {"then", "do", "else", "elif", "if", "while", "until", "{", "}"
 # Nothing that can execute another program belongs here (no interpreters, find,
 # awk or sed), or it becomes a way round the guard.
 TEXT_COMMANDS = {"echo", "printf", "grep", "egrep", "fgrep", "rg", "ag", "cat", "less", "more", "head", "tail",
-                 "man", "which", "type", "whereis", "ls", "wc", "sort", "uniq", "diff", "git", "cut", "tr",
+                 "man", "which", "type", "whereis", "ls", "wc", "sort", "uniq", "diff", "cut", "tr",
                  "jq", "yq"}
+# git can run shell aliases (-c alias.x='!cmd'); "gcloud" is data only inside a commit message.
+GIT_MESSAGE_FLAGS = {"-m", "--message"}
 GCLOUD_WORD = re.compile(r"(?:^|[^\w.-])gcloud(?:[^\w.-]|$)")
 MAX_DEPTH = 3
 SHELL_OPERATORS = {"&&", "||", ";", "|", "&", "|&", ";;", "(", ")", "\n"}
@@ -132,6 +134,11 @@ def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
             found += shell_gcloud_invocations(seg[script_idx + 1], depth + 1)
         elif exe == "gcloud":
             found.append(seg[1:])
+        elif exe == "git":
+            for i, a in enumerate(seg[1:], 1):
+                in_message = seg[i - 1] in GIT_MESSAGE_FLAGS or a.startswith(("-m", "--message="))
+                if GCLOUD_WORD.search(a) and not in_message:
+                    raise Unanalysable("gcloud in a git argument outside a commit message")
         elif exe not in TEXT_COMMANDS and any(GCLOUD_WORD.search(a) for a in seg[1:]):
             raise Unanalysable(f"gcloud run through {exe}")
     return found
@@ -223,7 +230,7 @@ def user_turns(transcript_path: str | None) -> list[str]:
             ask_ids |= {b.get("id") for b in content
                         if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("name") == "AskUserQuestion"}
         elif entry.get("type") == "user":
-            # One message (or one set of answers) is one turn: its parts are judged together.
+            # One user entry is one turn: its typed text and selected answers are judged together.
             blocks = [{"type": "text", "text": content}] if isinstance(content, str) else content
             typed, answered = [], []
             for b in blocks if isinstance(blocks, list) else []:
@@ -236,9 +243,8 @@ def user_turns(transcript_path: str | None) -> list[str]:
                 elif (b.get("type") == "tool_result" and b.get("tool_use_id") in ask_ids
                       and not b.get("is_error")):
                     answered += _answers(b.get("content"))
-            for part in (typed, answered):
-                if part:
-                    turns.append("\n".join(part))
+            if typed or answered:
+                turns.append("\n".join(typed + answered))
     return turns
 
 

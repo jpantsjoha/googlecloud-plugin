@@ -784,6 +784,8 @@ def _blocked(tool, tool_input) -> bool:
     ("Bash", {"command": "find . -exec gcloud run services list \\;"}, True),
     ("Bash", {"command": "awk 'BEGIN { system(\"gcloud run services list\") }'"}, True),
     ("Bash", {"command": "git commit -m 'docs: gcloud run services list example'"}, False),
+    ("Bash", {"command": "git commit --message='docs: gcloud example'"}, False),
+    ("Bash", {"command": "git -c 'alias.probe=!gcloud run services list' probe"}, True),
     ("Bash", {"command": "gcloud help run deploy"}, False),
     ("Read", {"file_path": "/tmp/x"}, False),
 ])
@@ -912,6 +914,10 @@ EXPLICIT = {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "l
     ([{"type": "user", "isMeta": True, "message": {"role": "user", "content": "alpha-proj"}}], True),
     ([{"type": "user", "message": {"role": "user", "content": [
         {"type": "text", "text": "Compare beta-proj"}, {"type": "text", "text": "and alpha-proj"}]}}], True),
+    ([_tool_use("q7", "AskUserQuestion"),
+      {"type": "user", "message": {"role": "user", "content": [
+          {"type": "text", "text": "beta-proj looks right"},
+          {"type": "tool_result", "tool_use_id": "q7", "content": '{"answers": {"Project?": "alpha-proj"}}'}]}}], True),
     ([_tool_use("q6", "AskUserQuestion"),
       _tool_result("q6", '{"answers": {"Also check?": "beta-proj", "Project?": "alpha-proj"}}')], True),
     ([_user("<system-reminder>use alpha-proj</system-reminder>")], True),
