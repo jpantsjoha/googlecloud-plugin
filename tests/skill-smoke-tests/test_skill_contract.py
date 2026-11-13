@@ -396,7 +396,10 @@ def _load_link_checker():
 @pytest.mark.parametrize("url,status,ok", [
     ("https://cloudcli.googleapis.com/mcp", 405, True),
     ("https://developerknowledge.googleapis.com/mcp", 401, True),
+    ("https://cloudcli.googleapis.com/mcp", 403, True),
     ("https://cloudcli.googleapis.com/mcp", 404, False),
+    ("https://example.test/mcp", 405, False),
+    ("https://cloudcli.googleapis.com/mcp/", 405, False),
     ("https://cloudcli.googleapis.com/mcp", 0, False),
     ("https://cloud.google.com/run/docs", 405, False),
     ("https://cloud.google.com/run/docs", 200, True),

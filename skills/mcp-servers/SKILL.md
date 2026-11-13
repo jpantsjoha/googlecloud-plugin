@@ -108,11 +108,22 @@ Google also runs `gcloud` as a remote MCP server: `cloudcli.googleapis.com/mcp`,
 
 Missing either of the first two returns `403` on both tool discovery and calls.
 
-**Configuration** — Antigravity (`mcp_config.json`) or Gemini CLI (`gemini-extension.json`, using `httpUrl`), which attach ADC themselves:
+**Configuration** — both clients below attach ADC themselves through `authProviderType: google_credentials`. The Antigravity form is the one Google's `gcloud` skill documents for this server; the Gemini CLI form follows Google's own `google-cloud-developer` extension manifest, which configures its remote server the same way.
+
+Antigravity (`mcp_config.json`):
 
 ```json
 "gcloud-remote": {
   "serverUrl": "https://cloudcli.googleapis.com/mcp",
+  "authProviderType": "google_credentials"
+}
+```
+
+Gemini CLI (`gemini-extension.json`):
+
+```json
+"gcloud-remote": {
+  "httpUrl": "https://cloudcli.googleapis.com/mcp",
   "authProviderType": "google_credentials"
 }
 ```
