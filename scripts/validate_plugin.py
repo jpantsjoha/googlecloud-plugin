@@ -28,6 +28,19 @@ def _load_json(path: Path, errors: list[str]) -> dict | None:
         return None
 
 
+def skills_dir_resolves(value) -> bool:
+    """A manifest's skills path must be a non-empty relative path to a directory inside the repo.
+
+    Only a literal leading "./" is removed: str.lstrip("./") would also strip
+    "../", turning a parent-relative path into a repo-relative one.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return False
+    target = (ROOT / value.removeprefix("./")).resolve()
+    root = ROOT.resolve()
+    return target != root and target.is_relative_to(root) and target.is_dir()
+
+
 def check_claude(errors: list[str]) -> None:
     m = _load_json(ROOT / ".claude-plugin" / "plugin.json", errors)
     if m:
@@ -71,7 +84,7 @@ def check_kimi(errors: list[str]) -> None:
         skills_path = m.get("skills")
         if not skills_path:
             errors.append("kimi plugin.json: missing 'skills' path")
-        elif not (ROOT / skills_path.lstrip("./")).is_dir():
+        elif not skills_dir_resolves(skills_path):
             errors.append(f"kimi plugin.json: skills path '{skills_path}' does not resolve")
         start = (m.get("sessionStart") or {}).get("skill")
         if start and not (ROOT / "skills" / start / "SKILL.md").exists():
@@ -89,18 +102,25 @@ def check_codex(errors: list[str]) -> None:
 
     # Codex plugin manifest: carries the display metadata (interface block)
     # that the closed Agent Plugins plugin.json schema cannot.
-    m = _load_json(ROOT / ".codex-plugin" / "plugin.json", errors)
-    if m:
+    path = ROOT / ".codex-plugin" / "plugin.json"
+    m = _load_json(path, errors)
+    if path.exists() and not isinstance(m, dict):
+        if m is not None or path.read_text().strip() == "null":
+            errors.append("codex plugin.json: must be a JSON object")
+    elif isinstance(m, dict):
         if m.get("name") != EXPECTED_NAME:
             errors.append(f"codex plugin.json: name '{m.get('name')}' != '{EXPECTED_NAME}'")
         if m.get("version") != EXPECTED_VERSION:
             errors.append(f"codex plugin.json: version '{m.get('version')}' != '{EXPECTED_VERSION}'")
         skills_path = m.get("skills")
-        if not skills_path or not (ROOT / skills_path.lstrip("./")).is_dir():
-            errors.append(f"codex plugin.json: skills path '{skills_path}' does not resolve")
-        interface = m.get("interface") or {}
+        if not skills_dir_resolves(skills_path):
+            errors.append(f"codex plugin.json: skills path {skills_path!r} does not resolve")
+        interface = m.get("interface")
+        if not isinstance(interface, dict):
+            errors.append("codex plugin.json: 'interface' must be an object")
+            interface = {}
         for field in ("displayName", "shortDescription", "developerName"):
-            if not interface.get(field):
+            if not isinstance(interface.get(field), str) or not interface[field].strip():
                 errors.append(f"codex plugin.json: interface missing '{field}'")
 
 

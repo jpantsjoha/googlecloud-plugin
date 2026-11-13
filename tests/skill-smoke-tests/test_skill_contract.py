@@ -343,12 +343,16 @@ def test_no_service_account_key_recipes() -> None:
 # ─── Codex plugin manifest (issue #17) ───────────────────────────────────────
 
 def _codex_errors(tmp_path, monkeypatch, mutate) -> list[str]:
+    """Validate a mutated copy; `mutate` may edit the dict in place or return a replacement."""
     validator = _load_packaging_validator()
-    (tmp_path / ".codex-plugin").mkdir()
+    tmp_path = tmp_path / "repo"
+    (tmp_path / ".codex-plugin").mkdir(parents=True)
     (tmp_path / "skills").mkdir()
     data = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
-    mutate(data)
-    (tmp_path / ".codex-plugin" / "plugin.json").write_text(json.dumps(data))
+    replaced = mutate(data)
+    data = data if replaced is None else replaced
+    text = "null" if data == "null" else json.dumps(data)
+    (tmp_path / ".codex-plugin" / "plugin.json").write_text(text)
     monkeypatch.setattr(validator, "ROOT", tmp_path)
     errors: list[str] = []
     validator.check_codex(errors)
@@ -362,7 +366,14 @@ def test_codex_manifest_currently_valid(tmp_path, monkeypatch) -> None:
 @pytest.mark.parametrize("mutate,expected", [
     (lambda d: d.update(version="9.9.9"), "version"),
     (lambda d: d.update(skills="./nowhere/"), "skills path"),
-    (lambda d: d["interface"].pop("displayName"), "displayName"),
+    (lambda d: d["interface"].pop("displayName") and None, "displayName"),
+    (lambda d: d.update(skills="../skills/"), "skills path"),
+    (lambda d: d.update(skills="./"), "skills path"),
+    (lambda d: d.update(skills=["./skills/"]), "skills path"),
+    (lambda d: d.update(interface="GoogleCloud Plugin"), "must be an object"),
+    (lambda d: d["interface"].update(displayName=42), "displayName"),
+    (lambda d: {}, "name"),
+    (lambda d: "null", "JSON object"),
 ])
 def test_codex_manifest_drift_is_caught(tmp_path, monkeypatch, mutate, expected) -> None:
     errors = _codex_errors(tmp_path, monkeypatch, mutate)
