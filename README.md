@@ -47,7 +47,7 @@ agy plugin install https://github.com/jpantsjoha/googlecloud-plugin
 /plugins install https://github.com/jpantsjoha/googlecloud-plugin
 ```
 
-**Codex** — no install step. Codex discovers `.agents/skills/` natively and reads `AGENTS.md` as its always-on adapter. Clone the repo and Codex picks up the contract:
+**Codex** — no install step. Codex discovers `.agents/skills/` natively and reads `AGENTS.md` as its always-on adapter. Clone the repo and Codex picks up the contract. `.codex-plugin/plugin.json` carries the display name, description and starter prompts Codex shows when the plugin is listed:
 
 ```bash
 git clone https://github.com/jpantsjoha/googlecloud-plugin

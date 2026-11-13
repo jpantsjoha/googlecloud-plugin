@@ -87,6 +87,22 @@ def check_codex(errors: list[str]) -> None:
     elif not list(agents_skills.glob("*/SKILL.md")):
         errors.append(".agents/skills resolves but contains no SKILL.md files")
 
+    # Codex plugin manifest: carries the display metadata (interface block)
+    # that the closed Agent Plugins plugin.json schema cannot.
+    m = _load_json(ROOT / ".codex-plugin" / "plugin.json", errors)
+    if m:
+        if m.get("name") != EXPECTED_NAME:
+            errors.append(f"codex plugin.json: name '{m.get('name')}' != '{EXPECTED_NAME}'")
+        if m.get("version") != EXPECTED_VERSION:
+            errors.append(f"codex plugin.json: version '{m.get('version')}' != '{EXPECTED_VERSION}'")
+        skills_path = m.get("skills")
+        if not skills_path or not (ROOT / skills_path.lstrip("./")).is_dir():
+            errors.append(f"codex plugin.json: skills path '{skills_path}' does not resolve")
+        interface = m.get("interface") or {}
+        for field in ("displayName", "shortDescription", "developerName"):
+            if not interface.get(field):
+                errors.append(f"codex plugin.json: interface missing '{field}'")
+
 
 REMOTE_URL_KEYS = ("url", "serverUrl", "httpUrl")
 # The one endpoint key each harness actually reads for a streamable-HTTP server.

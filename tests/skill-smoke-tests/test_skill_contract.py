@@ -338,3 +338,32 @@ def test_no_service_account_key_recipes() -> None:
                  *(ROOT / "shared").rglob("*.md"), ROOT / "PLUGIN.md", ROOT / "AGENTS.md", ROOT / "GEMINI.md"]:
         offenders += [f"{path.relative_to(ROOT)}: {hit}" for hit in key_file_recipes(path.read_text())]
     assert not offenders, "service-account key recipe found:\n" + "\n".join(offenders)
+
+
+# ─── Codex plugin manifest (issue #17) ───────────────────────────────────────
+
+def _codex_errors(tmp_path, monkeypatch, mutate) -> list[str]:
+    validator = _load_packaging_validator()
+    (tmp_path / ".codex-plugin").mkdir()
+    (tmp_path / "skills").mkdir()
+    data = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
+    mutate(data)
+    (tmp_path / ".codex-plugin" / "plugin.json").write_text(json.dumps(data))
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    errors: list[str] = []
+    validator.check_codex(errors)
+    return [e for e in errors if e.startswith("codex plugin.json")]
+
+
+def test_codex_manifest_currently_valid(tmp_path, monkeypatch) -> None:
+    assert _codex_errors(tmp_path, monkeypatch, lambda d: None) == []
+
+
+@pytest.mark.parametrize("mutate,expected", [
+    (lambda d: d.update(version="9.9.9"), "version"),
+    (lambda d: d.update(skills="./nowhere/"), "skills path"),
+    (lambda d: d["interface"].pop("displayName"), "displayName"),
+])
+def test_codex_manifest_drift_is_caught(tmp_path, monkeypatch, mutate, expected) -> None:
+    errors = _codex_errors(tmp_path, monkeypatch, mutate)
+    assert any(expected in e for e in errors), errors
