@@ -4,7 +4,7 @@ Last updated: 2026-11-13. What is happening now and what waits on whom. One entr
 
 ## 2026-11-13 — Google `google-cloud-developer` borrow, follow-ups landed
 
-All items from [#13](https://github.com/jpantsjoha/googlecloud-plugin/issues/13) and its follow-ups are merged to `main`. Each PR was merged with `--match-head-commit` pinned to the reviewed head below, so GitHub refused the merge if the branch had moved.
+All items from [#13](https://github.com/jpantsjoha/googlecloud-plugin/issues/13) and its follow-ups are merged to `main`. Each merge commit's second parent is the reviewed head listed below — check with `git rev-parse <merge>^2` — so what merged is exactly what was reviewed.
 
 *Session-recorded, not reproducible from this repo:* the pre-commit hook ran `make gate` on each reviewed head, and a fresh Codex Sol 6.1 reviewer (API lane) returned PASS on it. The reports are in the delivering session's local files, not posted to the PRs.
 
