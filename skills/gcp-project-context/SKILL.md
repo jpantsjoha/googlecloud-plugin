@@ -13,6 +13,10 @@ metadata:
 
 Running a command against the wrong project is the cheapest mistake to make and one of the most expensive to clean up. Settle the project once per session, before the first project-scoped command, and carry the answer into every command as `--project=PROJECT_ID` (see `gcloud-guardrails`).
 
+## Enforcement in Claude Code
+
+The plugin ships a `PreToolUse` hook (`hooks/hooks.json` → `scripts/gcloud_project_guard.py`). It blocks a project-scoped `gcloud` call that lacks `--project` — through the MCP server or the shell, judging each invocation in a chained or `sh -c` command on its own flags — and returns what the sources say: one project to retry with, the choices to put to the user, or a pointer to `gcloud init`. A `gcloud` call inside a command substitution or `eval` cannot be checked and is blocked outright. `--billing-project` does not count as a project. While sources disagree, even an explicit `--project` is held until the user has chosen that project in the session: the latest message they typed, or answer they selected, that names any candidate must name exactly that one, without negation. This stops the agent settling a conflict by quietly picking the gcloud default. Shell forms the hook cannot parse but that would run `gcloud` (command substitution, `eval`, `ssh`, deep `sh -c` nesting) are blocked outright. It is a guard against shortcuts, not a security boundary: it reads the session transcript, which a process with write access to your files could alter. The hook needs `python3`; without it Claude Code reports a hook error and the call proceeds. Clients without hooks rely on this skill alone.
+
 ## Step 1 — Collect every source
 
 Collect all of them; do not stop at the first one found. All checks are read-only.

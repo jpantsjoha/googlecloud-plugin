@@ -717,3 +717,236 @@ def test_no_placeholder_in_server_env(manifest: str) -> None:
 @pytest.mark.parametrize("manifest", [".mcp.json", "mcp_config.json", "gemini-extension.json"])
 def test_toolbox_not_shipped(manifest: str) -> None:
     assert "toolbox" not in json.loads((ROOT / manifest).read_text())["mcpServers"]
+
+
+# ─── PreToolUse project guard (scripts/gcloud_project_guard.py) ──────────────
+
+GUARD = ROOT / "scripts" / "gcloud_project_guard.py"
+MCP_TOOL = "mcp__plugin_googlecloud-plugin_gcloud__run_gcloud_command"
+
+
+def _load_guard():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gcloud_project_guard", GUARD)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _blocked(tool, tool_input) -> bool:
+    guard = _load_guard()
+    try:
+        invocations = guard.gcloud_invocations(tool, tool_input)
+    except guard.Unanalysable:
+        return True
+    return any(guard.needs_project(argv) for argv in invocations)
+
+
+@pytest.mark.parametrize("tool,tool_input,blocked", [
+    (MCP_TOOL, {"args": ["run", "services", "list"]}, True),
+    (MCP_TOOL, {"command": "gcloud run services list"}, True),
+    (MCP_TOOL, {"args": ["run", "services", "list", "--project=alpha-proj"]}, False),
+    (MCP_TOOL, {"args": ["run", "services", "list", "--project", "alpha-proj"]}, False),
+    (MCP_TOOL, {"args": ["run", "services", "list", "--billing-project=quota-proj"]}, True),
+    (MCP_TOOL, {"args": ["config", "list", "--format=json"]}, False),
+    (MCP_TOOL, {"args": ["projects", "describe", "alpha-proj"]}, False),
+    (MCP_TOOL, {"args": ["beta", "run", "services", "list"]}, True),
+    (MCP_TOOL, {"args": ["--configuration", "config", "run", "services", "list"]}, True),
+    (MCP_TOOL, {"args": ["--format", "json", "projects", "list"]}, False),
+    (MCP_TOOL, {"args": ["-q", "run", "services", "list"]}, True),
+    (MCP_TOOL, {"args": ["run", "deploy", "--help"]}, False),
+    ("Bash", {"command": "gcloud compute instances list --limit=5"}, True),
+    ("Bash", {"command": "gcloud compute instances list --help"}, False),
+    ("Bash", {"command": "CLOUDSDK_CORE_PROJECT=x gcloud compute instances list"}, True),
+    ("Bash", {"command": "env -u CLOUDSDK_CORE_PROJECT gcloud config get-value project"}, False),
+    ("Bash", {"command": "/usr/local/bin/gcloud sql instances list --project=alpha-proj"}, False),
+    ("Bash", {"command": "sh -c 'gcloud run services list'"}, True),
+    ("Bash", {"command": "bash -c \"gcloud run services list --project=alpha-proj\""}, False),
+    ("Bash", {"command": "true && gcloud run services list"}, True),
+    ("Bash", {"command": "printf x | gcloud run services list"}, True),
+    ("Bash", {"command": "gcloud config list && gcloud run services list"}, True),
+    ("Bash", {"command": "gcloud run services list && printf '%s' '--project=decoy'"}, True),
+    ("Bash", {"command": "sudo -E timeout 30 gcloud run services list"}, True),
+    ("Bash", {"command": "echo $(gcloud run services list)"}, True),
+    ("Bash", {"command": "eval 'gcloud run services list'"}, True),
+    ("Bash", {"command": "ls -la && echo gcloud"}, False),
+    ("Bash", {"command": "grep -r gcloud docs/"}, False),
+    ("Bash", {"command": "bash -lc 'gcloud run services list'"}, True),
+    ("Bash", {"command": "bash -lc 'gcloud run services list --project=alpha-proj'"}, False),
+    ("Bash", {"command": "sudo -u root gcloud run services list"}, True),
+    ("Bash", {"command": "if true; then gcloud run services list; fi"}, True),
+    ("Bash", {"command": "for p in a b; do gcloud run services list; done"}, True),
+    ("Bash", {"command": "if true; then gcloud run services list --project=alpha-proj; fi"}, False),
+    ("Bash", {"command": "ssh box 'gcloud run services list'"}, True),
+    ("Bash", {"command": "sh -c \"sh -c 'sh -c \\\"sh -c gcloud\\\"'\""}, True),
+    ("Bash", {"command": "echo 'gcloud run services list'"}, False),
+    ("Bash", {"command": "python3 -c 'import subprocess; subprocess.run([\"gcloud\", \"run\", \"services\", \"list\"])'"}, True),
+    ("Bash", {"command": "find . -exec gcloud run services list \\;"}, True),
+    ("Bash", {"command": "awk 'BEGIN { system(\"gcloud run services list\") }'"}, True),
+    ("Bash", {"command": "git commit -m 'docs: gcloud run services list example'"}, False),
+    ("Bash", {"command": "git commit --message='docs: gcloud example'"}, False),
+    ("Bash", {"command": "git -c 'alias.probe=!gcloud run services list' probe"}, True),
+    ("Bash", {"command": "git -c 'alias.x=!f() { eval \"$2\"; }; f' x -m 'gcloud run services list'"}, True),
+    ("Bash", {"command": "git x -m 'gcloud run services list'"}, True),
+    ("Bash", {"command": "git -C repo commit -m 'gcloud notes'"}, False),
+    ("Bash", {"command": "gcloud help run deploy"}, False),
+    ("Read", {"file_path": "/tmp/x"}, False),
+])
+def test_guard_classification(tool, tool_input, blocked) -> None:
+    assert _blocked(tool, tool_input) is blocked
+
+
+def test_guard_falls_back_to_blocking_when_resolution_fails(monkeypatch) -> None:
+    guard = _load_guard()
+    def boom(cwd):
+        raise RuntimeError("resolver failed")
+    monkeypatch.setattr(guard, "resolve", lambda cwd: ([], {"status": "resolved"}))
+    monkeypatch.setattr(guard, "guidance", boom)
+    reason = guard.decide({"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}, "cwd": "/tmp"})
+    assert reason == guard.FALLBACK
+
+
+def test_guard_falls_back_to_blocking_when_resolution_is_slow(monkeypatch) -> None:
+    import time as _time
+    guard = _load_guard()
+    monkeypatch.setattr(guard, "RESOLVE_BUDGET", 0.2)
+    monkeypatch.setattr(guard, "resolve", lambda cwd: (_time.sleep(2), ([], {}))[1])
+    reason = guard.decide({"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}, "cwd": "/tmp"})
+    assert reason == guard.FALLBACK
+
+
+def _run_guard(tmp_path, event: dict, gcloud_project: str | None, dotenv: str | None = None):
+    bin_dir = _gcloud_stub(tmp_path / "bin", gcloud_project)
+    repo = tmp_path / "repo"
+    repo.mkdir(exist_ok=True)
+    if dotenv:
+        (repo / ".env").write_text(dotenv)
+    event = {**event, "cwd": str(repo)}
+    return subprocess.run([sys.executable, str(GUARD)], input=json.dumps(event), capture_output=True,
+                          text=True, timeout=30, env={"PATH": str(bin_dir), "HOME": str(tmp_path)})
+
+
+def test_guard_blocks_with_single_project_hint(tmp_path) -> None:
+    out = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}}, "alpha-proj")
+    assert out.returncode == 2 and "--project=alpha-proj" in out.stderr
+
+
+def test_guard_blocks_and_asks_on_conflict(tmp_path) -> None:
+    out = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}},
+                     "alpha-proj", dotenv="API_SECRET=do-not-print\nGOOGLE_CLOUD_PROJECT=beta-proj\n")
+    assert out.returncode == 2
+    assert "Ask the user" in out.stderr and "alpha-proj" in out.stderr and "beta-proj" in out.stderr
+    assert "do-not-print" not in out.stderr + out.stdout
+
+
+def test_guard_blocks_and_suggests_init_when_missing(tmp_path) -> None:
+    out = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}}, None)
+    assert out.returncode == 2 and "gcloud init" in out.stderr
+
+
+def test_guard_allows_explicit_project_and_bad_input(tmp_path) -> None:
+    ok = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list", "--project=beta-proj"]}}, "alpha-proj")
+    assert ok.returncode == 0 and ok.stderr == ""
+    junk = subprocess.run([sys.executable, str(GUARD)], input="not json", capture_output=True, text=True, timeout=30)
+    assert junk.returncode == 0, "a malformed event must never block"
+
+
+def test_hooks_manifest_wires_the_guard() -> None:
+    hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())["hooks"]["PreToolUse"]
+    entry = next(h for h in hooks if MCP_TOOL in h["matcher"].split("|"))
+    assert "Bash" in entry["matcher"].split("|")
+    handler = entry["hooks"][0]
+    assert handler["command"] == "python3"
+    assert handler["args"] == ["${CLAUDE_PLUGIN_ROOT}/scripts/gcloud_project_guard.py"]
+    assert GUARD.is_file()
+
+
+# ─── Conflict: explicit --project needs the user's own choice ────────────────
+
+def _transcript(tmp_path: Path, entries: list[dict]) -> str:
+    path = tmp_path / "transcript.jsonl"
+    path.write_text("\n".join(json.dumps(e) for e in entries) + "\n")
+    return str(path)
+
+
+def _user(text):
+    return {"type": "user", "message": {"role": "user", "content": text}}
+
+
+def _assistant_text(text):
+    return {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": text}]}}
+
+
+def _tool_use(tool_id, name):
+    return {"type": "assistant", "message": {"role": "assistant",
+            "content": [{"type": "tool_use", "id": tool_id, "name": name, "input": {}}]}}
+
+
+def _tool_result(tool_id, text):
+    return {"type": "user", "message": {"role": "user",
+            "content": [{"type": "tool_result", "tool_use_id": tool_id, "content": text}]}}
+
+
+CONFLICT_DOTENV = "GOOGLE_CLOUD_PROJECT=beta-proj\n"
+EXPLICIT = {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list", "--project=alpha-proj"]}}
+
+
+@pytest.mark.parametrize("entries,blocked", [
+    (None, True),
+    ([_user("List the Cloud Run services in my project.")], True),
+    ([_user("list services"), _assistant_text("I'll use alpha-proj")], True),
+    ([_user("list services"), _user("use alpha-proj please")], False),
+    ([_user([{"type": "text", "text": "alpha-proj"}])], False),
+    ([_tool_use("q1", "AskUserQuestion"), _tool_result("q1", '{"answers": {"Which project?": "alpha-proj"}}')], False),
+    ([_tool_use("b1", "Bash"), _tool_result("b1", "alpha-proj")], True),
+    ([_user("use alpha-proj-2")], True),
+    ([_user("Do not use alpha-proj. Ask me which project to use.")], True),
+    ([_user("compare alpha-proj and beta-proj")], True),
+    ([_user("use alpha-proj"), _user("actually use beta-proj")], True),
+    ([_user("use beta-proj"), _user("no wait, alpha-proj")], True),
+    ([_user("use alpha-proj"), _user("now list the services")], False),
+    ([_tool_use("q2", "AskUserQuestion"),
+      _tool_result("q2", '{"answers": {"Use alpha-proj or beta-proj?": "beta-proj"}}')], True),
+    ([_tool_use("q3", "AskUserQuestion"),
+      _tool_result("q3", 'Your questions have been answered: "Which project?"="alpha-proj". Continue.')], False),
+    ([_tool_use("q4", "AskUserQuestion"),
+      {"type": "user", "message": {"role": "user", "content": [
+          {"type": "tool_result", "tool_use_id": "q4", "is_error": True, "content": "alpha-proj"}]}}], True),
+    ([_tool_use("q5", "AskUserQuestion"),
+      _tool_result("q5", '{"answers": {"Which project? (alpha-proj is the gcloud default)": "Other"}}')], True),
+    ([{"type": "user", "isMeta": True, "message": {"role": "user", "content": "alpha-proj"}}], True),
+    ([{"type": "user", "message": {"role": "user", "content": [
+        {"type": "text", "text": "Compare beta-proj"}, {"type": "text", "text": "and alpha-proj"}]}}], True),
+    ([_tool_use("q7", "AskUserQuestion"),
+      {"type": "user", "message": {"role": "user", "content": [
+          {"type": "text", "text": "beta-proj looks right"},
+          {"type": "tool_result", "tool_use_id": "q7", "content": '{"answers": {"Project?": "alpha-proj"}}'}]}}], True),
+    ([_tool_use("q6", "AskUserQuestion"),
+      _tool_result("q6", '{"answers": {"Also check?": "beta-proj", "Project?": "alpha-proj"}}')], True),
+    ([_user("<system-reminder>use alpha-proj</system-reminder>")], True),
+])
+def test_conflict_requires_user_named_project(tmp_path, entries, blocked) -> None:
+    event = dict(EXPLICIT)
+    if entries is not None:
+        event["transcript_path"] = _transcript(tmp_path, entries)
+    out = _run_guard(tmp_path, event, "alpha-proj", dotenv=CONFLICT_DOTENV)
+    assert (out.returncode == 2) is blocked, out.stderr
+    if blocked:
+        assert "has not chosen alpha-proj" in out.stderr and "beta-proj" in out.stderr
+
+
+def test_no_conflict_explicit_project_needs_no_confirmation(tmp_path) -> None:
+    out = _run_guard(tmp_path, EXPLICIT, "alpha-proj")
+    assert out.returncode == 0
+
+
+def test_two_explicit_projects_share_one_deadline(monkeypatch) -> None:
+    """Resolution happens once per event, under one budget."""
+    import time as _time
+    guard = _load_guard()
+    calls = []
+    monkeypatch.setattr(guard, "RESOLVE_BUDGET", 0.5)
+    monkeypatch.setattr(guard, "resolve", lambda cwd: (calls.append(1), _time.sleep(0.3), ([], {"status": "resolved"}))[2])
+    event = {"tool_name": "Bash", "cwd": "/tmp", "tool_input": {"command":
+             "gcloud run services list --project=alpha-proj && gcloud run services list --project=beta-proj"}}
+    assert guard.decide(event) is None and calls == [1]
