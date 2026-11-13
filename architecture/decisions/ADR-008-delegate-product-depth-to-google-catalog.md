@@ -1,6 +1,6 @@
 # ADR-008: Delegate Product Depth to Google's Catalog; Ground on Developer Knowledge
 
-**Status:** Proposed
+**Status:** Accepted — operator decision (JP, 2026-11-13), recorded on release [#23](https://github.com/jpantsjoha/googlecloud-plugin/issues/23)
 **Date:** 2026-11-12
 **Issue:** [#13](https://github.com/jpantsjoha/googlecloud-plugin/issues/13)
 

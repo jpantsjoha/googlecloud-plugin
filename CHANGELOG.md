@@ -7,6 +7,15 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-11-13
+
+**Safe execution and depth release.** Every `gcloud` call now follows
+command-level guardrails; product depth beyond the plugin comes from Google's
+public skill catalog on demand; official documentation is one MCP call away;
+and auth guidance no longer relies on downloaded service-account keys.
+Adapted in part from Google's `google-cloud-developer` plugin (Apache-2.0; see
+`NOTICE`). Decision record: ADR-008.
+
 ### Added
 
 - `gcloud-guardrails` skill — rules for every `gcloud` call: check the exact
@@ -26,7 +35,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `.mcp.json` (API key from `DEVELOPERKNOWLEDGE_API_KEY`), `mcp_config.json` and
   `gemini-extension.json` (Google credentials). Not in the portable `mcp.json`.
   ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
-- `NOTICE` for the adapted Apache-2.0 text; ADR-008 (Proposed) records the
+- `NOTICE` for the adapted Apache-2.0 text; ADR-008 (Accepted) records the
   decision. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
 - `.codex-plugin/plugin.json` — Codex listing metadata (display name,
   descriptions, category, capabilities, starter prompts), validated by the
@@ -167,5 +176,7 @@ Not verified: Codex (usage limit at time of release) and Toolbox (opt-in).
 Initial release. Six persona skills, eleven service skills, MCP server setup,
 and a self-validating research pipeline.
 
+[Unreleased]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jpantsjoha/googlecloud-plugin/releases/tag/v0.1.0
