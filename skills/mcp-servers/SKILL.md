@@ -66,20 +66,42 @@ memory. For `gcloud` flag syntax, `gcloud help` stays the authority
 
 | Harness | Manifest | Auth |
 |---------|----------|------|
-| Claude Code | `.mcp.json` | API key in `DEVELOPERKNOWLEDGE_API_KEY`, sent as `X-Goog-Api-Key` |
-| Antigravity | `mcp_config.json` | ADC (`authProviderType: google_credentials`) — no key |
-| Gemini CLI | `gemini-extension.json` | ADC (`authProviderType: google_credentials`) — no key |
+| Claude Code | `.mcp.json` | ADC through `headersHelper` (`scripts/dk_adc_headers.py`); API key in `DEVELOPERKNOWLEDGE_API_KEY` as a fallback |
+| Antigravity | `mcp_config.json` | ADC (`authProviderType: google_credentials`) |
+| Gemini CLI | `gemini-extension.json` | ADC (`authProviderType: google_credentials`) |
 
-It is **not** in the portable `mcp.json`: it needs either a key or client-managed
-ADC, and Agent Plugins 1.0.0 expands neither. For Claude Code:
+No API key is needed if you are logged in to gcloud:
 
 ```bash
-# Create a key restricted to the Developer Knowledge API, then:
-export DEVELOPERKNOWLEDGE_API_KEY=...   # in your shell profile, never in a repo
+gcloud auth application-default login
+gcloud config set project PROJECT_ID   # quota project for the docs API
 ```
 
-If the variable is unset, the server is configured with an empty key and its
-calls fail authentication; the rest of the plugin is unaffected.
+User credentials are refused (`403`) without a **quota project**. Claude Code's
+helper sends one as `X-Goog-User-Project`, taken from the ADC file's
+`quota_project_id` or else the gcloud project; set it explicitly with
+`gcloud auth application-default set-quota-project PROJECT_ID`. The helper runs
+on each connection, prints `{}` if gcloud is missing or logged out, and the
+static key header then applies:
+
+```bash
+export DEVELOPERKNOWLEDGE_API_KEY=...   # optional; in your shell profile, never in a repo
+```
+
+It is **not** in the portable `mcp.json`: it needs client-managed credentials,
+and Agent Plugins 1.0.0 expands no placeholders beyond the plugin's own paths.
+
+The helper needs `python3` on `PATH`. With neither a working gcloud login nor
+a key, the server fails to connect; nothing else in the plugin depends on it.
+
+**Already have a Developer Knowledge server of your own?** Claude Code drops a
+plugin server whose URL matches one you configured yourself, so your entry
+always wins. If yours depends on a key variable that is not set, every call
+fails with `API key not valid`. Either:
+
+- **use the plugin's server** — remove your entry by its configured name
+  (`claude mcp list` shows it): `claude mcp remove YOUR_SERVER_NAME`; or
+- **keep your own** — set the key variable it references.
 
 ## Google-Managed MCP Servers (v0.1)
 
@@ -183,7 +205,8 @@ npx -y @toolbox-sdk/server --stdio --config tools.yaml
 | `MCP server not found` | Server not installed | Check install step in references/ |
 | Connection timeout | VPC firewall blocking | Verify Private Google Access + firewall |
 | `gcloud-remote` returns `403` on `tools/list` | Cloud CLI Execution API not enabled on the host project, or caller lacks `roles/mcp.toolUser` | Ask an admin to enable the API and grant the role on the host project |
-| `developer-knowledge` returns `401`/`403` | Key unset, or API not enabled on the quota project | Export `DEVELOPERKNOWLEDGE_API_KEY`; enable the Developer Knowledge API |
+| `developer-knowledge` returns `API key not valid` | A user-configured server with an unset key variable is shadowing the plugin's | Remove that server (`claude mcp remove YOUR_SERVER_NAME`) to use the plugin's, or set its variable |
+| `developer-knowledge` returns `403` with ADC | No quota project, or the Developer Knowledge API is not enabled on it | `gcloud auth application-default set-quota-project PROJECT_ID`; ask an admin to enable the API |
 
 ## References
 

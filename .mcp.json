@@ -21,7 +21,8 @@
       "url": "https://developerknowledge.googleapis.com/mcp",
       "headers": {
         "X-Goog-Api-Key": "${DEVELOPERKNOWLEDGE_API_KEY:-}"
-      }
+      },
+      "headersHelper": "python3 scripts/dk_adc_headers.py"
     }
   }
 }

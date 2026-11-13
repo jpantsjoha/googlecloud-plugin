@@ -50,6 +50,8 @@
       "Google Cloud documentation grounding"
     ],
     "websiteURL": "https://github.com/jpantsjoha/googlecloud-plugin",
+    "logo": "./assets/logo.svg",
+    "composerIcon": "./assets/logo.svg",
     "defaultPrompt": [
       "Design a Cloud Run service for this app and take it through the security gate before any deploy.",
       "Review my GCP architecture against the Well-Architected Framework and list the gaps by pillar.",
