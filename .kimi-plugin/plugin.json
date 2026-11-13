@@ -42,6 +42,7 @@
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/jpantsjoha/googlecloud-plugin"
+    "websiteURL": "https://github.com/jpantsjoha/googlecloud-plugin",
+    "logo": "./assets/logo.svg"
   }
 }

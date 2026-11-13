@@ -41,6 +41,20 @@ def skills_dir_resolves(value) -> bool:
     return target != root and target.is_relative_to(root) and target.is_dir()
 
 
+def repo_file_resolves(value) -> bool:
+    """A relative path to a file inside the repo (same rules as skills_dir_resolves)."""
+    if not isinstance(value, str) or not value.strip() or Path(value).is_absolute():
+        return False
+    target = (ROOT / value.removeprefix("./")).resolve()
+    return target.is_relative_to(ROOT.resolve()) and target.is_file()
+
+
+def check_icon_fields(manifest: str, interface: dict, errors: list[str]) -> None:
+    for field in ("logo", "composerIcon"):
+        if field in interface and not repo_file_resolves(interface[field]):
+            errors.append(f"{manifest}: interface {field} {interface[field]!r} does not resolve")
+
+
 def check_claude(errors: list[str]) -> None:
     m = _load_json(ROOT / ".claude-plugin" / "plugin.json", errors)
     if m:
@@ -86,6 +100,7 @@ def check_kimi(errors: list[str]) -> None:
             errors.append("kimi plugin.json: missing 'skills' path")
         elif not skills_dir_resolves(skills_path):
             errors.append(f"kimi plugin.json: skills path '{skills_path}' does not resolve")
+        check_icon_fields("kimi plugin.json", m.get("interface") or {}, errors)
         start = (m.get("sessionStart") or {}).get("skill")
         if start and not (ROOT / "skills" / start / "SKILL.md").exists():
             errors.append(f"kimi plugin.json: sessionStart skill '{start}' not found")
@@ -122,6 +137,7 @@ def check_codex(errors: list[str]) -> None:
         for field in ("displayName", "shortDescription", "developerName"):
             if not isinstance(interface.get(field), str) or not interface[field].strip():
                 errors.append(f"codex plugin.json: interface missing '{field}'")
+        check_icon_fields("codex plugin.json", interface, errors)
 
 
 REMOTE_URL_KEYS = ("url", "serverUrl", "httpUrl")
@@ -179,6 +195,13 @@ def check_mcp_consistency(errors: list[str]) -> None:
         return cleaned
 
     claude = mcp_map(ROOT / ".mcp.json")
+    claude_raw = _load_json(ROOT / ".mcp.json", errors) or {}
+    for name, cfg in (claude_raw.get("mcpServers") or {}).items():
+        helper = cfg.get("headersHelper") if isinstance(cfg, dict) else None
+        if helper is not None:
+            script = next((part for part in str(helper).split() if part.endswith((".py", ".sh"))), None)
+            if not script or not repo_file_resolves(script):
+                errors.append(f".mcp.json server '{name}': headersHelper {helper!r} names no script in the repo")
     agy = mcp_map(ROOT / "mcp_config.json")
     gemini = mcp_map(ROOT / "gemini-extension.json")
 

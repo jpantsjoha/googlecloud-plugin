@@ -348,6 +348,8 @@ def _codex_errors(tmp_path, monkeypatch, mutate) -> list[str]:
     tmp_path = tmp_path / "repo"
     (tmp_path / ".codex-plugin").mkdir(parents=True)
     (tmp_path / "skills").mkdir()
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "logo.svg").write_text((ROOT / "assets" / "logo.svg").read_text())
     data = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
     if mutate == "ABSOLUTE":  # absolute path to a real skills dir inside this checkout
         mutate = lambda d: d.update(skills=str((tmp_path / "skills").resolve()))
@@ -406,3 +408,109 @@ def _load_link_checker():
 ])
 def test_link_checker_mcp_endpoints(url: str, status: int, ok: bool) -> None:
     assert _load_link_checker().resolved(url, status) is ok
+
+
+# ─── Developer Knowledge ADC headers helper (scripts/dk_adc_headers.py) ──────
+
+import os
+import subprocess
+import sys
+
+HELPER = ROOT / "scripts" / "dk_adc_headers.py"
+
+
+def _fake_gcloud(bin_dir: Path, token: str | None, project: str = "proj-123") -> None:
+    """A stand-in gcloud: prints a token (or fails) and a configured project."""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    script = bin_dir / "gcloud"
+    token_branch = f'echo "{token}"; exit 0' if token else 'echo "not logged in" >&2; exit 1'
+    script.write_text(
+        "#!/bin/sh\n"
+        'case "$*" in\n'
+        f'  "auth application-default print-access-token") {token_branch};;\n'
+        f'  "config get-value project") echo "{project}"; exit 0;;\n'
+        "esac\nexit 1\n"
+    )
+    script.chmod(0o755)
+
+
+def _run_helper(tmp_path: Path, path_dirs: list[Path], adc: dict | None = None) -> dict:
+    config = tmp_path / "gcloud-config"
+    config.mkdir(exist_ok=True)
+    if adc is not None:
+        (config / "application_default_credentials.json").write_text(json.dumps(adc))
+    env = {"PATH": os.pathsep.join(str(p) for p in path_dirs), "CLOUDSDK_CONFIG": str(config), "HOME": str(tmp_path)}
+    out = subprocess.run([sys.executable, str(HELPER)], capture_output=True, text=True, env=env, timeout=20)
+    assert out.returncode == 0, out.stderr
+    assert out.stderr == "", "the helper must not write to stderr"
+    return json.loads(out.stdout)
+
+
+def test_helper_emits_bearer_and_quota_project(tmp_path) -> None:
+    _fake_gcloud(tmp_path / "bin", token="tok-abc")
+    assert _run_helper(tmp_path, [tmp_path / "bin"]) == {
+        "Authorization": "Bearer tok-abc", "X-Goog-User-Project": "proj-123"}
+
+
+def test_helper_prefers_adc_quota_project(tmp_path) -> None:
+    _fake_gcloud(tmp_path / "bin", token="tok-abc")
+    headers = _run_helper(tmp_path, [tmp_path / "bin"], adc={"quota_project_id": "quota-proj"})
+    assert headers["X-Goog-User-Project"] == "quota-proj"
+
+
+def test_helper_omits_unset_project(tmp_path) -> None:
+    _fake_gcloud(tmp_path / "bin", token="tok-abc", project="(unset)")
+    assert _run_helper(tmp_path, [tmp_path / "bin"]) == {"Authorization": "Bearer tok-abc"}
+
+
+def test_helper_empty_when_not_logged_in(tmp_path) -> None:
+    _fake_gcloud(tmp_path / "bin", token=None)
+    assert _run_helper(tmp_path, [tmp_path / "bin"]) == {}
+
+
+def test_helper_empty_without_gcloud(tmp_path) -> None:
+    (tmp_path / "empty").mkdir()
+    assert _run_helper(tmp_path, [tmp_path / "empty"]) == {}
+
+
+def test_helper_wired_in_claude_manifest() -> None:
+    server = json.loads((ROOT / ".mcp.json").read_text())["mcpServers"]["developer-knowledge"]
+    assert server.get("headersHelper") == "python3 scripts/dk_adc_headers.py"
+    assert "X-Goog-Api-Key" in server.get("headers", {}), "static key header stays as the fallback"
+
+
+# ─── Logo and helper path checks (scripts/validate_plugin.py) ────────────────
+
+def test_logo_is_square_svg() -> None:
+    import xml.etree.ElementTree as ET
+    root = ET.parse(ROOT / "assets" / "logo.svg").getroot()
+    _, _, width, height = (float(n) for n in root.get("viewBox").split())
+    assert width == height, "listing icons must be square"
+
+
+@pytest.mark.parametrize("value,ok", [
+    ("./assets/logo.svg", True),
+    ("assets/logo.svg", True),
+    ("./assets/missing.svg", False),
+    ("../assets/logo.svg", False),
+    (str(ROOT / "assets" / "logo.svg"), False),
+    (42, False),
+])
+def test_repo_file_resolves(value, ok) -> None:
+    assert _load_packaging_validator().repo_file_resolves(value) is ok
+
+
+def test_broken_icon_and_helper_paths_are_caught(tmp_path, monkeypatch) -> None:
+    validator = _load_packaging_validator()
+    errors: list[str] = []
+    validator.check_icon_fields("codex plugin.json", {"logo": "./assets/missing.svg"}, errors)
+    assert any("logo" in e for e in errors), errors
+    for name in (".mcp.json", "mcp_config.json", "gemini-extension.json", "mcp.json"):
+        (tmp_path / name).write_text((ROOT / name).read_text())
+    data = json.loads((tmp_path / ".mcp.json").read_text())
+    data["mcpServers"]["developer-knowledge"]["headersHelper"] = "python3 scripts/missing.py"
+    (tmp_path / ".mcp.json").write_text(json.dumps(data))
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    errors = []
+    validator.check_mcp_consistency(errors)
+    assert any("headersHelper" in e for e in errors), errors
