@@ -1,0 +1,18 @@
+{
+  "description": "googlecloud-plugin: block project-scoped gcloud calls that lack --project and tell the agent what the project sources say (gcp-project-context).",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__plugin_googlecloud-plugin_gcloud__run_gcloud_command|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/gcloud_project_guard.py"],
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

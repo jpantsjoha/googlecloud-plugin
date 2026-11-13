@@ -717,3 +717,85 @@ def test_no_placeholder_in_server_env(manifest: str) -> None:
 @pytest.mark.parametrize("manifest", [".mcp.json", "mcp_config.json", "gemini-extension.json"])
 def test_toolbox_not_shipped(manifest: str) -> None:
     assert "toolbox" not in json.loads((ROOT / manifest).read_text())["mcpServers"]
+
+
+# ─── PreToolUse project guard (scripts/gcloud_project_guard.py) ──────────────
+
+GUARD = ROOT / "scripts" / "gcloud_project_guard.py"
+MCP_TOOL = "mcp__plugin_googlecloud-plugin_gcloud__run_gcloud_command"
+
+
+def _load_guard():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gcloud_project_guard", GUARD)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("tool,tool_input,blocked", [
+    (MCP_TOOL, {"args": ["run", "services", "list"]}, True),
+    (MCP_TOOL, {"command": "gcloud run services list"}, True),
+    (MCP_TOOL, {"args": ["run", "services", "list", "--project=alpha-proj"]}, False),
+    (MCP_TOOL, {"args": ["run", "services", "list", "--project", "alpha-proj"]}, False),
+    (MCP_TOOL, {"args": ["config", "list", "--format=json"]}, False),
+    (MCP_TOOL, {"args": ["projects", "describe", "alpha-proj"]}, False),
+    (MCP_TOOL, {"args": ["beta", "run", "services", "list"]}, True),
+    ("Bash", {"command": "gcloud compute instances list --limit=5"}, True),
+    ("Bash", {"command": "CLOUDSDK_CORE_PROJECT=x gcloud compute instances list"}, True),
+    ("Bash", {"command": "env -u CLOUDSDK_CORE_PROJECT gcloud config get-value project"}, False),
+    ("Bash", {"command": "/usr/local/bin/gcloud sql instances list --project=alpha-proj"}, False),
+    ("Bash", {"command": "ls -la && echo gcloud"}, False),
+    ("Bash", {"command": "gcloud help run deploy"}, False),
+    ("Read", {"file_path": "/tmp/x"}, False),
+])
+def test_guard_classification(tool, tool_input, blocked) -> None:
+    guard = _load_guard()
+    argv = guard.gcloud_argv(tool, tool_input)
+    assert (argv is not None and guard.needs_project(argv)) is blocked
+
+
+def _run_guard(tmp_path, event: dict, gcloud_project: str | None, dotenv: str | None = None):
+    bin_dir = _gcloud_stub(tmp_path / "bin", gcloud_project)
+    repo = tmp_path / "repo"
+    repo.mkdir(exist_ok=True)
+    if dotenv:
+        (repo / ".env").write_text(dotenv)
+    event = {**event, "cwd": str(repo)}
+    return subprocess.run([sys.executable, str(GUARD)], input=json.dumps(event), capture_output=True,
+                          text=True, timeout=30, env={"PATH": str(bin_dir), "HOME": str(tmp_path)})
+
+
+def test_guard_blocks_with_single_project_hint(tmp_path) -> None:
+    out = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}}, "alpha-proj")
+    assert out.returncode == 2 and "--project=alpha-proj" in out.stderr
+
+
+def test_guard_blocks_and_asks_on_conflict(tmp_path) -> None:
+    out = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}},
+                     "alpha-proj", dotenv="API_SECRET=do-not-print\nGOOGLE_CLOUD_PROJECT=beta-proj\n")
+    assert out.returncode == 2
+    assert "Ask the user" in out.stderr and "alpha-proj" in out.stderr and "beta-proj" in out.stderr
+    assert "do-not-print" not in out.stderr + out.stdout
+
+
+def test_guard_blocks_and_suggests_init_when_missing(tmp_path) -> None:
+    out = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list"]}}, None)
+    assert out.returncode == 2 and "gcloud init" in out.stderr
+
+
+def test_guard_allows_explicit_project_and_bad_input(tmp_path) -> None:
+    ok = _run_guard(tmp_path, {"tool_name": MCP_TOOL, "tool_input": {"args": ["run", "services", "list", "--project=beta-proj"]}}, "alpha-proj")
+    assert ok.returncode == 0 and ok.stderr == ""
+    junk = subprocess.run([sys.executable, str(GUARD)], input="not json", capture_output=True, text=True, timeout=30)
+    assert junk.returncode == 0, "a malformed event must never block"
+
+
+def test_hooks_manifest_wires_the_guard() -> None:
+    hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())["hooks"]["PreToolUse"]
+    entry = next(h for h in hooks if MCP_TOOL in h["matcher"].split("|"))
+    assert "Bash" in entry["matcher"].split("|")
+    handler = entry["hooks"][0]
+    assert handler["command"] == "python3"
+    assert handler["args"] == ["${CLAUDE_PLUGIN_ROOT}/scripts/gcloud_project_guard.py"]
+    assert GUARD.is_file()

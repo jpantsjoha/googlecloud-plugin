@@ -13,6 +13,10 @@ metadata:
 
 Running a command against the wrong project is the cheapest mistake to make and one of the most expensive to clean up. Settle the project once per session, before the first project-scoped command, and carry the answer into every command as `--project=PROJECT_ID` (see `gcloud-guardrails`).
 
+## Enforcement in Claude Code
+
+The plugin ships a `PreToolUse` hook (`hooks/hooks.json` → `scripts/gcloud_project_guard.py`). It blocks any project-scoped `gcloud` call, through the MCP server or the shell, that lacks `--project`, and returns what the sources say: one project to retry with, the choices to put to the user, or a pointer to `gcloud init`. Clients without hooks rely on this skill alone.
+
 ## Step 1 — Collect every source
 
 Collect all of them; do not stop at the first one found. All checks are read-only.
