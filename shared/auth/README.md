@@ -10,7 +10,7 @@ The plugin does **not** ship an `init` that logs you in or hardcodes a project. 
 make preflight     # read-only; detects project + credentials, never logs in
 ```
 
-**Project precedence:** `GOOGLE_CLOUD_PROJECT` → `GCP_PROJECT_ID` → `CLOUDSDK_CORE_PROJECT` → `gcloud config get-value project` → prompt.
+**Project sources:** exported `CLOUDSDK_CORE_PROJECT`, `GOOGLE_CLOUD_PROJECT`, `GCP_PROJECT_ID` and `GCLOUD_PROJECT`; the repository's `.env` and `.env.local` (those keys only); and the active gcloud configuration. All are collected, not just the first. One distinct ID → proceed; several → the user picks; none → `gcloud init` or `gcloud config set project`. `gcloud` itself uses `CLOUDSDK_CORE_PROJECT` if set, else its active configuration. See `skills/gcp-project-context/`.
 
 **Credential precedence:** `GOOGLE_APPLICATION_CREDENTIALS` (path) → ADC file (`~/.config/gcloud/application_default_credentials.json`) → active `gcloud` account → prompt.
 

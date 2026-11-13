@@ -1,0 +1,73 @@
+---
+name: gcp-project-context
+description: "Works out which Google Cloud project a task targets before any project-scoped command runs. Reads every source — exported variables (CLOUDSDK_CORE_PROJECT, GOOGLE_CLOUD_PROJECT, GCP_PROJECT_ID, GCLOUD_PROJECT), the repository's .env and .env.local, and the active gcloud configuration — then proceeds when they agree, asks the user to pick when they disagree, and tells the user how to set one when none exists. Built for machines with several projects. Use this to decide the project; use gcloud-guardrails for how each command is then built and run. Use when the user mentions: which project, gcp project, project id, wrong project, switch project, multiple projects, gcloud init, set project, project not set."
+license: MIT
+metadata:
+  "googlecloud-plugin/version": "0.1"
+  "googlecloud-plugin/triggers": "which project, gcp project, project id, wrong project, switch project, multiple projects, gcloud init, set project, project not set"
+  "googlecloud-plugin/required-scopes": ""
+  "googlecloud-plugin/mcp-servers": "gcloud"
+---
+
+# GCP Project Context
+
+Running a command against the wrong project is the cheapest mistake to make and one of the most expensive to clean up. Settle the project once per session, before the first project-scoped command, and carry the answer into every command as `--project=PROJECT_ID` (see `gcloud-guardrails`).
+
+## Step 1 — Collect every source
+
+Collect all of them; do not stop at the first one found. All checks are read-only.
+
+| Source | How to read it | Who uses it |
+|--------|----------------|-------------|
+| `CLOUDSDK_CORE_PROJECT` | `printenv CLOUDSDK_CORE_PROJECT` | `gcloud` — overrides its configuration |
+| `GOOGLE_CLOUD_PROJECT`, `GCP_PROJECT_ID`, `GCLOUD_PROJECT` | `printenv NAME` | Client libraries, Terraform, the application |
+| Repository `.env`, `.env.local` | Read **only** lines whose key is one of the four names above | The application when it runs |
+| Active gcloud configuration | `gcloud config configurations list --filter=is_active=true --format="value(name)"` and `gcloud config get-value project` | `gcloud`, and the plugin's `gcloud` MCP server |
+
+Never print, copy or summarise any other line of a `.env` file: it usually holds secrets.
+
+In this plugin's repository, `python3 scripts/preflight.py --json` collects the same sources, validates each ID and returns `resolved`, `conflict` or `missing`.
+
+Discard a value that is not a project ID (6–30 characters: lowercase letters, digits and hyphens, starting with a letter). An unexpanded `${GCP_PROJECT_ID}` or `(unset)` is a configuration fault to report, not a project.
+
+## Step 2 — Decide
+
+| Distinct valid IDs | Action |
+|--------------------|--------|
+| **One** | State it with its sources — "Using `my-proj` (from `.env` and gcloud config)" — and proceed. Confirm it once before the first consequential command. |
+| **Two or more** | **Ask.** Show each ID with every source that names it, say which one `gcloud` would use today (`CLOUDSDK_CORE_PROJECT` if set, else the active configuration), and let the user pick. Do not guess, and do not run any project-scoped command until they answer. |
+| **None** | Stop project-scoped work and tell the user how to set one (Step 4). Read-only work that needs no project can continue. |
+
+Once chosen, the project holds for the session. If the user names a different project later, repeat Step 2 for that request.
+
+## Step 3 — Use the choice everywhere
+
+- Pass `--project=PROJECT_ID` on every `gcloud` command, even when the active configuration already matches. The plugin's `gcloud` MCP server inherits `CLOUDSDK_CORE_PROJECT` or the active configuration, which may differ from the user's choice.
+- For tools that read environment variables (client libraries, Terraform), state which variable they will read and whether it matches.
+
+## Step 4 — Help the user make it stick
+
+Offer these; do not run them without a yes, since each changes the user's configuration:
+
+```bash
+# No project anywhere: guided setup (login, project, default region)
+gcloud init
+
+# One default project on this machine
+gcloud config set project PROJECT_ID
+
+# Several projects: one named configuration each, switched explicitly
+gcloud config configurations create PROJECT_NAME
+gcloud config set project PROJECT_ID
+gcloud config configurations activate PROJECT_NAME
+
+# Pin a repository to its project (read by the app and by this skill)
+echo 'GOOGLE_CLOUD_PROJECT=PROJECT_ID' >> .env
+```
+
+When sources conflicted, recommend aligning them to the chosen ID, so the next session resolves without a question.
+
+## References
+
+- `references/README.md`
+- gcloud configurations: https://cloud.google.com/sdk/docs/configurations

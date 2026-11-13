@@ -58,6 +58,7 @@ Route agent prompts to the correct skill using the trigger list below. When in d
 | Trigger Pattern | Skill |
 |----------------|-------|
 | MCP server, MCP setup, GenAI Toolbox, Developer Knowledge | `skills/mcp-servers/` |
+| Which project, project not set, several projects, switch project | `skills/gcp-project-context/` |
 | Any gcloud command: syntax, flags, dry run, destructive operations | `skills/gcloud-guardrails/` |
 | Product depth this plugin does not cover (GKE troubleshooting, Agent Platform tuning, Genkit, Gemini API, AlloyDB, Spanner, Firebase) | `skills/google-skills-catalog/` |
 

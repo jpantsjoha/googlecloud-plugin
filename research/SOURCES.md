@@ -689,3 +689,10 @@ Every source URL is stored with retrieval date and content hash for audit.
 - **Retrieved**: 2026-11-13T00:29:10+00:00
 - **Hash**: n/a (JSON-RPC endpoint; GET returns 405)
 - **Status**: ENDPOINT
+
+## gcp-project-context
+### gcloud configurations
+- **URL**: https://cloud.google.com/sdk/docs/configurations
+- **Retrieved**: 2026-11-13T12:11:34.722969+00:00
+- **Hash**: 4f07579130aa45f2d703dbf80a1640087307ce7577d9a8a1f7f94257eb0c3530
+- **Status**: OK

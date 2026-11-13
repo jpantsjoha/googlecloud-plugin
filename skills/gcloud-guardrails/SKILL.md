@@ -31,7 +31,7 @@ Every `gcloud` task, whether executed now or written up as a plan, follows these
 | Rule | Why |
 |------|-----|
 | One `gcloud` command per call. No `&&`, `;`, pipes, redirection or `$(...)`. | Each step must be inspectable and its exit code attributable. |
-| Pass `--project=PROJECT_ID` on every command. Never rely on the active configuration. | The active project is ambient state the user may not be looking at. |
+| Pass `--project=PROJECT_ID` on every command, using the project settled by `gcp-project-context`. Never rely on the active configuration. | The active project is ambient state the user may not be looking at, and on a multi-project machine it is often not the one they mean. |
 | Pass the location flag (`--region`, `--zone`, `--location`) the resource needs. | An omitted location triggers an interactive prompt, which hangs a non-interactive agent. |
 | Add `--quiet` to commands that would prompt, only once the command is read-only or authorised, and never to a denylisted command. | `--quiet` accepts defaults, including "yes" to destructive prompts. It is never a way round authorisation. |
 | Add `--async` to long-running operations that support it, then poll with `describe`. | Avoids tool-call timeouts on cluster or instance creation. |
