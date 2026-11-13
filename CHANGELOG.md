@@ -35,7 +35,7 @@ Adapted in part from Google's `google-cloud-developer` plugin (Apache-2.0; see
   `.mcp.json` (API key from `DEVELOPERKNOWLEDGE_API_KEY`), `mcp_config.json` and
   `gemini-extension.json` (Google credentials). Not in the portable `mcp.json`.
   ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
-- `NOTICE` for the adapted Apache-2.0 text; ADR-008 (Proposed) records the
+- `NOTICE` for the adapted Apache-2.0 text; ADR-008 (Accepted) records the
   decision. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
 - `.codex-plugin/plugin.json` — Codex listing metadata (display name,
   descriptions, category, capabilities, starter prompts), validated by the
