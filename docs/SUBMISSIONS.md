@@ -23,8 +23,8 @@ Where to list `googlecloud-plugin` so builders can find and install it. Each ent
 - **Re-index:** the hub auto-discovers on a schedule (GitHub Code Search backed), but submitting the repo URL
   at https://www.claudepluginhub.com is the fastest route. Its own guide: *"Push your plugin to GitHub and
   submit the URL for the fastest route to indexing."*
-- **Status:** **LISTED** and verified owner. Showing v0.1.0 as of 2026-08-07 — awaiting re-crawl of the
-  v0.2.0 release. No self-service refresh control exists on the listing page.
+- **Status:** **LISTED** and verified owner. The owned-plugin page has a **Re-sync** button; last re-synced
+  2026-11-13 at commit `95d15d7` (v0.5.0 plus README): 20 skills, hooks, documentation score 100.
 
 ## 2. Gemini CLI Extensions — Antigravity / Gemini
 
@@ -41,7 +41,7 @@ Where to list `googlecloud-plugin` so builders can find and install it. Each ent
 - **Where:** https://claude.ai/settings/plugins/submit or https://platform.claude.com/plugins/submit
 - **Needs:** public repo with `.claude-plugin/plugin.json` + `marketplace.json` (both present and valid).
 - **Note:** complementary to Claude Plugin Hub, not competing — per the hub's own guidance.
-- **Status:** not yet submitted. Eligible now that v0.2.0 is tagged and released.
+- **Status:** not yet submitted. Eligible: latest release v0.5.1.
 
 ## 4. awesome-claude-code — community list
 
@@ -68,5 +68,5 @@ Where to list `googlecloud-plugin` so builders can find and install it. Each ent
 - [x] Tag a release before submitting — `v0.2.0` tagged and released 2026-08-07
 - [x] Conforms to Agent Plugins 1.0.0 (`make spec`) and Agent Skills (`skills-ref` 17/17)
 - [x] `CHANGELOG.md` present; version bumped so clients invalidate their cache
-- [ ] Submit repo URL to Claude Plugin Hub to trigger re-index of v0.5.0
+- [ ] Submit repo URL to Claude Plugin Hub to trigger re-index of v0.5.1
 - [ ] Submit to Anthropic official marketplace

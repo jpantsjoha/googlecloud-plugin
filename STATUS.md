@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-11-13 (release v0.5.0). What is happening now and what waits on whom. One entry per working session; pruned, not grown.
+Last updated: 2026-11-13 (release v0.5.1). What is happening now and what waits on whom. One entry per working session; pruned, not grown.
 
 ## 2026-11-13 — Google `google-cloud-developer` borrow, follow-ups landed
 
@@ -20,17 +20,16 @@ Gate on `a4180b4`: 273 tests pass, 19/19 skills conform, 4 harness manifests agr
 
 ## Released
 
+- `v0.5.1` ([#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32)): project guard false positives fixed; README quick start, comparison and troubleshooting ([#31](https://github.com/jpantsjoha/googlecloud-plugin/pull/31)).
 - `v0.5.0` ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27), [#29](https://github.com/jpantsjoha/googlecloud-plugin/pull/29)): project resolution from env, `.env` and gcloud config, enforced in Claude Code by a hook that asks on conflict; `gcloud` MCP no longer receives a literal `${GCP_PROJECT_ID}`; GenAI Toolbox no longer shipped.
 - `v0.4.0` ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)): Developer Knowledge works in Claude Code from gcloud ADC with no API key — verified live; square logo for Codex and Kimi.
 - `v0.3.0` ([#23](https://github.com/jpantsjoha/googlecloud-plugin/issues/23)): the work in the table above; ADR-008 accepted as the operator's decision (JP, 2026-11-13).
 
 ## Waiting on the operator
 
-| # | Decision | Recommendation | Unblocks | Cost if wrong | Reversibility |
-|---|---|---|---|---|---|
-| 1 | README usage section | Add a short usage/examples section — the one gap Claude Plugin Hub's score names | Documentation score 75 → higher on the Hub listing | None | cheap |
+Nothing. The README usage section is done ([#31](https://github.com/jpantsjoha/googlecloud-plugin/pull/31)).
 
-Claude Plugin Hub listing last re-synced at `v0.4.0` (2026-11-13).
+Claude Plugin Hub listing last re-synced at `95d15d7` (v0.5.0 plus README, 2026-11-13): 20 skills, hooks, documentation score 100.
 
 ## Not done, and why
 
@@ -39,6 +38,7 @@ Claude Plugin Hub listing last re-synced at `v0.4.0` (2026-11-13).
 
 ## Open
 
+- The `gcloud` MCP server failed on the first Claude Code session after install and after update (2026-11-13), then connected after Claude Code's 15-minute retry cache; cause unknown ([#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32)).
 - The remote Cloud CLI MCP is untested live ([#21](https://github.com/jpantsjoha/googlecloud-plugin/pull/21)); `cloudcli.googleapis.com` did not appear in `gcloud services list --available`. Developer Knowledge was verified live in [#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25).
 - The Kimi manifest's `interface.logo` key is assumed, not checked against a Kimi schema ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)).
 - `make check` will report drift on `research/SOURCES.md` for the Google catalog `index.json`, which changes often ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14)).
