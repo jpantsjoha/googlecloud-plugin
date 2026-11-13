@@ -61,10 +61,16 @@ gcloud storage buckets update gs://BUCKET_NAME \
 ### Generate a signed URL (time-limited access)
 
 ```bash
+# Signs as the service account through impersonation — no private key file
 gcloud storage sign-url gs://BUCKET_NAME/OBJECT \
   --duration=1h \
-  --private-key-file=KEY_FILE
+  --impersonate-service-account=SA_NAME@PROJECT_ID.iam.gserviceaccount.com
 ```
+
+Two identities, two permissions — both IAM grants a named human authorises:
+
+- **The caller** needs `roles/iam.serviceAccountTokenCreator` on the signing service account (to sign as it).
+- **The signing service account** needs `storage.objects.get` on the object, typically `roles/storage.objectViewer` on the bucket. Without it the URL signs successfully but returns `403` when used.
 
 ## References
 
