@@ -960,9 +960,19 @@ def test_project_requirement_never_stated_for_every_command() -> None:
     for path in [*SKILLS_DIR.glob("*/SKILL.md"), ROOT / "AGENTS.md", ROOT / "GEMINI.md", ROOT / "PLUGIN.md",
                  *(ROOT / "shared").rglob("*.md")]:
         for lineno, line in enumerate(path.read_text().splitlines(), 1):
-            if re.search(r"--project[^|\n]{0,40}\bon every command\b", line):
-                offenders.append(f"{path.relative_to(ROOT)}:{lineno}")
+            demands = re.search(r"\bevery\b[^.|]{0,80}--project|--project[^.|]{0,80}\bevery\b", line) or \
+                re.search(r"\bpass `--project`", line)
+            if demands and "project-scoped" not in line:
+                offenders.append(f"{path.relative_to(ROOT)}:{lineno}: {line.strip()[:100]}")
     assert not offenders, offenders
+
+
+def test_documented_exemptions_match_the_hook() -> None:
+    exempt = _load_guard().EXEMPT_GROUPS
+    for doc in ("gcp-project-context", "gcloud-guardrails"):
+        text = (SKILLS_DIR / doc / "SKILL.md").read_text()
+        missing = sorted(g for g in exempt if f"`{g}`" not in text)
+        assert not missing, f"{doc} does not list hook exemptions {missing}"
 
 
 def test_project_context_skill_says_when_not_to_ask() -> None:

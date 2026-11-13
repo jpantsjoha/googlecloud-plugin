@@ -20,11 +20,11 @@ It does **not** apply to, and you must not ask for a project for:
 - fetching or corroborating documentation (the `developer-knowledge` server, `google-skills-catalog`);
 - best practices, patterns, approaches, guidelines and policies; validating assumptions;
 - designs, ADRs, Well-Architected and security reviews of a plan;
-- `gcloud` commands that act on no project: `help` and `--help`, `config`, `auth`, `components`, `info`, `version`, `topic`, `projects list`.
+- `gcloud` commands that act on no project: `help` and `--help`, `config`, `auth`, `components`, `info`, `init`, `meta`, `topic`, `version`; and `projects`, `organizations` and `billing`, which name their target explicitly (a project ID, organization or billing account) rather than using a session project. Changes to billing and organizations remain on the `gcloud-guardrails` denylist.
 
 Most work with this plugin is in the second group. Reach for this skill at the first project-scoped command, not at the start of the conversation.
 
-Running a command against the wrong project is the cheapest mistake to make and one of the most expensive to clean up. Settle the project once per session, before the first project-scoped command, and carry the answer into every command as `--project=PROJECT_ID` (see `gcloud-guardrails`).
+Running a command against the wrong project is the cheapest mistake to make and one of the most expensive to clean up. Settle the project once per session, before the first project-scoped command, and carry the answer into every project-scoped command as `--project=PROJECT_ID` (see `gcloud-guardrails`).
 
 ## Enforcement in Claude Code
 
@@ -49,7 +49,7 @@ Discard a value that is not a project ID: 6–30 characters of lowercase letters
 
 With `CLOUDSDK_CORE_PROJECT` exported, `gcloud config get-value project` echoes the variable and hides what the configuration stores. Read the stored value with the variable removed: `env -u CLOUDSDK_CORE_PROJECT gcloud config get-value project`.
 
-These discovery commands, like every other command that acts on no project, need no `--project`.
+These discovery commands act on no project, so they take no `--project`.
 
 ## Step 2 — Decide
 

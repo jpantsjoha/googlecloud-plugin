@@ -33,7 +33,7 @@ Before the first project-scoped command, use `gcp-project-context`: collect the 
 
 ## Every gcloud call
 
-Follow `gcloud-guardrails` for every `gcloud` command, whichever skill proposed it: validate the leaf with `gcloud help`, dry-run where supported, reduce output, pass `--project` and location explicitly, one command per call, and stop for human authorisation on the denylist (IAM changes, deletes, billing, organizations, KMS, IaC apply, API enablement, CLI installation).
+Follow `gcloud-guardrails` for every `gcloud` command, whichever skill proposed it: validate the leaf with `gcloud help`, dry-run where supported, reduce output, pass `--project` (on project-scoped commands) and the location explicitly, one command per call, and stop for human authorisation on the denylist (IAM changes, deletes, billing, organizations, KMS, IaC apply, API enablement, CLI installation).
 
 ## Product depth beyond this plugin
 
