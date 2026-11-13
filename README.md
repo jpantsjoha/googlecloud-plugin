@@ -222,6 +222,16 @@ Choose Google's for a small bundled skill set. Choose this one when you also wan
 
 ---
 
+## Troubleshooting
+
+**`gcloud` MCP server shows as failed straight after install or update (Claude Code).** Seen in Claude Code 2.1.323: the first session after installing or updating the plugin failed to connect, and Claude Code then skips the server for 15 minutes ("recent failure cached, retries automatically in 15 min"). The cause is not yet known; in a separate test a cold `npx` start answered in 2.8 seconds, well inside the 30-second connection limit. Wait out the 15 minutes, or reconnect the server from `/mcp` in an interactive session. Meanwhile the agent can run `gcloud` in the shell; the project guard applies there too.
+
+**Docs server returns `403`.** Set a quota project (`gcloud auth application-default set-quota-project PROJECT_ID`) with the Developer Knowledge API enabled; see `mcp-servers`.
+
+**A command was blocked by the project guard.** The message says why: add `--project`, or answer which project to use. To check what the plugin sees, run `python3 scripts/preflight.py`.
+
+---
+
 ## Standards and compliance
 
 This plugin conforms to the open, vendor-neutral packaging standards — not to any

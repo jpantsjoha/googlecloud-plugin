@@ -980,3 +980,61 @@ def test_project_context_skill_says_when_not_to_ask() -> None:
     fm = parse_frontmatter(SKILLS_DIR / "gcp-project-context" / "SKILL.md")
     assert "need no project" in fm["description"]
     assert "must not ask for a project" in text
+
+
+# ─── Guard false positives found in use (v0.5.0) ─────────────────────────────
+
+@pytest.mark.parametrize("command,blocked", [
+    # Names that merely contain the word are not the CLI.
+    ("python3 -c \"print('googlecloud-plugin:gcloud')\"", False),
+    ("D=$(mktemp -d); npx -y @google-cloud/gcloud-mcp", False),
+    ("ls scripts/gcloud_project_guard.py", False),
+    # Heredocs written to files are data.
+    ("cat > run.sh <<'EOF'\ngcloud run services list\nEOF", False),
+    ("tee notes.md <<EOF\ngcloud run deploy web\nEOF", False),
+    ("cat <<-EOF > x.sh\n\tgcloud sql instances list\n\tEOF", False),
+    # Heredocs fed to a shell or interpreter run.
+    ("bash <<'EOF'\ngcloud run services list\nEOF", True),
+    ("bash <<'EOF'\ngcloud run services list --project=alpha-proj\nEOF", False),
+    ("python3 <<'EOF'\nimport subprocess; subprocess.run(['gcloud', 'run', 'services', 'list'])\nEOF", True),
+    # Command substitutions are judged like any other command.
+    ("P=$(gcloud config get-value project)", False),
+    ("echo $(gcloud run services list)", True),
+    ("echo $(gcloud run services list --project=alpha-proj)", False),
+    ("X=`gcloud compute instances list`", True),
+    ("echo $(echo $(gcloud run services list))", True),
+    # Heredocs that execute, however the shell is reached.
+    ("command bash <<'EOF'\ngcloud run services list\nEOF", True),
+    ("if true; then bash <<'EOF'\ngcloud run services list\nEOF\nfi", True),
+    ("true & bash <<'EOF'\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | bash\ngcloud run services list\nEOF", True),
+    ("cat <<EOF\n$(gcloud run services list)\nEOF", True),
+    ("cat <<EOF.txt\nhello\nEOF.txt\ngcloud run services list", True),
+    ("echo '<<EOF'\ngcloud run services list", True),
+    # Command names or scripts built at run time.
+    ("bash -c \"$(printf 'gcloud run services list')\"", True),
+    ("G=$(printf gcloud); $G run services list", True),
+    # Interpreter code and shell expansions.
+    ("ruby -e '%x:gcloud run services list:'", True),
+    ("echo $(gcloud${IFS}run${IFS}services${IFS}list)", True),
+    # Data heredocs with unusual delimiters stay data.
+    ("cat <<'EOF.txt'\ngcloud notes\nEOF.txt", False),
+    ("cat <<'END-1' > x.md\ngcloud run services list\nEND-1", False),
+    # Round 3: quoted and versioned executors run; filenames and comments do not.
+    ("cat <<'EOF' | 'bash'\ngcloud run services list\nEOF", True),
+    ("python3.12 <<'EOF'\nimport subprocess; subprocess.run(['gcloud', 'run', 'services', 'list'])\nEOF", True),
+    ("cat > bash <<'EOF'\ngcloud run services list\nEOF", False),
+    ("cat > notes.md <<'EOF' # bash\ngcloud run services list\nEOF", False),
+    ("echo gcloud-mcp; \"$PYTHON\" --version", False),
+    ("bash -c 'echo \"$(pwd)/gcloud-mcp\"'", False),
+    ("python3 -c \"print('plugin:gcloud docs')\"", False),
+    ("cat <<'EOF' | 2>/dev/null bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | >/dev/null command bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' 2>/dev/null > notes.md\ngcloud run services list\nEOF", False),
+    ("cat <<'EOF' | &>/dev/null bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | &>>/tmp/log bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | 2>&1 bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' &>/dev/null > notes.md\ngcloud run services list\nEOF", False),
+])
+def test_guard_false_positives_and_real_cases(command, blocked) -> None:
+    assert _blocked("Bash", {"command": command}) is blocked
