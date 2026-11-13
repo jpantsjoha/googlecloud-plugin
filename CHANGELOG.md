@@ -7,6 +7,44 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-11-13
+
+**The right project, every time.** The plugin now works out which Google Cloud
+project you mean from every place it can be set, asks when they disagree, and
+no longer sends `gcloud` a placeholder instead of a project.
+
+### Added
+
+- `gcp-project-context` skill: collects the project from exported
+  `CLOUDSDK_CORE_PROJECT`, `GOOGLE_CLOUD_PROJECT`, `GCP_PROJECT_ID` and
+  `GCLOUD_PROJECT`, the repository's `.env` and `.env.local` (those keys only),
+  and the active gcloud configuration. One ID: it says so and proceeds. Several:
+  it asks you to pick. None: it points you at `gcloud init`. The choice is then
+  passed explicitly to every project-scoped tool. ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27))
+- `scripts/preflight.py` reports every project source with validation, which one
+  `gcloud` would use, and exits 0 / 3 / 2 for resolved / conflict / missing
+  (`--json` for machines). Its `.env` parsing is quote-aware and never outputs
+  any other value from the file. ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27))
+- In Claude Code, a `PreToolUse` hook enforces it: a project-scoped `gcloud`
+  call without `--project` — through the MCP server or the shell — is blocked,
+  and the agent is told what the sources say (retry with the one project, ask
+  you to choose, or suggest `gcloud init`). While sources disagree, an explicit
+  `--project` is held until you have chosen that project in the session.
+  Verified live in Claude Code 2.1.323. ([#29](https://github.com/jpantsjoha/googlecloud-plugin/pull/29))
+- A project is asked for only when a command acts on one. Documentation
+  lookups, best practices, patterns, policies, designs and reviews never need a
+  project, and project-agnostic `gcloud` commands (`help`, `config`, `auth`, …)
+  are never blocked. ([#30](https://github.com/jpantsjoha/googlecloud-plugin/pull/30))
+
+### Fixed
+
+- The `gcloud` MCP server ran with the literal project `${GCP_PROJECT_ID}`
+  when that variable was unset. It now inherits `CLOUDSDK_CORE_PROJECT` or your
+  active gcloud configuration, as `gcloud` does. ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27))
+- GenAI Toolbox failed to start on every install without a `tools.yaml`. It is
+  no longer shipped; the opt-in setup in `mcp-servers` is unchanged.
+  ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27))
+
 ## [0.4.0] — 2026-11-13
 
 **Keyless docs grounding.** The Developer Knowledge MCP server now works in
@@ -200,7 +238,8 @@ Not verified: Codex (usage limit at time of release) and Toolbox (opt-in).
 Initial release. Six persona skills, eleven service skills, MCP server setup,
 and a self-validating research pipeline.
 
-[Unreleased]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jpantsjoha/googlecloud-plugin/compare/v0.1.0...v0.2.0
