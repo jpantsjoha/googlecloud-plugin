@@ -16,6 +16,13 @@ TIMEOUT = 15
 WORKERS = 10
 URL_RE = re.compile(r"https?://[^\s\)\]\'\"><,]+")
 HEADERS = {"User-Agent": "googlecloud-plugin/0.1 link-checker"}
+# MCP endpoints speak JSON-RPC over POST and require auth, so a plain GET is
+# refused. A refusal still proves the endpoint exists; a 404 or DNS failure does not.
+MCP_REACHABLE = {401, 403, 405}
+
+
+def resolved(url: str, status: int) -> bool:
+    return status == 200 or (url.rstrip("/").endswith("/mcp") and status in MCP_REACHABLE)
 
 
 def check_url(url: str) -> tuple[str, int, str]:
@@ -68,7 +75,7 @@ def main():
         futures = {ex.submit(check_url, url): url for url in all_urls}
         for future in as_completed(futures):
             url, status, msg = future.result()
-            if status == 200:
+            if resolved(url, status):
                 print(f"OK    {url}")
             else:
                 print(f"FAIL  [{status}] {url}  — {msg}")

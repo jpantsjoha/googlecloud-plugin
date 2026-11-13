@@ -94,6 +94,35 @@ calls fail authentication; the rest of the plugin is unaffected.
 | `google-logging` | Cloud Logging query/ingest | `roles/logging.viewer` |
 | `google-monitoring` | Metrics, alerting | `roles/monitoring.viewer` |
 
+## Remote Cloud CLI MCP — opt-in
+
+Google also runs `gcloud` as a remote MCP server: `cloudcli.googleapis.com/mcp`, one tool (`run_gcloud_command`), executing each command in a Google-managed environment under your identity. Nothing starts on your machine. The shipped `gcloud` server (local `npx @google-cloud/gcloud-mcp`) stays the default; choose the remote one when you cannot run Node locally or want execution off the workstation.
+
+`gcloud-guardrails` applies unchanged: the remote tool runs whatever command string it is given, including deletes.
+
+**Prerequisites** — each is an action a named human authorises:
+
+1. Enable the Cloud CLI Execution API (`cloudcli.googleapis.com`) on a host project. That project carries the API's quota and billing; it need not be the project you operate on.
+2. Grant the caller `roles/mcp.toolUser` (permission `mcp.tools.call`) on the host project.
+3. The caller still needs ordinary roles on the target resources (for example `roles/run.viewer`); the MCP role grants no resource access.
+
+Missing either of the first two returns `403` on both tool discovery and calls.
+
+**Configuration** — Antigravity (`mcp_config.json`) or Gemini CLI (`gemini-extension.json`, using `httpUrl`), which attach ADC themselves:
+
+```json
+"gcloud-remote": {
+  "serverUrl": "https://cloudcli.googleapis.com/mcp",
+  "authProviderType": "google_credentials"
+}
+```
+
+Claude Code has no equivalent of `authProviderType`, so it cannot attach ADC to a remote server from configuration alone; keep the local `gcloud` server there.
+
+**Calling it** — `run_gcloud_command` takes `command` (the full `gcloud` line) and `project` (`projects/HOST_PROJECT`, used only for the API's quota and billing). Put `--project=TARGET_PROJECT` inside `command`; the `project` parameter does not set it. Treat `exit_code == 0` as the only success signal.
+
+Not shipped in any manifest: it needs an enabled API and an IAM grant before it works, and the plugin enables neither on your behalf.
+
 ## GenAI Toolbox (Google's MCP for Databases) — opt-in
 
 Google's MCP Toolbox for Databases enables LLM agents to query Cloud SQL, AlloyDB, Spanner, BigQuery, and more safely.
@@ -142,6 +171,7 @@ npx -y @toolbox-sdk/server --stdio --config tools.yaml
 | `403 Permission Denied` | SA missing required role | Add role per table above |
 | `MCP server not found` | Server not installed | Check install step in references/ |
 | Connection timeout | VPC firewall blocking | Verify Private Google Access + firewall |
+| `gcloud-remote` returns `403` on `tools/list` | Cloud CLI Execution API not enabled on the host project, or caller lacks `roles/mcp.toolUser` | Ask an admin to enable the API and grant the role on the host project |
 | `developer-knowledge` returns `401`/`403` | Key unset, or API not enabled on the quota project | Export `DEVELOPERKNOWLEDGE_API_KEY`; enable the Developer Knowledge API |
 
 ## References

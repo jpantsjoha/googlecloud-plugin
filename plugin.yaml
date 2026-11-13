@@ -135,6 +135,11 @@ mcp_servers:
       endpoint: https://developerknowledge.googleapis.com/mcp
       auth: API key (Claude Code, DEVELOPERKNOWLEDGE_API_KEY) or ADC (Antigravity, Gemini)
       status: declared
+    - id: gcloud-remote
+      capability: Remote gcloud execution (run_gcloud_command) in a Google-managed environment
+      endpoint: https://cloudcli.googleapis.com/mcp
+      auth: ADC (Antigravity, Gemini); requires cloudcli.googleapis.com enabled and roles/mcp.toolUser
+      status: opt-in
   community:
     - id: genai-toolbox
       capability: Database access for LLM agents (Cloud SQL, Spanner, BigQuery, AlloyDB)
