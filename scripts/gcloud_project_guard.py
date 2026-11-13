@@ -56,7 +56,14 @@ TEXT_COMMANDS = {"echo", "printf", "grep", "egrep", "fgrep", "rg", "ag", "cat", 
 # aliases that shadow built-ins) with no -c/--config-env overrides.
 GIT_MESSAGE_FLAGS = {"-m", "--message"}
 GIT_GLOBAL_VALUE_OPTS = {"-C", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
-GCLOUD_WORD = re.compile(r"(?:^|[^\w.-])gcloud(?:[^\w.-]|$)")
+# "gcloud" as a command word: standing alone, or the last part of a path. Not
+# "gcloud-mcp", "gcloud.py" or "plugin:gcloud", which are names, not the CLI.
+GCLOUD_WORD = re.compile(r"(?:^|[\s;&|(`'\"=/!{,])gcloud(?=[\s;&|)`'\"},]|$)")
+SUBSTITUTION = re.compile(r"\$\(((?:[^()]|\([^()]*\))*)\)|`([^`]*)`")
+HEREDOC = re.compile(r"<<(-?)[ \t]*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\2")
+# Commands that execute what they read on stdin.
+STDIN_EXECUTORS = {"sh", "bash", "zsh", "dash", "ksh", "python", "python3", "node", "ruby", "perl",
+                   "sudo", "env", "xargs", "eval", "exec", "ssh"}
 MAX_DEPTH = 3
 SHELL_OPERATORS = {"&&", "||", ";", "|", "&", "|&", ";;", "(", ")", "\n"}
 RESOLVE_BUDGET = 8.0  # seconds; the hook timeout is 15
@@ -128,17 +135,55 @@ def _git_commit_message_only(args: list[str]) -> bool:
     return True
 
 
+def _split_heredocs(command: str) -> tuple[str, list[tuple[str, str]]]:
+    """Remove heredoc bodies; return the command and (consumer, body) pairs."""
+    lines = command.split("\n")
+    kept, bodies, i = [], [], 0
+    while i < len(lines):
+        line = lines[i]
+        kept.append(line)
+        i += 1
+        for match in HEREDOC.finditer(line):
+            strip_tabs, delimiter = match.group(1) == "-", match.group(3)
+            body = []
+            while i < len(lines) and (lines[i].lstrip("\t") if strip_tabs else lines[i]) != delimiter:
+                body.append(lines[i])
+                i += 1
+            i += 1  # the delimiter line
+            before = re.split(r"&&|\|\||;|\|", line[:match.start()])[-1].split()
+            consumer = next((w for w in before if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w)), "")
+            bodies.append((Path(consumer).name, "\n".join(body)))
+    return "\n".join(kept), bodies
+
+
 def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
     """Argument lists (without 'gcloud') of every gcloud invocation in a shell command."""
-    if re.search(r"\$\(|`", command) and re.search(r"\bgcloud\b", command):
-        raise Unanalysable("gcloud inside a command substitution")
+    if depth > MAX_DEPTH:
+        raise Unanalysable("shell commands nested too deeply to check")
+    command, heredocs = _split_heredocs(command)
+    found: list[list[str]] = []
+    for consumer, body in heredocs:
+        # A heredoc written to a file is data; one fed to a shell or interpreter runs.
+        if consumer in STDIN_EXECUTORS and GCLOUD_WORD.search(body):
+            if consumer in SHELLS:
+                found += shell_gcloud_invocations(body, depth + 1)
+            else:
+                raise Unanalysable(f"gcloud in a heredoc run by {consumer}")
+    # Command substitutions run too: judge their contents as commands, then
+    # replace them with a placeholder so the outer command parses.
+    for match in SUBSTITUTION.finditer(command):
+        inner = match.group(1) if match.group(1) is not None else match.group(2)
+        if GCLOUD_WORD.search(inner):
+            found += shell_gcloud_invocations(inner, depth + 1)
+    command = SUBSTITUTION.sub(" __SUBST__ ", command)
+    if ("$(" in command or "`" in command) and GCLOUD_WORD.search(command):
+        raise Unanalysable("gcloud inside a command substitution that could not be parsed")
     try:
         tokens = _tokens(command)
     except ValueError as exc:
-        if re.search(r"\bgcloud\b", command):
+        if GCLOUD_WORD.search(command):
             raise Unanalysable("unparseable shell command containing gcloud") from exc
-        return []
-    found = []
+        return found
     for seg in _segments(tokens):
         seg = _strip_prefixes(seg)
         if not seg:
