@@ -950,3 +950,23 @@ def test_two_explicit_projects_share_one_deadline(monkeypatch) -> None:
     event = {"tool_name": "Bash", "cwd": "/tmp", "tool_input": {"command":
              "gcloud run services list --project=alpha-proj && gcloud run services list --project=beta-proj"}}
     assert guard.decide(event) is None and calls == [1]
+
+
+# ─── Project requirement is scoped to project-scoped commands ────────────────
+
+def test_project_requirement_never_stated_for_every_command() -> None:
+    """Docs, design and review work need no project; guidance must not demand one everywhere."""
+    offenders = []
+    for path in [*SKILLS_DIR.glob("*/SKILL.md"), ROOT / "AGENTS.md", ROOT / "GEMINI.md", ROOT / "PLUGIN.md",
+                 *(ROOT / "shared").rglob("*.md")]:
+        for lineno, line in enumerate(path.read_text().splitlines(), 1):
+            if re.search(r"--project[^|\n]{0,40}\bon every command\b", line):
+                offenders.append(f"{path.relative_to(ROOT)}:{lineno}")
+    assert not offenders, offenders
+
+
+def test_project_context_skill_says_when_not_to_ask() -> None:
+    text = (SKILLS_DIR / "gcp-project-context" / "SKILL.md").read_text()
+    fm = parse_frontmatter(SKILLS_DIR / "gcp-project-context" / "SKILL.md")
+    assert "need no project" in fm["description"]
+    assert "must not ask for a project" in text

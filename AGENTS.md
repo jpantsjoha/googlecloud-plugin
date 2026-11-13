@@ -27,7 +27,7 @@ Restate the intent in one sentence before writing code. No GCP implementation wi
 
 ## Settle the project first
 
-Before the first project-scoped command, use `gcp-project-context`: collect the project from exported variables, the repository's `.env` files and the active gcloud configuration. One ID → use it and say so. Several → ask the user which. None → stop and point them at `gcloud init`. Then pass that ID as `--project` on every command.
+Before the first project-scoped command, use `gcp-project-context`: collect the project from exported variables, the repository's `.env` files and the active gcloud configuration. One ID → use it and say so. Several → ask the user which. None → stop and point them at `gcloud init`. Then pass that ID as `--project` on every project-scoped command. Documentation, best-practice, design and review work needs no project — do not ask for one.
 
 ## Every gcloud call
 

@@ -1,6 +1,6 @@
 ---
 name: gcp-project-context
-description: "Works out which Google Cloud project a task targets before any project-scoped command runs. Reads every source — exported variables (CLOUDSDK_CORE_PROJECT, GOOGLE_CLOUD_PROJECT, GCP_PROJECT_ID, GCLOUD_PROJECT), the repository's .env and .env.local, and the active gcloud configuration — then proceeds when they agree, asks the user to pick when they disagree, and tells the user how to set one when none exists. Built for machines with several projects. Use this to decide the project; use gcloud-guardrails for how each command is then built and run. Use when the user mentions: which project, gcp project, project id, wrong project, switch project, multiple projects, gcloud init, set project, project not set."
+description: "Works out which Google Cloud project a task targets before any project-scoped command runs. Reads every source — exported variables (CLOUDSDK_CORE_PROJECT, GOOGLE_CLOUD_PROJECT, GCP_PROJECT_ID, GCLOUD_PROJECT), the repository's .env and .env.local, and the active gcloud configuration — then proceeds when they agree, asks the user to pick when they disagree, and tells the user how to set one when none exists. Built for machines with several projects. Only for commands that act on a project: documentation lookups, best practices, patterns, policies, designs and reviews need no project, so skip this skill for them. Use this to decide the project; use gcloud-guardrails for how each command is then built and run. Use when the user mentions: which project, gcp project, project id, wrong project, switch project, multiple projects, gcloud init, set project, project not set."
 license: MIT
 metadata:
   "googlecloud-plugin/version": "0.1"
@@ -10,6 +10,19 @@ metadata:
 ---
 
 # GCP Project Context
+
+## When this applies — and when it does not
+
+Only when a command will read or change resources inside a project: `gcloud` calls such as `run services list` or `sql instances create`, Terraform plans and applies, and running code that calls Google Cloud APIs.
+
+It does **not** apply to, and you must not ask for a project for:
+
+- fetching or corroborating documentation (the `developer-knowledge` server, `google-skills-catalog`);
+- best practices, patterns, approaches, guidelines and policies; validating assumptions;
+- designs, ADRs, Well-Architected and security reviews of a plan;
+- `gcloud` commands that act on no project: `help` and `--help`, `config`, `auth`, `components`, `info`, `version`, `topic`, `projects list`.
+
+Most work with this plugin is in the second group. Reach for this skill at the first project-scoped command, not at the start of the conversation.
 
 Running a command against the wrong project is the cheapest mistake to make and one of the most expensive to clean up. Settle the project once per session, before the first project-scoped command, and carry the answer into every command as `--project=PROJECT_ID` (see `gcloud-guardrails`).
 
@@ -36,7 +49,7 @@ Discard a value that is not a project ID: 6–30 characters of lowercase letters
 
 With `CLOUDSDK_CORE_PROJECT` exported, `gcloud config get-value project` echoes the variable and hides what the configuration stores. Read the stored value with the variable removed: `env -u CLOUDSDK_CORE_PROJECT gcloud config get-value project`.
 
-The discovery commands above are the one exception to `--project` on every command: they run before a project is chosen, and none of them is project-scoped.
+These discovery commands, like every other command that acts on no project, need no `--project`.
 
 ## Step 2 — Decide
 
@@ -52,7 +65,7 @@ Once chosen, the project holds for the session. If the user names a different pr
 
 Every project-scoped invocation names the chosen project itself; ambient configuration never decides.
 
-- **gcloud** — `--project=PROJECT_ID` on every command, even when the active configuration matches. The plugin's `gcloud` MCP server inherits `CLOUDSDK_CORE_PROJECT` or the active configuration, which may differ from the choice.
+- **gcloud** — `--project=PROJECT_ID` on every project-scoped command, even when the active configuration matches. The plugin's `gcloud` MCP server inherits `CLOUDSDK_CORE_PROJECT` or the active configuration, which may differ from the choice.
 - **Terraform** — pass it (`-var="project_id=PROJECT_ID"`, or the variable the configuration defines) or confirm the provider block pins the same ID.
 - **Client libraries and the application** — set the variable they read on the command itself (`GOOGLE_CLOUD_PROJECT=PROJECT_ID python app.py`).
 - **Anything that cannot be pointed at a project explicitly** — stop, show the user which project it would use, and run it only once that matches the choice.
