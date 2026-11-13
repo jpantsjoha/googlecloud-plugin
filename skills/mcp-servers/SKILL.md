@@ -212,7 +212,7 @@ npx -y @toolbox-sdk/server --stdio --config tools.yaml
 | `MCP server not found` | Server not installed | Check install step in references/ |
 | Connection timeout | VPC firewall blocking | Verify Private Google Access + firewall |
 | `gcloud-remote` returns `403` on `tools/list` | Cloud CLI Execution API not enabled on the host project, or caller lacks `roles/mcp.toolUser` | Ask an admin to enable the API and grant the role on the host project |
-| `gcloud` server `failed` straight after installing or updating the plugin (Claude Code) | First connection after install/update failed (cause unknown; not `npx` download time — cold start measured at 2.8 s); Claude Code caches the failure for 15 minutes | Wait 15 minutes or reconnect from `/mcp`; use `gcloud` in the shell meanwhile |
+| `gcloud` server `failed` straight after installing or updating the plugin (Claude Code) | First connection after install/update failed (cause unknown; a separate cold `npx` start measured 2.8 s, inside the 30 s limit); Claude Code caches the failure for 15 minutes | Wait 15 minutes or reconnect from `/mcp`; use `gcloud` in the shell meanwhile |
 | `developer-knowledge` returns `API key not valid` | A user-configured server with an unset key variable is shadowing the plugin's | Remove that server (`claude mcp remove YOUR_SERVER_NAME`) to use the plugin's, or set its variable |
 | `developer-knowledge` returns `403` with ADC | No quota project, or the Developer Knowledge API is not enabled on it | `gcloud auth application-default set-quota-project PROJECT_ID`; ask an admin to enable the API |
 

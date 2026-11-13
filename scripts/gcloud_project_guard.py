@@ -58,9 +58,15 @@ GIT_MESSAGE_FLAGS = {"-m", "--message"}
 GIT_GLOBAL_VALUE_OPTS = {"-C", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
 # "gcloud" as a command word: standing alone, or the last part of a path. Not
 # "gcloud-mcp", "gcloud.py" or "plugin:gcloud", which are names, not the CLI.
-GCLOUD_WORD = re.compile(r"(?:^|[\s;&|(`'\"=/!{,])gcloud(?=[\s;&|)`'\"},]|$)")
+GCLOUD_WORD = re.compile(r"(?:^|[\s;&|(`'\"=/!{,])gcloud(?=[\s;&|)`'\"},$]|$)")
+# Inside interpreter code (python -c, ruby -e, …): the CLI used as a command
+# ("gcloud run …", any delimiter before it) or as a quoted list element.
+CODE_GCLOUD = re.compile(r"gcloud\s+[a-z]|['\"]gcloud['\"]\s*[,\])]")
+ANY_GCLOUD = re.compile(r"gcloud", re.I)
 SUBSTITUTION = re.compile(r"\$\(((?:[^()]|\([^()]*\))*)\)|`([^`]*)`")
-HEREDOC = re.compile(r"<<(-?)[ \t]*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\2")
+HEREDOC = re.compile(r"<<(-?)[ \t]*((?:'[^'\n]*'|\"[^\"\n]*\"|[^\s;&|<>()'\"])+)")
+# Commands that only write or show what they read: a heredoc fed to them is data.
+DATA_SINKS = {"cat", "tee", "less", "more", "head", "tail", "wc", "sort", "uniq", "tr", "cut", "grep", "jq", "yq"}
 # Commands that execute what they read on stdin.
 STDIN_EXECUTORS = {"sh", "bash", "zsh", "dash", "ksh", "python", "python3", "node", "ruby", "perl",
                    "sudo", "env", "xargs", "eval", "exec", "ssh"}
@@ -135,47 +141,94 @@ def _git_commit_message_only(args: list[str]) -> bool:
     return True
 
 
-def _split_heredocs(command: str) -> tuple[str, list[tuple[str, str]]]:
-    """Remove heredoc bodies; return the command and (consumer, body) pairs."""
+def _outside_quotes(line: str, pos: int) -> bool:
+    single = double = False
+    i = 0
+    while i < pos:
+        c = line[i]
+        if c == "\\" and not single:
+            i += 2
+            continue
+        if c == "'" and not double:
+            single = not single
+        elif c == '"' and not single:
+            double = not double
+        i += 1
+    return not (single or double)
+
+
+def _split_heredocs(command: str) -> tuple[str, list[dict]]:
+    """Remove heredoc bodies; return the command and one record per heredoc.
+
+    A body is data only when its delimiter is quoted (no expansion) and nothing
+    else on the opening line can execute it; anything uncertain is kept or
+    flagged rather than silently discarded.
+    """
     lines = command.split("\n")
-    kept, bodies, i = [], [], 0
+    kept, records, i = [], [], 0
     while i < len(lines):
         line = lines[i]
         kept.append(line)
         i += 1
         for match in HEREDOC.finditer(line):
-            strip_tabs, delimiter = match.group(1) == "-", match.group(3)
-            body = []
-            while i < len(lines) and (lines[i].lstrip("\t") if strip_tabs else lines[i]) != delimiter:
-                body.append(lines[i])
-                i += 1
-            i += 1  # the delimiter line
-            before = re.split(r"&&|\|\||;|\|", line[:match.start()])[-1].split()
-            consumer = next((w for w in before if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w)), "")
-            bodies.append((Path(consumer).name, "\n".join(body)))
-    return "\n".join(kept), bodies
+            if line[match.start() - 1:match.start()] == "<" or not _outside_quotes(line, match.start()):
+                continue  # a here-string (<<<) or text inside quotes
+            word = match.group(2)
+            delimiter = word.replace("'", "").replace('"', "")
+            strip_tabs = match.group(1) == "-"
+            j, body = i, []
+            while j < len(lines) and (lines[j].lstrip("\t") if strip_tabs else lines[j]) != delimiter:
+                body.append(lines[j])
+                j += 1
+            if j >= len(lines):
+                records.append({"unterminated": True, "body": "\n".join(lines[i:])})
+                continue  # keep the remaining lines in the command
+            i = j + 1
+            words = [Path(w).name for w in re.findall(r"[^\s;&|()<>]+", line)]
+            first = next((w for w in words if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w)
+                          and w not in SHELL_KEYWORDS and w not in WRAPPERS), "")
+            executes = any(w in STDIN_EXECUTORS or w in SHELLS for w in words)
+            records.append({"unterminated": False, "body": "\n".join(body),
+                            "quoted": "'" in word or '"' in word,
+                            "data": first in DATA_SINKS and not executes,
+                            "shell": next((w for w in words if w in SHELLS), None)})
+    return "\n".join(kept), records
 
 
 def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
     """Argument lists (without 'gcloud') of every gcloud invocation in a shell command."""
     if depth > MAX_DEPTH:
         raise Unanalysable("shell commands nested too deeply to check")
+    command = re.sub(r"\$\{IFS\}|\$IFS\b", " ", command)  # the shell splits these into words
     command, heredocs = _split_heredocs(command)
     found: list[list[str]] = []
-    for consumer, body in heredocs:
-        # A heredoc written to a file is data; one fed to a shell or interpreter runs.
-        if consumer in STDIN_EXECUTORS and GCLOUD_WORD.search(body):
-            if consumer in SHELLS:
-                found += shell_gcloud_invocations(body, depth + 1)
-            else:
-                raise Unanalysable(f"gcloud in a heredoc run by {consumer}")
+    for doc in heredocs:
+        body = doc["body"]
+        if doc["unterminated"]:
+            if ANY_GCLOUD.search(body):
+                raise Unanalysable("gcloud after a heredoc whose end could not be found")
+            continue
+        if doc["data"]:
+            if not doc["quoted"]:  # unquoted: $(...) in the body runs while the shell builds stdin
+                for match in SUBSTITUTION.finditer(body):
+                    inner = match.group(1) if match.group(1) is not None else match.group(2)
+                    if ANY_GCLOUD.search(inner):
+                        found += shell_gcloud_invocations(inner, depth + 1)
+            continue
+        if not ANY_GCLOUD.search(body):
+            continue
+        if doc["shell"] and doc["quoted"]:
+            found += shell_gcloud_invocations(body, depth + 1)
+        else:
+            raise Unanalysable("gcloud in a heredoc that may be executed")
     # Command substitutions run too: judge their contents as commands, then
     # replace them with a placeholder so the outer command parses.
     for match in SUBSTITUTION.finditer(command):
         inner = match.group(1) if match.group(1) is not None else match.group(2)
         if GCLOUD_WORD.search(inner):
             found += shell_gcloud_invocations(inner, depth + 1)
-    command = SUBSTITUTION.sub(" __SUBST__ ", command)
+    has_any = bool(ANY_GCLOUD.search(command))
+    command = SUBSTITUTION.sub("__SUBST__", command)
     if ("$(" in command or "`" in command) and GCLOUD_WORD.search(command):
         raise Unanalysable("gcloud inside a command substitution that could not be parsed")
     try:
@@ -189,6 +242,8 @@ def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
         if not seg:
             continue
         exe = Path(seg[0]).name
+        if has_any and (exe.startswith("$") or "__SUBST__" in seg[0]):
+            raise Unanalysable("a command name built at run time, with gcloud in the line")
         script_idx = next((i for i, a in enumerate(seg[1:], 1)
                            if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", a)), None) if exe in SHELLS else None
         if script_idx is not None:
@@ -196,13 +251,16 @@ def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
                 continue
             if depth >= MAX_DEPTH:
                 raise Unanalysable("shell commands nested too deeply to check")
+            if has_any and "__SUBST__" in seg[script_idx + 1]:
+                raise Unanalysable("a shell script built from command output, with gcloud in the line")
             found += shell_gcloud_invocations(seg[script_idx + 1], depth + 1)
         elif exe == "gcloud":
             found.append(seg[1:])
         elif exe == "git":
             if any(GCLOUD_WORD.search(a) for a in seg[1:]) and not _git_commit_message_only(seg[1:]):
                 raise Unanalysable("gcloud in a git argument outside a commit message")
-        elif exe not in TEXT_COMMANDS and any(GCLOUD_WORD.search(a) for a in seg[1:]):
+        elif exe not in TEXT_COMMANDS and any(GCLOUD_WORD.search(a) or CODE_GCLOUD.search(a)
+                                                for a in seg[1:]):
             raise Unanalysable(f"gcloud run through {exe}")
     return found
 

@@ -1003,6 +1003,23 @@ def test_project_context_skill_says_when_not_to_ask() -> None:
     ("echo $(gcloud run services list --project=alpha-proj)", False),
     ("X=`gcloud compute instances list`", True),
     ("echo $(echo $(gcloud run services list))", True),
+    # Heredocs that execute, however the shell is reached.
+    ("command bash <<'EOF'\ngcloud run services list\nEOF", True),
+    ("if true; then bash <<'EOF'\ngcloud run services list\nEOF\nfi", True),
+    ("true & bash <<'EOF'\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | bash\ngcloud run services list\nEOF", True),
+    ("cat <<EOF\n$(gcloud run services list)\nEOF", True),
+    ("cat <<EOF.txt\nhello\nEOF.txt\ngcloud run services list", True),
+    ("echo '<<EOF'\ngcloud run services list", True),
+    # Command names or scripts built at run time.
+    ("bash -c \"$(printf 'gcloud run services list')\"", True),
+    ("G=$(printf gcloud); $G run services list", True),
+    # Interpreter code and shell expansions.
+    ("ruby -e '%x:gcloud run services list:'", True),
+    ("echo $(gcloud${IFS}run${IFS}services${IFS}list)", True),
+    # Data heredocs with unusual delimiters stay data.
+    ("cat <<'EOF.txt'\ngcloud notes\nEOF.txt", False),
+    ("cat <<'END-1' > x.md\ngcloud run services list\nEND-1", False),
 ])
 def test_guard_false_positives_and_real_cases(command, blocked) -> None:
     assert _blocked("Bash", {"command": command}) is blocked
