@@ -184,10 +184,17 @@ def _line_commands(line: str) -> list[str]:
         return ["sh"]  # unparseable: assume it may execute
     names = []
     for seg in _segments(tokens):
-        seg = _strip_prefixes(seg)
-        # Skip redirection operators and their targets ("> file").
-        while seg and re.fullmatch(r"\d*[<>]+&?", seg[0]):
-            seg = seg[2:]
+        # Strip prefixes and leading redirections ("2>/dev/null", "> file",
+        # "2 >") alternately until a command name is left.
+        while True:
+            before = list(seg)
+            seg = _strip_prefixes(seg)
+            if seg and seg[0].isdigit() and len(seg) > 1 and re.fullmatch(r"[<>]+&?", seg[1]):
+                seg = seg[1:]  # file descriptor split from its operator
+            if seg and re.fullmatch(r"\d*[<>]+&?\d*", seg[0]):
+                seg = seg[2:] if re.fullmatch(r"\d*[<>]+&?", seg[0]) else seg[1:]
+            if seg == before:
+                break
         if seg:
             names.append(_command_name(seg[0]))
     return names

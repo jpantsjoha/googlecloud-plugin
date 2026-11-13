@@ -1028,6 +1028,9 @@ def test_project_context_skill_says_when_not_to_ask() -> None:
     ("echo gcloud-mcp; \"$PYTHON\" --version", False),
     ("bash -c 'echo \"$(pwd)/gcloud-mcp\"'", False),
     ("python3 -c \"print('plugin:gcloud docs')\"", False),
+    ("cat <<'EOF' | 2>/dev/null bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' | >/dev/null command bash\ngcloud run services list\nEOF", True),
+    ("cat <<'EOF' 2>/dev/null > notes.md\ngcloud run services list\nEOF", False),
 ])
 def test_guard_false_positives_and_real_cases(command, blocked) -> None:
     assert _blocked("Bash", {"command": command}) is blocked
