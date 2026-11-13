@@ -28,6 +28,15 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
 - `NOTICE` for the adapted Apache-2.0 text; ADR-008 (Proposed) records the
   decision. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
+- `.codex-plugin/plugin.json` — Codex listing metadata (display name,
+  descriptions, category, capabilities, starter prompts), validated by the
+  packaging gate. ([#17](https://github.com/jpantsjoha/googlecloud-plugin/issues/17),
+  [#20](https://github.com/jpantsjoha/googlecloud-plugin/pull/20))
+- Opt-in remote Cloud CLI MCP (`cloudcli.googleapis.com/mcp`) documented in
+  `mcp-servers` for Antigravity and Gemini CLI, with its API, `roles/mcp.toolUser`
+  and resource-role prerequisites. Not shipped in any manifest.
+  ([#15](https://github.com/jpantsjoha/googlecloud-plugin/issues/15),
+  [#21](https://github.com/jpantsjoha/googlecloud-plugin/pull/21))
 - `CONTRIBUTING.md` — the gate, the skill contract, and why each rule exists.
 - `SECURITY.md` — private reporting, and what counts as a vulnerability in a
   plugin that ships instructions rather than a running service.
@@ -44,6 +53,19 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `AGENTS.md` and `GEMINI.md` route every `gcloud` call through
   `gcloud-guardrails` and send product-depth questions to
   `google-skills-catalog`. ([#14](https://github.com/jpantsjoha/googlecloud-plugin/pull/14))
+- Auth guidance is keyless by default: ADC, service-account impersonation,
+  attached service accounts / Workload Identity, and Workload Identity
+  Federation (with its trust and `roles/iam.workloadIdentityUser`
+  prerequisites). Service-account keys become a documented exception a named
+  human creates; `sign-url` examples sign by impersonation. A test fails on any
+  key-file recipe. ([#16](https://github.com/jpantsjoha/googlecloud-plugin/issues/16),
+  [#19](https://github.com/jpantsjoha/googlecloud-plugin/pull/19))
+- The packaging gate rejects harness skills paths that are absolute, escape the
+  repository (`../`) or point at its root, and validates empty or `null`
+  manifests instead of skipping them. ([#20](https://github.com/jpantsjoha/googlecloud-plugin/pull/20))
+- The link checker accepts a refusal (401/403/405) only from an explicit list of
+  reviewed MCP endpoints, and labels them as not auth-verified.
+  ([#21](https://github.com/jpantsjoha/googlecloud-plugin/pull/21))
 
 ## [0.2.0] — 2026-08-07
 
