@@ -87,7 +87,7 @@ The quota project needs the Developer Knowledge API enabled (an administrator ta
 - **several** — it asks you to pick, and runs no project-scoped command until you do;
 - **none** — it tells you to run `gcloud init`.
 
-In Claude Code a hook enforces this for the `gcloud` MCP tool and shell commands (it needs `python3`): a project-scoped call without `--project` is stopped and the agent is told what the sources say. Other clients rely on the skill's instructions. Check your own setup with `python3 scripts/preflight.py` (exit 0 ready, 3 sources disagree, 2 project or credentials missing).
+In Claude Code a hook enforces this for the `gcloud` MCP tool and shell commands: a project-scoped call without `--project` is stopped and the agent is told what the sources say. It needs `python3`; without it, or on input it cannot read, the call goes ahead. Other clients rely on the skill's instructions. Check your own setup with `python3 scripts/preflight.py` (exit 0 ready, 3 sources disagree, 2 project or credentials missing).
 
 **4. Consequential commands wait for you.** `gcloud-guardrails` instructs the agent to show anything that creates, changes, deletes or bills, with its effect, and wait for your yes; IAM changes, deletes, billing, KMS and organization changes are never to run unattended. This is instruction, not a hook; your client's own permission prompts still apply.
 
@@ -197,7 +197,7 @@ The rule underneath every gate: **infer intent, never infer permission.** An AI 
 | :--- | :--- | :--- |
 | `gcloud` (local, `@google-cloud/gcloud-mcp`) | shipped | Inherits your project the way `gcloud` does. |
 | `developer-knowledge` (Google, remote) | shipped (Claude Code, Antigravity, Gemini CLI) | Official Google Cloud, Firebase, Android and Gemini docs. Claude Code authenticates from your gcloud login; Antigravity and Gemini CLI use their own Google sign-in. Codex and Kimi: add it to your own MCP config (see `mcp-servers`). |
-| Project guard hook (Claude Code) | shipped | Stops project-scoped `gcloud` calls (MCP tool and shell) without `--project`; asks on conflict. Needs `python3`. |
+| Project guard hook (Claude Code) | shipped | Stops project-scoped `gcloud` calls (MCP tool and shell) without `--project`; asks on conflict. Needs `python3` and lets the call through without it. Checks the project only, not the location. |
 | GenAI Toolbox, remote Cloud CLI MCP | opt-in | Need a `tools.yaml`, or an enabled API and IAM grant; setup in `mcp-servers`. |
 
 ---
@@ -212,7 +212,7 @@ Google announced [`google-cloud-developer`](https://cloud.google.com/blog/topics
 | **Skills** | 5 (`gcloud`, auth and onboarding recipes, docs retrieval, catalog finder) | 20: six personas, eleven service skills, three safety-and-depth skills |
 | **Product depth** | Fetches Google's catalog on demand | Its own service skills, plus the same catalog on demand |
 | **`gcloud` safety** | Leaf `gcloud help`, dry run, trimmed output, denylist | Same rules, adapted; plus approval asked for every consequential command |
-| **Project selection** | Explicit `--project` and location required | Same rule; plus reconciling env, `.env` and gcloud config, asking on conflict, and a hook that enforces it in Claude Code |
+| **Project selection** | Explicit `--project` and location required | Same rule; plus reconciling env, `.env` and gcloud config, asking on conflict, and a Claude Code hook that enforces explicit project selection (not location) |
 | **Docs MCP auth** | Google sign-in in Antigravity and Gemini CLI; API key in Claude Code | Google sign-in in Claude Code, Antigravity and Gemini CLI — no key |
 | **Clients** | Antigravity Marketplace listing; manifests for Antigravity, Claude, Codex, Gemini | Manifests for Claude Code, Antigravity, Codex, Kimi, Gemini CLI |
 | **Packaging** | Agent Plugins manifest with extra display fields | Agent Plugins 1.0.0 conformant; validated in CI |
