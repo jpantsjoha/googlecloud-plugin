@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-11-13 (release v0.4.0). What is happening now and what waits on whom. One entry per working session; pruned, not grown.
+Last updated: 2026-11-13 (release v0.5.0). What is happening now and what waits on whom. One entry per working session; pruned, not grown.
 
 ## 2026-11-13 — Google `google-cloud-developer` borrow, follow-ups landed
 
@@ -20,6 +20,7 @@ Gate on `a4180b4`: 273 tests pass, 19/19 skills conform, 4 harness manifests agr
 
 ## Released
 
+- `v0.5.0` ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27)): project resolution from env, `.env` and gcloud config with a prompt on conflict; `gcloud` MCP no longer receives a literal `${GCP_PROJECT_ID}`; GenAI Toolbox no longer shipped.
 - `v0.4.0` ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)): Developer Knowledge works in Claude Code from gcloud ADC with no API key — verified live; square logo for Codex and Kimi.
 - `v0.3.0` ([#23](https://github.com/jpantsjoha/googlecloud-plugin/issues/23)): the work in the table above; ADR-008 accepted as the operator's decision (JP, 2026-11-13).
 
@@ -27,8 +28,9 @@ Gate on `a4180b4`: 273 tests pass, 19/19 skills conform, 4 harness manifests agr
 
 | # | Decision | Recommendation | Unblocks | Cost if wrong | Reversibility |
 |---|---|---|---|---|---|
-| 1 | Your own Claude Code Developer Knowledge server ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)) | Remove it — `claude mcp remove google-developer-knowledge` — so the plugin's keyless server takes over; it currently reads the unset `GOOGLE_DEVELOPER_KNOWLEDGE_API_KEY` and every call fails with `API key not valid` | Working docs grounding in your sessions | Losing a server you re-add in one command | cheap |
-| 2 | Listing re-index ([docs/SUBMISSIONS.md](docs/SUBMISSIONS.md)) | Resubmit the repo to Claude Plugin Hub so the listing shows `v0.4.0` | Directory visitors see the new skills | None | cheap |
+| 1 | README usage section | Add a short usage/examples section — the one gap Claude Plugin Hub's score names | Documentation score 75 → higher on the Hub listing | None | cheap |
+
+Claude Plugin Hub listing last re-synced at `v0.4.0` (2026-11-13).
 
 ## Not done, and why
 
