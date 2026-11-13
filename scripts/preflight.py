@@ -35,35 +35,68 @@ PROJECT_ENV_VARS = ["CLOUDSDK_CORE_PROJECT", "GOOGLE_CLOUD_PROJECT", "GCP_PROJEC
 DOTENV_FILES = [".env", ".env.local"]
 ADC_DEFAULT = Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
 # A valid project ID: 6-30 chars, lowercase letters, digits, hyphens, starting
-# with a letter. Anything else (an unexpanded "${VAR}", "(unset)", a typo) is
-# reported as invalid instead of being treated as a candidate.
-PROJECT_ID = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
-DOTENV_LINE = re.compile(r"^\s*(?:export\s+)?([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$")
+# with a letter, optionally prefixed by a legacy domain scope
+# ("example.com:my-project"). Anything else (an unexpanded "${VAR}",
+# "(unset)", a typo) is reported as invalid instead of being a candidate.
+PROJECT_ID = re.compile(r"^(?:[a-z0-9-]+(?:\.[a-z0-9-]+)+:)?[a-z][a-z0-9-]{4,28}[a-z0-9]$")
+DOTENV_KEY = re.compile(r"\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
 
 
-def _run(cmd: list[str]) -> str | None:
+def _run(cmd: list[str], env: dict[str, str] | None = None) -> str | None:
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=10, env=env)
         val = out.stdout.strip()
         return val or None
     except (subprocess.SubprocessError, FileNotFoundError, OSError):
         return None
 
 
+def parse_dotenv_projects(text: str) -> list[tuple[str, str]]:
+    """Return (key, value) for project keys only, parsing quotes like a dotenv loader.
+
+    Values of every other key are scanned past, never kept, so a multi-line
+    quoted secret cannot be mistaken for an assignment. A malformed project
+    value (unclosed quote) is returned as-is so it is reported invalid rather
+    than silently repaired.
+    """
+    found: list[tuple[str, str]] = []
+    pos, n = 0, len(text)
+    while pos < n:
+        eol = text.find("\n", pos)
+        eol = n if eol == -1 else eol
+        line = text[pos:eol]
+        match = DOTENV_KEY.match(line)
+        if not match or line.lstrip().startswith("#"):
+            pos = eol + 1
+            continue
+        key = match.group(1)
+        start = pos + match.end()
+        while start < n and text[start] in " \t":
+            start += 1
+        quote = text[start] if start < n and text[start] in "'\"" else None
+        if quote:
+            close = text.find(quote, start + 1)
+            if close == -1:  # unclosed: the rest of the file is this value
+                value, pos = text[start:].rstrip("\r\n"), n
+            else:
+                value = text[start + 1:close]
+                nxt = text.find("\n", close)
+                pos = n if nxt == -1 else nxt + 1
+        else:
+            raw = text[start:eol].rstrip("\r")
+            comment = re.search(r"[ \t]#", raw)
+            value = (raw[:comment.start()] if comment else raw).strip()
+            pos = eol + 1
+        if key in PROJECT_ENV_VARS:
+            found.append((key, value))
+    return found
+
+
 def _dotenv_projects(path: Path) -> list[tuple[str, str]]:
-    """Return (key, value) for project keys in one dotenv file; other keys are skipped unread."""
     try:
-        lines = path.read_text(errors="replace").splitlines()
+        return parse_dotenv_projects(path.read_text(errors="replace"))
     except OSError:
         return []
-    found = []
-    for line in lines:
-        match = DOTENV_LINE.match(line)
-        if not match or match.group(1) not in PROJECT_ENV_VARS:
-            continue
-        value = match.group(2).split(" #", 1)[0].strip().strip("'\"")
-        found.append((match.group(1), value))
-    return found
 
 
 def collect_project_candidates(project_dir: Path, env: dict[str, str] | None = None) -> list[dict]:
@@ -78,15 +111,16 @@ def collect_project_candidates(project_dir: Path, env: dict[str, str] | None = N
             if value:
                 candidates.append({"source": f"{name}:{key}", "value": value})
     if shutil.which("gcloud"):
+        # With CLOUDSDK_CORE_PROJECT exported, `config get-value` echoes it and
+        # hides what the configuration stores. Ask without the override so the
+        # stored project is reported as its own source.
+        stored_env = {k: v for k, v in os.environ.items() if k != "CLOUDSDK_CORE_PROJECT"}
         configuration = _run(["gcloud", "config", "configurations", "list",
-                              "--filter=is_active=true", "--format=value(name)"])
-        proj = _run(["gcloud", "config", "get-value", "project"])
+                              "--filter=is_active=true", "--format=value(name)"], env=stored_env)
+        proj = _run(["gcloud", "config", "get-value", "project"], env=stored_env)
         if proj and proj != "(unset)":
             label = f"gcloud config ({configuration})" if configuration else "gcloud config"
-            # With CLOUDSDK_CORE_PROJECT set, get-value echoes it; only count the
-            # configuration when it is a distinct source.
-            if proj != env.get("CLOUDSDK_CORE_PROJECT"):
-                candidates.append({"source": label, "value": proj})
+            candidates.append({"source": label, "value": proj})
     for c in candidates:
         c["valid"] = bool(PROJECT_ID.match(c["value"]))
     return candidates
@@ -96,8 +130,9 @@ def resolve_project(candidates: list[dict]) -> dict:
     """resolved: one distinct valid value. conflict: several. missing: none."""
     valid = [c for c in candidates if c["valid"]]
     distinct = list(dict.fromkeys(c["value"] for c in valid))
-    gcloud_uses = next((c["value"] for c in valid
-                        if c["source"] == "env:CLOUDSDK_CORE_PROJECT" or c["source"].startswith("gcloud config")), None)
+    # gcloud's own order: an exported CLOUDSDK_CORE_PROJECT, else the configuration.
+    gcloud_uses = next((c["value"] for c in valid if c["source"] == "env:CLOUDSDK_CORE_PROJECT"),
+                       next((c["value"] for c in valid if c["source"].startswith("gcloud config")), None))
     if not distinct:
         status = "missing"
     elif len(distinct) == 1:

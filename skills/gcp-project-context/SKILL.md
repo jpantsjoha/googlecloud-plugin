@@ -28,7 +28,11 @@ Never print, copy or summarise any other line of a `.env` file: it usually holds
 
 In this plugin's repository, `python3 scripts/preflight.py --json` collects the same sources, validates each ID and returns `resolved`, `conflict` or `missing`.
 
-Discard a value that is not a project ID (6–30 characters: lowercase letters, digits and hyphens, starting with a letter). An unexpanded `${GCP_PROJECT_ID}` or `(unset)` is a configuration fault to report, not a project.
+Discard a value that is not a project ID: 6–30 characters of lowercase letters, digits and hyphens, starting with a letter, optionally with a legacy domain prefix (`example.com:my-project`). An unexpanded `${GCP_PROJECT_ID}` or `(unset)` is a configuration fault to report, not a project.
+
+With `CLOUDSDK_CORE_PROJECT` exported, `gcloud config get-value project` echoes the variable and hides what the configuration stores. Read the stored value with the variable removed: `env -u CLOUDSDK_CORE_PROJECT gcloud config get-value project`.
+
+The discovery commands above are the one exception to `--project` on every command: they run before a project is chosen, and none of them is project-scoped.
 
 ## Step 2 — Decide
 
@@ -40,10 +44,16 @@ Discard a value that is not a project ID (6–30 characters: lowercase letters, 
 
 Once chosen, the project holds for the session. If the user names a different project later, repeat Step 2 for that request.
 
-## Step 3 — Use the choice everywhere
+## Step 3 — Target the choice explicitly, every time
 
-- Pass `--project=PROJECT_ID` on every `gcloud` command, even when the active configuration already matches. The plugin's `gcloud` MCP server inherits `CLOUDSDK_CORE_PROJECT` or the active configuration, which may differ from the user's choice.
-- For tools that read environment variables (client libraries, Terraform), state which variable they will read and whether it matches.
+Every project-scoped invocation names the chosen project itself; ambient configuration never decides.
+
+- **gcloud** — `--project=PROJECT_ID` on every command, even when the active configuration matches. The plugin's `gcloud` MCP server inherits `CLOUDSDK_CORE_PROJECT` or the active configuration, which may differ from the choice.
+- **Terraform** — pass it (`-var="project_id=PROJECT_ID"`, or the variable the configuration defines) or confirm the provider block pins the same ID.
+- **Client libraries and the application** — set the variable they read on the command itself (`GOOGLE_CLOUD_PROJECT=PROJECT_ID python app.py`).
+- **Anything that cannot be pointed at a project explicitly** — stop, show the user which project it would use, and run it only once that matches the choice.
+
+This sits beneath, not instead of, `gcloud-guardrails`: consequential commands still need a named human's authorisation.
 
 ## Step 4 — Help the user make it stick
 
