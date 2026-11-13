@@ -786,6 +786,9 @@ def _blocked(tool, tool_input) -> bool:
     ("Bash", {"command": "git commit -m 'docs: gcloud run services list example'"}, False),
     ("Bash", {"command": "git commit --message='docs: gcloud example'"}, False),
     ("Bash", {"command": "git -c 'alias.probe=!gcloud run services list' probe"}, True),
+    ("Bash", {"command": "git -c 'alias.x=!f() { eval \"$2\"; }; f' x -m 'gcloud run services list'"}, True),
+    ("Bash", {"command": "git x -m 'gcloud run services list'"}, True),
+    ("Bash", {"command": "git -C repo commit -m 'gcloud notes'"}, False),
     ("Bash", {"command": "gcloud help run deploy"}, False),
     ("Read", {"file_path": "/tmp/x"}, False),
 ])

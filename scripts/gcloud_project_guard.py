@@ -51,8 +51,11 @@ SHELL_KEYWORDS = {"then", "do", "else", "elif", "if", "while", "until", "{", "}"
 TEXT_COMMANDS = {"echo", "printf", "grep", "egrep", "fgrep", "rg", "ag", "cat", "less", "more", "head", "tail",
                  "man", "which", "type", "whereis", "ls", "wc", "sort", "uniq", "diff", "cut", "tr",
                  "jq", "yq"}
-# git can run shell aliases (-c alias.x='!cmd'); "gcloud" is data only inside a commit message.
+# git can run shell aliases (-c alias.x='!cmd'), which may execute any argument.
+# "gcloud" is data only as the message of the built-in `git commit` (git ignores
+# aliases that shadow built-ins) with no -c/--config-env overrides.
 GIT_MESSAGE_FLAGS = {"-m", "--message"}
+GIT_GLOBAL_VALUE_OPTS = {"-C", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
 GCLOUD_WORD = re.compile(r"(?:^|[^\w.-])gcloud(?:[^\w.-]|$)")
 MAX_DEPTH = 3
 SHELL_OPERATORS = {"&&", "||", ";", "|", "&", "|&", ";;", "(", ")", "\n"}
@@ -108,6 +111,23 @@ def _strip_prefixes(seg: list[str]) -> list[str]:
     return seg
 
 
+def _git_commit_message_only(args: list[str]) -> bool:
+    """True when this is `git commit` without config overrides and gcloud appears only in -m/--message values."""
+    i = 0
+    while i < len(args) and args[i].startswith("-"):
+        if args[i] in ("-c", "--config-env") or args[i].startswith(("-c", "--config-env=")):
+            return False
+        i += 2 if args[i] in GIT_GLOBAL_VALUE_OPTS else 1
+    if i >= len(args) or args[i] != "commit":
+        return False
+    rest = args[i + 1:]
+    for j, a in enumerate(rest):
+        in_message = (j > 0 and rest[j - 1] in GIT_MESSAGE_FLAGS) or a.startswith(("-m", "--message="))
+        if GCLOUD_WORD.search(a) and not in_message:
+            return False
+    return True
+
+
 def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
     """Argument lists (without 'gcloud') of every gcloud invocation in a shell command."""
     if re.search(r"\$\(|`", command) and re.search(r"\bgcloud\b", command):
@@ -135,10 +155,8 @@ def shell_gcloud_invocations(command: str, depth: int = 0) -> list[list[str]]:
         elif exe == "gcloud":
             found.append(seg[1:])
         elif exe == "git":
-            for i, a in enumerate(seg[1:], 1):
-                in_message = seg[i - 1] in GIT_MESSAGE_FLAGS or a.startswith(("-m", "--message="))
-                if GCLOUD_WORD.search(a) and not in_message:
-                    raise Unanalysable("gcloud in a git argument outside a commit message")
+            if any(GCLOUD_WORD.search(a) for a in seg[1:]) and not _git_commit_message_only(seg[1:]):
+                raise Unanalysable("gcloud in a git argument outside a commit message")
         elif exe not in TEXT_COMMANDS and any(GCLOUD_WORD.search(a) for a in seg[1:]):
             raise Unanalysable(f"gcloud run through {exe}")
     return found
