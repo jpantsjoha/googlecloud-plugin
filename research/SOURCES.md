@@ -682,3 +682,10 @@ Every source URL is stored with retrieval date and content hash for audit.
 - **Retrieved**: 2026-11-12T16:17:11.197301+00:00
 - **Hash**: 75b3e071e0b523c5d24cd472ac4de7dddf4f12f1d7f034eb7971e2b51800190d
 - **Status**: OK
+
+## mcp-servers
+### Cloud CLI remote MCP endpoint
+- **URL**: https://cloudcli.googleapis.com/mcp
+- **Retrieved**: 2026-11-13T00:29:10+00:00
+- **Hash**: n/a (JSON-RPC endpoint; GET returns 405)
+- **Status**: ENDPOINT

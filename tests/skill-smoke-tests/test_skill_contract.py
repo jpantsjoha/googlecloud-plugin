@@ -381,3 +381,28 @@ def test_codex_manifest_currently_valid(tmp_path, monkeypatch) -> None:
 def test_codex_manifest_drift_is_caught(tmp_path, monkeypatch, mutate, expected) -> None:
     errors = _codex_errors(tmp_path, monkeypatch, mutate)
     assert any(expected in e for e in errors), errors
+
+
+# ─── Link checker: MCP endpoints (scripts/check_links.py) ────────────────────
+
+def _load_link_checker():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("check_links", ROOT / "scripts" / "check_links.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("url,status,ok", [
+    ("https://cloudcli.googleapis.com/mcp", 405, True),
+    ("https://developerknowledge.googleapis.com/mcp", 401, True),
+    ("https://cloudcli.googleapis.com/mcp", 403, True),
+    ("https://cloudcli.googleapis.com/mcp", 404, False),
+    ("https://example.test/mcp", 405, False),
+    ("https://cloudcli.googleapis.com/mcp/", 405, False),
+    ("https://cloudcli.googleapis.com/mcp", 0, False),
+    ("https://cloud.google.com/run/docs", 405, False),
+    ("https://cloud.google.com/run/docs", 200, True),
+])
+def test_link_checker_mcp_endpoints(url: str, status: int, ok: bool) -> None:
+    assert _load_link_checker().resolved(url, status) is ok
