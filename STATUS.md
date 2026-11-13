@@ -20,7 +20,7 @@ Gate on `a4180b4`: 273 tests pass, 19/19 skills conform, 4 harness manifests agr
 
 ## Released
 
-- `v0.5.0` ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27)): project resolution from env, `.env` and gcloud config with a prompt on conflict; `gcloud` MCP no longer receives a literal `${GCP_PROJECT_ID}`; GenAI Toolbox no longer shipped.
+- `v0.5.0` ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27), [#29](https://github.com/jpantsjoha/googlecloud-plugin/pull/29)): project resolution from env, `.env` and gcloud config, enforced in Claude Code by a hook that asks on conflict; `gcloud` MCP no longer receives a literal `${GCP_PROJECT_ID}`; GenAI Toolbox no longer shipped.
 - `v0.4.0` ([#25](https://github.com/jpantsjoha/googlecloud-plugin/pull/25)): Developer Knowledge works in Claude Code from gcloud ADC with no API key — verified live; square logo for Codex and Kimi.
 - `v0.3.0` ([#23](https://github.com/jpantsjoha/googlecloud-plugin/issues/23)): the work in the table above; ADR-008 accepted as the operator's decision (JP, 2026-11-13).
 

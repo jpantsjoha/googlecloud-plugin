@@ -25,6 +25,12 @@ no longer sends `gcloud` a placeholder instead of a project.
   `gcloud` would use, and exits 0 / 3 / 2 for resolved / conflict / missing
   (`--json` for machines). Its `.env` parsing is quote-aware and never outputs
   any other value from the file. ([#27](https://github.com/jpantsjoha/googlecloud-plugin/pull/27))
+- In Claude Code, a `PreToolUse` hook enforces it: a project-scoped `gcloud`
+  call without `--project` — through the MCP server or the shell — is blocked,
+  and the agent is told what the sources say (retry with the one project, ask
+  you to choose, or suggest `gcloud init`). While sources disagree, an explicit
+  `--project` is held until you have chosen that project in the session.
+  Verified live in Claude Code 2.1.323. ([#29](https://github.com/jpantsjoha/googlecloud-plugin/pull/29))
 
 ### Fixed
 
