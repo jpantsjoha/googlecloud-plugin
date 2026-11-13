@@ -34,7 +34,7 @@ ship `gcloud` and `developer-knowledge`. Neither passes a project in its
 environment: the `gcloud` server inherits `CLOUDSDK_CORE_PROJECT` if you export
 it, else your active gcloud configuration — exactly as `gcloud` does. Which
 project a task targets is settled per session by `gcp-project-context`, and
-passed as `--project` on every command.
+passed as `--project` on every project-scoped command.
 
 The portable `mcp.json` (Agent Plugins 1.0.0) declares **one** server — `gcloud`
 — because that is the only one that starts with no user-supplied configuration:
