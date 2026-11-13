@@ -68,5 +68,5 @@ Where to list `googlecloud-plugin` so builders can find and install it. Each ent
 - [x] Tag a release before submitting — `v0.2.0` tagged and released 2026-08-07
 - [x] Conforms to Agent Plugins 1.0.0 (`make spec`) and Agent Skills (`skills-ref` 17/17)
 - [x] `CHANGELOG.md` present; version bumped so clients invalidate their cache
-- [ ] Submit repo URL to Claude Plugin Hub to trigger re-index of v0.3.0
+- [ ] Submit repo URL to Claude Plugin Hub to trigger re-index of v0.4.0
 - [ ] Submit to Anthropic official marketplace
