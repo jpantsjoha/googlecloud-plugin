@@ -10,8 +10,11 @@ every connection and after a 401/403. It prints a JSON object of headers:
   project. Taken from the ADC file's `quota_project_id`, else the gcloud
   project.
 
-On any failure (no gcloud, not logged in, timeout) it prints `{}` and exits 0,
-so the static `X-Goog-Api-Key` header in .mcp.json still applies. Nothing is
+Both headers or neither: a token without a quota project is refused, and an
+Authorization header would also stop Claude Code falling back. So on any
+failure (no gcloud, not logged in, no quota project, a lookup timing out) it
+prints `{}` and exits 0, and the static `X-Goog-Api-Key` header in .mcp.json
+applies instead. Nothing is
 written to disk and the token never reaches stderr.
 """
 import json
@@ -19,17 +22,19 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
-TIMEOUT = 4  # seconds per gcloud call; Claude Code gives the helper 10 in total
+BUDGET = 8.0  # seconds for the whole helper; Claude Code gives up at 10
 
 
-def gcloud(*args: str) -> str:
+def gcloud(deadline: float, *args: str) -> str:
     exe = shutil.which("gcloud")
-    if not exe:
+    remaining = deadline - time.monotonic()
+    if not exe or remaining <= 0.5:
         return ""
     try:
-        out = subprocess.run([exe, *args], capture_output=True, text=True, timeout=TIMEOUT)
+        out = subprocess.run([exe, *args], capture_output=True, text=True, timeout=remaining)
     except (OSError, subprocess.TimeoutExpired):
         return ""
     return out.stdout.strip() if out.returncode == 0 else ""
@@ -46,14 +51,14 @@ def adc_quota_project() -> str:
 
 
 def headers() -> dict[str, str]:
-    token = gcloud("auth", "application-default", "print-access-token")
+    deadline = time.monotonic() + BUDGET
+    project = adc_quota_project() or gcloud(deadline, "config", "get-value", "project")
+    if not project or project == "(unset)":
+        return {}
+    token = gcloud(deadline, "auth", "application-default", "print-access-token")
     if not token:
         return {}
-    result = {"Authorization": f"Bearer {token}"}
-    project = adc_quota_project() or gcloud("config", "get-value", "project")
-    if project and project != "(unset)":
-        result["X-Goog-User-Project"] = project
-    return result
+    return {"Authorization": f"Bearer {token}", "X-Goog-User-Project": project}
 
 
 if __name__ == "__main__":

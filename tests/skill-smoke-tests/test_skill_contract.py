@@ -225,6 +225,9 @@ def test_skills_discoverable_non_recursively() -> None:
 
 # ─── Harness MCP drift guard (scripts/validate_plugin.py) ────────────────────
 
+HELPER_SOURCE = ROOT / "scripts" / "dk_adc_headers.py"
+
+
 def _load_packaging_validator():
     import importlib.util
     spec = importlib.util.spec_from_file_location(
@@ -253,10 +256,25 @@ def test_harness_manifests_currently_agree() -> None:
     assert errors == []
 
 
-def _drift_errors(tmp_path, monkeypatch, manifest: str, mutate) -> list[str]:
-    validator = _load_packaging_validator()
+def _copy_mcp_fixture(tmp_path: Path) -> None:
     for name in (".mcp.json", "mcp_config.json", "gemini-extension.json", "mcp.json"):
         (tmp_path / name).write_text((ROOT / name).read_text())
+    (tmp_path / "scripts").mkdir(exist_ok=True)
+    (tmp_path / "scripts" / "dk_adc_headers.py").write_text(HELPER_SOURCE.read_text())
+
+
+def test_mcp_fixture_baseline_is_clean(tmp_path, monkeypatch) -> None:
+    validator = _load_packaging_validator()
+    _copy_mcp_fixture(tmp_path)
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    errors: list[str] = []
+    validator.check_mcp_consistency(errors)
+    assert errors == []
+
+
+def _drift_errors(tmp_path, monkeypatch, manifest: str, mutate) -> list[str]:
+    validator = _load_packaging_validator()
+    _copy_mcp_fixture(tmp_path)
     data = json.loads((tmp_path / manifest).read_text())
     mutate(data["mcpServers"]["developer-knowledge"])
     (tmp_path / manifest).write_text(json.dumps(data))
@@ -271,7 +289,7 @@ def test_remote_server_url_drift_is_caught(tmp_path, monkeypatch) -> None:
     def drift(cfg):
         cfg["serverUrl"] = "https://drifted.example.test/mcp"
     errors = _drift_errors(tmp_path, monkeypatch, "mcp_config.json", drift)
-    assert any("developer-knowledge" in e for e in errors), errors
+    assert any("MCP drift: server 'developer-knowledge' differs" in e for e in errors), errors
 
 
 def test_foreign_endpoint_key_is_rejected(tmp_path, monkeypatch) -> None:
@@ -288,7 +306,7 @@ def test_matching_shadow_key_cannot_mask_native_drift(tmp_path, monkeypatch) -> 
         cfg["httpUrl"] = "https://drifted.example.test/mcp"
     errors = _drift_errors(tmp_path, monkeypatch, "gemini-extension.json", shadow)
     assert any("reads only 'httpUrl'" in e for e in errors), errors
-    assert any("differs" in e and "developer-knowledge" in e for e in errors), errors
+    assert any("MCP drift: server 'developer-knowledge' differs" in e for e in errors), errors
 
 
 # ─── Auth: no key-file recipes (shared/auth/README.md, issue #16) ─────────────
@@ -419,16 +437,17 @@ import sys
 HELPER = ROOT / "scripts" / "dk_adc_headers.py"
 
 
-def _fake_gcloud(bin_dir: Path, token: str | None, project: str = "proj-123") -> None:
-    """A stand-in gcloud: prints a token (or fails) and a configured project."""
+def _fake_gcloud(bin_dir: Path, token: str | None, project: str | None = "proj-123") -> None:
+    """A stand-in gcloud: prints a token (or fails) and a project (or fails)."""
     bin_dir.mkdir(parents=True, exist_ok=True)
     script = bin_dir / "gcloud"
     token_branch = f'echo "{token}"; exit 0' if token else 'echo "not logged in" >&2; exit 1'
+    project_branch = f'echo "{project}"; exit 0' if project else 'echo "error" >&2; exit 1'
     script.write_text(
         "#!/bin/sh\n"
         'case "$*" in\n'
         f'  "auth application-default print-access-token") {token_branch};;\n'
-        f'  "config get-value project") echo "{project}"; exit 0;;\n'
+        f'  "config get-value project") {project_branch};;\n'
         "esac\nexit 1\n"
     )
     script.chmod(0o755)
@@ -458,9 +477,11 @@ def test_helper_prefers_adc_quota_project(tmp_path) -> None:
     assert headers["X-Goog-User-Project"] == "quota-proj"
 
 
-def test_helper_omits_unset_project(tmp_path) -> None:
-    _fake_gcloud(tmp_path / "bin", token="tok-abc", project="(unset)")
-    assert _run_helper(tmp_path, [tmp_path / "bin"]) == {"Authorization": "Bearer tok-abc"}
+@pytest.mark.parametrize("project", ["(unset)", None])
+def test_helper_empty_without_quota_project(tmp_path, project) -> None:
+    """A token without a quota project is refused, so emit nothing and let the key header apply."""
+    _fake_gcloud(tmp_path / "bin", token="tok-abc", project=project)
+    assert _run_helper(tmp_path, [tmp_path / "bin"]) == {}
 
 
 def test_helper_empty_when_not_logged_in(tmp_path) -> None:
@@ -505,8 +526,7 @@ def test_broken_icon_and_helper_paths_are_caught(tmp_path, monkeypatch) -> None:
     errors: list[str] = []
     validator.check_icon_fields("codex plugin.json", {"logo": "./assets/missing.svg"}, errors)
     assert any("logo" in e for e in errors), errors
-    for name in (".mcp.json", "mcp_config.json", "gemini-extension.json", "mcp.json"):
-        (tmp_path / name).write_text((ROOT / name).read_text())
+    _copy_mcp_fixture(tmp_path)
     data = json.loads((tmp_path / ".mcp.json").read_text())
     data["mcpServers"]["developer-knowledge"]["headersHelper"] = "python3 scripts/missing.py"
     (tmp_path / ".mcp.json").write_text(json.dumps(data))

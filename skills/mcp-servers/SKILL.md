@@ -91,11 +91,17 @@ export DEVELOPERKNOWLEDGE_API_KEY=...   # optional; in your shell profile, never
 It is **not** in the portable `mcp.json`: it needs client-managed credentials,
 and Agent Plugins 1.0.0 expands no placeholders beyond the plugin's own paths.
 
+The helper needs `python3` on `PATH`. With neither a working gcloud login nor
+a key, the server fails to connect; nothing else in the plugin depends on it.
+
 **Already have a Developer Knowledge server of your own?** Claude Code drops a
-plugin server whose URL matches one you configured yourself, so your entry wins.
-If yours depends on a key variable that is not set, every call fails with
-`API key not valid` — remove it (`claude mcp remove google-developer-knowledge`)
-or set its variable, and the plugin's server takes over.
+plugin server whose URL matches one you configured yourself, so your entry
+always wins. If yours depends on a key variable that is not set, every call
+fails with `API key not valid`. Either:
+
+- **use the plugin's server** — remove your entry by its configured name
+  (`claude mcp list` shows it): `claude mcp remove YOUR_SERVER_NAME`; or
+- **keep your own** — set the key variable it references.
 
 ## Google-Managed MCP Servers (v0.1)
 
@@ -199,7 +205,7 @@ npx -y @toolbox-sdk/server --stdio --config tools.yaml
 | `MCP server not found` | Server not installed | Check install step in references/ |
 | Connection timeout | VPC firewall blocking | Verify Private Google Access + firewall |
 | `gcloud-remote` returns `403` on `tools/list` | Cloud CLI Execution API not enabled on the host project, or caller lacks `roles/mcp.toolUser` | Ask an admin to enable the API and grant the role on the host project |
-| `developer-knowledge` returns `API key not valid` | A user-configured server with an unset key variable is shadowing the plugin's | Remove that server or set its variable |
+| `developer-knowledge` returns `API key not valid` | A user-configured server with an unset key variable is shadowing the plugin's | Remove that server (`claude mcp remove YOUR_SERVER_NAME`) to use the plugin's, or set its variable |
 | `developer-knowledge` returns `403` with ADC | No quota project, or the Developer Knowledge API is not enabled on it | `gcloud auth application-default set-quota-project PROJECT_ID`; ask an admin to enable the API |
 
 ## References
