@@ -32,7 +32,7 @@ Ordered so the one that compounds comes first: the installed v0.5.0 guard blocks
 | # | Decision | Recommendation | Unblocks | Cost if wrong | Reversibility |
 |---|---|---|---|---|---|
 | 1 | Release v0.5.1 ([#33](https://github.com/jpantsjoha/googlecloud-plugin/pull/33)) | Approve #33: merge, tag `v0.5.1`, publish the release, update the installed plugin, re-sync the Hub listing | Installed copies stop blocking commands that only mention `gcloud` ([#32](https://github.com/jpantsjoha/googlecloud-plugin/pull/32)); merging alone would publish, since installs read the version from `main` | A defective tag needs a `0.5.2`; users who updated keep it | one-way |
-| 2 | OpenAI API review lane at its spend cap | Leave the cap as it is: reviews run on the Codex subscription lane, which answered every request on 2026-11-13 | Nothing, while the subscription lane has quota | If subscription quota also runs out, reviews wait until quota returns or a fresh Claude reviewer stands in (your 2026-11-09 fallback); on 2026-11-13 the subscription lane hit its quota too | cheap |
+| 2 | OpenAI API review lane at its project spend cap (HTTP 429 `project_spend_limit_exceeded`, 2026-11-13) | Leave the cap as it is: reviews fall back to the Codex subscription lane, then to a fresh Claude reviewer under your 2026-11-09 rule | Nothing today: on 2026-11-13 the subscription lane covered reviews until it hit its own quota, and a fresh Claude Sonnet reviewer covered the rest | While both Codex lanes stay quota-blocked, reviews have no cross-model second opinion — Claude reviews Claude-written work | cheap |
 
 The README usage section is done ([#31](https://github.com/jpantsjoha/googlecloud-plugin/pull/31)).
 
