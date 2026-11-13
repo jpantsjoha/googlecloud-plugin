@@ -31,6 +31,10 @@ no longer sends `gcloud` a placeholder instead of a project.
   you to choose, or suggest `gcloud init`). While sources disagree, an explicit
   `--project` is held until you have chosen that project in the session.
   Verified live in Claude Code 2.1.323. ([#29](https://github.com/jpantsjoha/googlecloud-plugin/pull/29))
+- A project is asked for only when a command acts on one. Documentation
+  lookups, best practices, patterns, policies, designs and reviews never need a
+  project, and project-agnostic `gcloud` commands (`help`, `config`, `auth`, …)
+  are never blocked. ([#30](https://github.com/jpantsjoha/googlecloud-plugin/pull/30))
 
 ### Fixed
 
