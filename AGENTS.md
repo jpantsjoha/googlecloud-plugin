@@ -25,6 +25,10 @@ Restate the intent in one sentence before writing code. No GCP implementation wi
 - Never pin a preview Gemini model ID; use GA IDs, reverify for the GEAP surface.
 - GEAP naming in prose; legacy `vertex-ai` literals in code/URLs/Terraform.
 
+## Settle the project first
+
+Before the first project-scoped command, use `gcp-project-context`: collect the project from exported variables, the repository's `.env` files and the active gcloud configuration. One ID → use it and say so. Several → ask the user which. None → stop and point them at `gcloud init`. Then pass that ID as `--project` on every command.
+
 ## Every gcloud call
 
 Follow `gcloud-guardrails` for every `gcloud` command, whichever skill proposed it: validate the leaf with `gcloud help`, dry-run where supported, reduce output, pass `--project` and location explicitly, one command per call, and stop for human authorisation on the denylist (IAM changes, deletes, billing, organizations, KMS, IaC apply, API enablement, CLI installation).

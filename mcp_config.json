@@ -1,27 +1,12 @@
 {
-  "_about": "Google Cloud MCP self-configuration. Agents reach GCP through named MCP servers, never raw credentials. Auth via Application Default Credentials (ADC) — never hardcoded. See skills/mcp-servers/SKILL.md for setup and troubleshooting. Tested 2026-07-23: gcloud-mcp v0.5.3 confirmed operational (live GCP query); toolbox-server confirmed installable via npx.",
+  "_about": "Google Cloud MCP self-configuration. Agents reach GCP through named MCP servers, never raw credentials. Auth via Application Default Credentials (ADC) — never hardcoded. See skills/mcp-servers/SKILL.md for setup and troubleshooting. Tested 2026-07-23: gcloud-mcp v0.5.3 confirmed operational (live GCP query); GenAI Toolbox moved to an opt-in (needs a user-specific tools.yaml).",
 
   "mcpServers": {
     "gcloud": {
-      "_note": "gcloud CLI MCP server — tested live against GCP (run_gcloud_command tool, MCP initialize handshake confirmed). Requires local gcloud auth application-default login.",
+      "_note": "gcloud CLI MCP server. No env block: it inherits CLOUDSDK_CORE_PROJECT if you export it, else your active gcloud configuration — the same precedence as gcloud itself. Requires local gcloud auth application-default login. GenAI Toolbox is an opt-in; see skills/mcp-servers.",
       "_tested": "2026-07-23 — npx @google-cloud/gcloud-mcp v0.5.3 started, responded to MCP initialize, queried live GCP project via run_gcloud_command",
       "command": "npx",
-      "args": ["-y", "@google-cloud/gcloud-mcp"],
-      "env": {
-        "CLOUDSDK_CORE_PROJECT": "${GCP_PROJECT_ID}"
-      }
-    },
-    "toolbox": {
-      "_note": "Google GenAI Toolbox — database MCP server (BigQuery, Cloud SQL, Spanner, AlloyDB). Requires a tools.yaml config file. See https://mcp-toolbox.dev for setup.",
-      "_tested": "2026-07-23 — @toolbox-sdk/server resolves, accepts MCP stdio mode, and validates its config path. Requires a tools.yaml pointing at a database source.",
-      "_correction": "Previous config used 'uvx toolbox-core' which has no CLI. Correct package: npx @toolbox-sdk/server --stdio --config PATH",
-      "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--stdio", "--config", "${TOOLBOX_TOOLS_FILE}"],
-      "env": {
-        "GCP_PROJECT_ID": "${GCP_PROJECT_ID}",
-        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
-        "TOOLBOX_TOOLS_FILE": "${TOOLBOX_TOOLS_FILE}"
-      }
+      "args": ["-y", "@google-cloud/gcloud-mcp"]
     },
     "developer-knowledge": {
       "_note": "Google Developer Knowledge MCP — answers grounded in official Google Cloud, Firebase, Android, Web and Gemini docs. Antigravity attaches ADC through authProviderType, so no API key is needed. Requires the Developer Knowledge API enabled on the ADC quota project.",

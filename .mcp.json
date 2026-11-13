@@ -2,19 +2,7 @@
   "mcpServers": {
     "gcloud": {
       "command": "npx",
-      "args": ["-y", "@google-cloud/gcloud-mcp"],
-      "env": {
-        "CLOUDSDK_CORE_PROJECT": "${GCP_PROJECT_ID}"
-      }
-    },
-    "toolbox": {
-      "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--stdio", "--config", "${TOOLBOX_TOOLS_FILE}"],
-      "env": {
-        "GCP_PROJECT_ID": "${GCP_PROJECT_ID}",
-        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
-        "TOOLBOX_TOOLS_FILE": "${TOOLBOX_TOOLS_FILE}"
-      }
+      "args": ["-y", "@google-cloud/gcloud-mcp"]
     },
     "developer-knowledge": {
       "type": "http",

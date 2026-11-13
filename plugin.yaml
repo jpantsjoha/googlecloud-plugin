@@ -85,6 +85,10 @@ skills:
     path: skills/terraform-gcp/SKILL.md
     wave: 1
     status: normalized
+  - name: gcp-project-context
+    path: skills/gcp-project-context/SKILL.md
+    wave: 2
+    status: normalized
   - name: gcloud-guardrails
     path: skills/gcloud-guardrails/SKILL.md
     wave: 2

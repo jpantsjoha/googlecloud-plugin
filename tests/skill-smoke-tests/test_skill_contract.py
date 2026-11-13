@@ -534,3 +534,186 @@ def test_broken_icon_and_helper_paths_are_caught(tmp_path, monkeypatch) -> None:
     errors = []
     validator.check_mcp_consistency(errors)
     assert any("headersHelper" in e for e in errors), errors
+
+
+# ─── Project resolution (scripts/preflight.py, gcp-project-context) ──────────
+
+PREFLIGHT = ROOT / "scripts" / "preflight.py"
+
+
+def _load_preflight():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("preflight", PREFLIGHT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _gcloud_stub(bin_dir: Path, project: str | None, configuration: str = "default",
+                 account: str | None = "dev@example.com") -> Path:
+    """Behaves like gcloud: an exported CLOUDSDK_CORE_PROJECT overrides the stored project."""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    script = bin_dir / "gcloud"
+    stored = f'echo "{project}"' if project else 'echo "(unset)"'
+    proj = f'if [ -n "$CLOUDSDK_CORE_PROJECT" ]; then echo "$CLOUDSDK_CORE_PROJECT"; else {stored}; fi'
+    script.write_text(
+        "#!/bin/sh\n"
+        'case "$*" in\n'
+        f'  "config get-value project") {proj};;\n'
+        f'  "config configurations list --filter=is_active=true --format=value(name)") echo "{configuration}";;\n'
+        f'  "config get-value account") echo "{account or "(unset)"}";;\n'
+        '  "version") echo "Google Cloud SDK 0.0.0";;\n'
+        "esac\nexit 0\n"
+    )
+    script.chmod(0o755)
+    return bin_dir
+
+
+def _candidates(tmp_path, monkeypatch, env: dict, dotenv: str | None = None, gcloud_project: str | None = None):
+    preflight = _load_preflight()
+    monkeypatch.setenv("PATH", str(_gcloud_stub(tmp_path / "bin", gcloud_project)))
+    for var in preflight.PROJECT_ENV_VARS:
+        if var in env:
+            monkeypatch.setenv(var, env[var])
+        else:
+            monkeypatch.delenv(var, raising=False)
+    repo = tmp_path / "repo"
+    repo.mkdir(exist_ok=True)
+    if dotenv is not None:
+        (repo / ".env").write_text(dotenv)
+    found = preflight.collect_project_candidates(repo, env=env)
+    return found, preflight.resolve_project(found)
+
+
+def test_project_resolved_when_sources_agree(tmp_path, monkeypatch) -> None:
+    found, result = _candidates(tmp_path, monkeypatch, {"GOOGLE_CLOUD_PROJECT": "alpha-proj"},
+                                dotenv="GCP_PROJECT_ID=alpha-proj\n", gcloud_project="alpha-proj")
+    assert result["status"] == "resolved" and result["project"] == "alpha-proj"
+    assert [c["source"] for c in found] == ["env:GOOGLE_CLOUD_PROJECT", ".env:GCP_PROJECT_ID", "gcloud config (default)"]
+
+
+def test_project_conflict_lists_every_choice(tmp_path, monkeypatch) -> None:
+    _, result = _candidates(tmp_path, monkeypatch, {"CLOUDSDK_CORE_PROJECT": "alpha-proj"},
+                            dotenv="export GOOGLE_CLOUD_PROJECT='beta-proj'  # app\n", gcloud_project="gamma-proj")
+    assert result["status"] == "conflict"
+    assert result["choices"] == ["alpha-proj", "beta-proj", "gamma-proj"]
+    assert result["gcloud_uses"] == "alpha-proj", "CLOUDSDK_CORE_PROJECT overrides the configuration"
+
+
+def test_project_missing(tmp_path, monkeypatch) -> None:
+    _, result = _candidates(tmp_path, monkeypatch, {}, gcloud_project=None)
+    assert result["status"] == "missing" and result["choices"] == []
+
+
+def test_unexpanded_placeholder_is_invalid_not_a_project(tmp_path, monkeypatch) -> None:
+    found, result = _candidates(tmp_path, monkeypatch, {"CLOUDSDK_CORE_PROJECT": "${GCP_PROJECT_ID}"},
+                                gcloud_project="alpha-proj")
+    assert result["status"] == "resolved" and result["project"] == "alpha-proj"
+    assert [c["value"] for c in result["invalid"]] == ["${GCP_PROJECT_ID}"]
+
+
+def test_override_does_not_hide_stored_configuration(tmp_path, monkeypatch) -> None:
+    """With CLOUDSDK_CORE_PROJECT exported, the stored configuration project is still read and reported."""
+    found, result = _candidates(tmp_path, monkeypatch, {"CLOUDSDK_CORE_PROJECT": "alpha-proj"}, gcloud_project="beta-proj")
+    assert [(c["source"], c["value"]) for c in found] == [
+        ("env:CLOUDSDK_CORE_PROJECT", "alpha-proj"), ("gcloud config (default)", "beta-proj")]
+    assert result["status"] == "conflict" and result["gcloud_uses"] == "alpha-proj"
+
+
+def test_legacy_domain_scoped_id_is_valid(tmp_path, monkeypatch) -> None:
+    _, alone = _candidates(tmp_path, monkeypatch, {"GOOGLE_CLOUD_PROJECT": "example.com:legacy-proj"})
+    assert alone["status"] == "resolved" and alone["project"] == "example.com:legacy-proj"
+    _, both = _candidates(tmp_path, monkeypatch, {"GOOGLE_CLOUD_PROJECT": "example.com:legacy-proj"},
+                          dotenv="GCP_PROJECT_ID=alpha-proj\n")
+    assert both["status"] == "conflict"
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("GOOGLE_CLOUD_PROJECT=beta-proj\t# app\n", [("GOOGLE_CLOUD_PROJECT", "beta-proj")]),
+    ("GOOGLE_CLOUD_PROJECT=beta-proj # app\r\n", [("GOOGLE_CLOUD_PROJECT", "beta-proj")]),
+    ("export GCP_PROJECT_ID='beta-proj'\n", [("GCP_PROJECT_ID", "beta-proj")]),
+    ('GCLOUD_PROJECT="beta-proj # suffix"\n', [("GCLOUD_PROJECT", "beta-proj # suffix")]),
+    ('CLOUDSDK_CORE_PROJECT="unclosed\nAPI_SECRET=do-not-print\n',
+     [("CLOUDSDK_CORE_PROJECT", "<unterminated quoted value>")]),
+    ('TOKEN="first \\"\nGCP_PROJECT_ID=leaked-value\nlast"\nGOOGLE_CLOUD_PROJECT=real-proj\n',
+     [("GOOGLE_CLOUD_PROJECT", "real-proj")]),
+    ("TOKEN='single \\'\nGOOGLE_CLOUD_PROJECT=real-proj\n", [("GOOGLE_CLOUD_PROJECT", "real-proj")]),
+    ("# GOOGLE_CLOUD_PROJECT=commented-out\n", []),
+    ('SECRET="first\nGCP_PROJECT_ID=inside-secret\nlast"\nGOOGLE_CLOUD_PROJECT=real-proj\n',
+     [("GOOGLE_CLOUD_PROJECT", "real-proj")]),
+])
+def test_dotenv_parser(text, expected) -> None:
+    assert _load_preflight().parse_dotenv_projects(text) == expected
+
+
+@pytest.mark.parametrize("dotenv", [
+    'GOOGLE_CLOUD_PROJECT="unclosed\nAPI_SECRET=do-not-print\n',
+    'TOKEN="a \\"\nGCP_PROJECT_ID=do-not-print\nz"\nGOOGLE_CLOUD_PROJECT=alpha-proj\n',
+])
+@pytest.mark.parametrize("as_json", [True, False])
+def test_preflight_output_never_leaks_dotenv_secrets(tmp_path, dotenv, as_json) -> None:
+    bin_dir = _gcloud_stub(tmp_path / "bin", "alpha-proj")
+    home = tmp_path / "home"
+    (home / ".config" / "gcloud").mkdir(parents=True)
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".env").write_text(dotenv)
+    args = [sys.executable, str(PREFLIGHT), "--project-dir", str(repo)] + (["--json"] if as_json else [])
+    out = subprocess.run(args, capture_output=True, text=True, timeout=30, env={"PATH": str(bin_dir), "HOME": str(home)})
+    assert "do-not-print" not in out.stdout + out.stderr
+
+
+def test_quoted_comment_value_is_invalid_not_truncated(tmp_path, monkeypatch) -> None:
+    _, result = _candidates(tmp_path, monkeypatch, {}, dotenv='GOOGLE_CLOUD_PROJECT="beta-proj # x"\n',
+                            gcloud_project="alpha-proj")
+    assert result["status"] == "resolved" and result["project"] == "alpha-proj"
+    assert [c["value"] for c in result["invalid"]] == ["beta-proj # x"]
+
+
+def test_dotenv_reads_only_project_keys(tmp_path, monkeypatch) -> None:
+    found, _ = _candidates(tmp_path, monkeypatch, {},
+                           dotenv='API_SECRET=do-not-read\nTOKEN="multi\nGCP_PROJECT_ID=leaked-value\nline"\n'
+                                  "GOOGLE_CLOUD_PROJECT=alpha-proj\n")
+    dumped = json.dumps(found)
+    assert "do-not-read" not in dumped and "leaked-value" not in dumped
+
+
+@pytest.mark.parametrize("env,gcloud_project,creds,code,status", [
+    ({"GOOGLE_CLOUD_PROJECT": "alpha-proj"}, "alpha-proj", True, 0, "resolved"),
+    ({"GOOGLE_CLOUD_PROJECT": "alpha-proj"}, "beta-proj", True, 3, "conflict"),
+    ({}, None, True, 2, "missing"),
+    ({"GOOGLE_CLOUD_PROJECT": "alpha-proj"}, "alpha-proj", False, 2, "resolved"),
+])
+def test_preflight_cli_exit_codes(tmp_path, env, gcloud_project, creds, code, status) -> None:
+    """Exit 0 ready, 3 project conflict, 2 project or credentials missing."""
+    bin_dir = _gcloud_stub(tmp_path / "bin", gcloud_project, account="dev@example.com" if creds else None)
+    home = tmp_path / "home"
+    (home / ".config" / "gcloud").mkdir(parents=True)
+    if creds:
+        (home / ".config" / "gcloud" / "application_default_credentials.json").write_text("{}")
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    out = subprocess.run([sys.executable, str(PREFLIGHT), "--project-dir", str(repo), "--json"],
+                         capture_output=True, text=True, timeout=30,
+                         env={"PATH": str(bin_dir), "HOME": str(home), **env})
+    assert out.returncode == code, out.stdout + out.stderr
+    assert json.loads(out.stdout)["project"]["status"] == status
+
+
+# ─── Harness manifests pass no placeholders into server env ──────────────────
+
+@pytest.mark.parametrize("manifest", [".mcp.json", "mcp_config.json", "gemini-extension.json"])
+def test_no_placeholder_in_server_env(manifest: str) -> None:
+    """An unset ${VAR} reaches the server literally (observed: gcloud core.project='${GCP_PROJECT_ID}')."""
+    servers = json.loads((ROOT / manifest).read_text())["mcpServers"]
+    for name, cfg in servers.items():
+        for key, value in (cfg.get("env") or {}).items():
+            if not key.startswith("_"):
+                assert "${" not in str(value), f"{manifest} server '{name}' env {key}={value}"
+        for arg in cfg.get("args") or []:
+            assert "${" not in str(arg), f"{manifest} server '{name}' arg {arg}"
+
+
+@pytest.mark.parametrize("manifest", [".mcp.json", "mcp_config.json", "gemini-extension.json"])
+def test_toolbox_not_shipped(manifest: str) -> None:
+    assert "toolbox" not in json.loads((ROOT / manifest).read_text())["mcpServers"]

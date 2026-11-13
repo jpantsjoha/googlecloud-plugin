@@ -29,6 +29,13 @@ CI outside Google Cloud uses Workload Identity Federation instead. See `shared/a
 
 ## What the plugin ships vs what you opt into
 
+The harness manifests (`.mcp.json`, `mcp_config.json`, `gemini-extension.json`)
+ship `gcloud` and `developer-knowledge`. Neither passes a project in its
+environment: the `gcloud` server inherits `CLOUDSDK_CORE_PROJECT` if you export
+it, else your active gcloud configuration — exactly as `gcloud` does. Which
+project a task targets is settled per session by `gcp-project-context`, and
+passed as `--project` on every command.
+
 The portable `mcp.json` (Agent Plugins 1.0.0) declares **one** server — `gcloud`
 — because that is the only one that starts with no user-supplied configuration:
 
@@ -160,7 +167,7 @@ Not shipped in any manifest: it needs an enabled API and an IAM grant before it 
 
 Google's MCP Toolbox for Databases enables LLM agents to query Cloud SQL, AlloyDB, Spanner, BigQuery, and more safely.
 
-> **Why this is not in `mcp.json`.** Toolbox needs `--config <your tools.yaml>`,
+> **Why this is not shipped in any manifest.** Toolbox needs `--config <your tools.yaml>`,
 > a path only you can supply. No Agent Plugins placeholder can express it, so
 > shipping it in the portable manifest would mean a server that fails to start
 > on every fresh install. Add it to your own client config once you have a
