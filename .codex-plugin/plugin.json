@@ -1,0 +1,59 @@
+{
+  "name": "googlecloud-plugin",
+  "version": "0.2.0",
+  "description": "A full Google Cloud delivery team for your coding agent: vendor-objective solution designer, GCP architect, agentic-systems architect (ADK / Agent Runtime / MCP / A2A / AP2), plus security, SRE, and QA — wired into a design-first, security-first delivery gate. Eleven service skills (Cloud Run, GKE, IAM, BigQuery, Cloud Storage, Vertex AI, networking, observability), MCP server setup, and a self-validating research pipeline that keeps every reference current.",
+  "author": {
+    "name": "Jaroslav Pantsjoha",
+    "url": "https://uk.linkedin.com/in/johas"
+  },
+  "homepage": "https://github.com/jpantsjoha/googlecloud-plugin",
+  "repository": "https://github.com/jpantsjoha/googlecloud-plugin",
+  "license": "MIT",
+  "keywords": [
+    "google-cloud",
+    "gcp",
+    "gcp-skills",
+    "cloud-run",
+    "gke",
+    "bigquery",
+    "vertex-ai",
+    "iam",
+    "cloud-storage",
+    "terraform",
+    "well-architected",
+    "mcp",
+    "adk",
+    "a2a",
+    "ap2",
+    "agentic",
+    "agent-architecture",
+    "gemini",
+    "geap",
+    "sre",
+    "devsecops",
+    "solution-architecture",
+    "claude-code",
+    "antigravity",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "GoogleCloud Plugin",
+    "shortDescription": "A full Google Cloud delivery team for your coding agent.",
+    "longDescription": "Install once and gain a vendor-objective solution designer, a GCP architect, an agentic-systems architect (ADK / A2A / AP2 / MCP), plus security, SRE, and QA — wired into a design-first, security-first delivery gate. Eleven service skills, MCP setup, and a self-validating research pipeline.",
+    "developerName": "Jaroslav Pantsjoha",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Design-first delivery gate",
+      "GCP and agentic architecture",
+      "Safe gcloud execution",
+      "Google Cloud documentation grounding"
+    ],
+    "websiteURL": "https://github.com/jpantsjoha/googlecloud-plugin",
+    "defaultPrompt": [
+      "Design a Cloud Run service for this app and take it through the security gate before any deploy.",
+      "Review my GCP architecture against the Well-Architected Framework and list the gaps by pillar.",
+      "Plan the gcloud commands to set up this project, with dry runs and the steps that need my approval."
+    ]
+  }
+}
