@@ -349,6 +349,8 @@ def _codex_errors(tmp_path, monkeypatch, mutate) -> list[str]:
     (tmp_path / ".codex-plugin").mkdir(parents=True)
     (tmp_path / "skills").mkdir()
     data = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
+    if mutate == "ABSOLUTE":  # absolute path to a real skills dir inside this checkout
+        mutate = lambda d: d.update(skills=str((tmp_path / "skills").resolve()))
     replaced = mutate(data)
     data = data if replaced is None else replaced
     text = "null" if data == "null" else json.dumps(data)
@@ -373,6 +375,7 @@ def test_codex_manifest_currently_valid(tmp_path, monkeypatch) -> None:
     (lambda d: d.update(interface="GoogleCloud Plugin"), "must be an object"),
     (lambda d: d["interface"].update(displayName=42), "displayName"),
     (lambda d: {}, "name"),
+    ("ABSOLUTE", "skills path"),
     (lambda d: "null", "JSON object"),
 ])
 def test_codex_manifest_drift_is_caught(tmp_path, monkeypatch, mutate, expected) -> None:

@@ -34,7 +34,7 @@ def skills_dir_resolves(value) -> bool:
     Only a literal leading "./" is removed: str.lstrip("./") would also strip
     "../", turning a parent-relative path into a repo-relative one.
     """
-    if not isinstance(value, str) or not value.strip():
+    if not isinstance(value, str) or not value.strip() or Path(value).is_absolute():
         return False
     target = (ROOT / value.removeprefix("./")).resolve()
     root = ROOT.resolve()
